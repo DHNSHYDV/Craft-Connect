@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="checkout-section">
+    <div class="container">
+        <h1>Checkout</h1>
+
+        <div class="checkout-container">
+            <div class="checkout-form">
+                <div class="checkout-step active">
+                    <h3>1. Delivery Address</h3>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" placeholder="e.g. Rahul Sharma" value="Rahul Sharma">
+                        </div>
+                        <div class="form-group">
+                            <label>Phone Number</label>
+                            <input type="text" placeholder="10-digit mobile number" value="9876543210">
+                        </div>
+                        <div class="form-group full">
+                            <label>Address (Area and Street)</label>
+                            <textarea rows="3"
+                                placeholder="Apartment, suite, unit, building, floor, etc.">123, Heritage Lane, near City Center</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>City/District/Town</label>
+                            <input type="text" placeholder="City" value="Jaipur">
+                        </div>
+                        <div class="form-group">
+                            <label>State</label>
+                            <select>
+                                <option>Rajasthan</option>
+                                <option>Delhi</option>
+                                <option>Maharashtra</option>
+                                <option>Karnataka</option>
+                                <option>West Bengal</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Pincode</label>
+                            <input type="text" placeholder="6-digit code" value="302001">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="checkout-step">
+                    <h3>2. Payment Method</h3>
+                    <div class="payment-options">
+                        <label class="payment-option active">
+                            <input type="radio" name="payment" checked>
+                            <div class="payment-details">
+                                <span class="method-name">UPI (GPay, PhonePe, Paytm)</span>
+                                <span class="method-desc">Pay securely using your UPI app</span>
+                            </div>
+                        </label>
+                        <label class="payment-option">
+                            <input type="radio" name="payment">
+                            <div class="payment-details">
+                                <span class="method-name">Cash on Delivery</span>
+                                <span class="method-desc">Pay when your craft reaches home</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-summary">
+                <h3>Final Order</h3>
+                <div id="checkoutItems">
+                    <!-- Items list -->
+                </div>
+                <hr>
+                <div class="summary-row">
+                    <span>Subtotal</span>
+                    <span id="checkoutSubtotal">₹0</span>
+                </div>
+                <div class="summary-row">
+                    <span>GST (18%)</span>
+                    <span id="checkoutTax">₹0</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Amount Payable</span>
+                    <span id="checkoutTotal">₹0</span>
+                </div>
+                <button class="btn-primary full-width" onclick="placeOrder()">Place Your Order</button>
+                <p class="terms">By placing your order, you agree to our Terms of Use and Privacy Policy.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Success Modal Overlay -->
+<div id="successOverlay" class="success-overlay">
+    <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h2>Order Placed Successfully!</h2>
+        <p>Thank you for supporting Indian Artisans. Your order #OD{{ range(1000, 9999) | random }} will be delivered
+            soon.</p>
+        <div class="order-details">
+            <p>Estimated Delivery: <strong>5-7 Business Days</strong></p>
+        </div>
+        <a href="/" class="btn-primary" onclick="clearCart()">Back to Home</a>
+    </div>
+</div>
+
+<style>
+    .checkout-section {
+        padding: 120px 2rem 5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .checkout-section h1 {
+        font-family: var(--font-heading);
+        margin-bottom: 2rem;
+    }
+
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .checkout-step {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        margin-bottom: 2rem;
+    }
+
+    .checkout-step h3 {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        color: var(--accent-color);
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 0.5rem;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-group.full {
+        grid-column: span 2;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-color);
+        color: var(--text-color);
+        font-family: inherit;
+    }
+
+    .payment-options {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .payment-option {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .payment-option.active {
+        border-color: var(--accent-color);
+        background: var(--primary-color);
+        opacity: 0.9;
+    }
+
+    .method-name {
+        display: block;
+        font-weight: bold;
+    }
+
+    .method-desc {
+        font-size: 0.85rem;
+        opacity: 0.7;
+    }
+
+    .checkout-summary {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        position: sticky;
+        top: 100px;
+    }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .full-width {
+        width: 100%;
+        margin-top: 1.5rem;
+    }
+
+    .terms {
+        font-size: 0.75rem;
+        text-align: center;
+        margin-top: 1rem;
+        opacity: 0.6;
+    }
+
+    /* Success Modal */
+    .success-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 2000;
+        backdrop-filter: blur(8px);
+    }
+
+    .success-card {
+        background: var(--card-bg);
+        padding: 3rem;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 500px;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .success-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .order-details {
+        background: var(--bg-color);
+        padding: 1rem;
+        border-radius: 12px;
+        margin: 1.5rem 0;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const itemsList = document.getElementById('checkoutItems');
+        const totalEl = document.getElementById('checkoutTotal');
+
+        if (cart.length === 0) {
+            window.location.href = '/products';
+            return;
+        }
+
+        let total = 0;
+        cart.forEach(item => {
+            total += item.price * item.quantity;
+            itemsList.innerHTML += `
+            <div class="summary-item">
+                <span>${item.name} x ${item.quantity}</span>
+                <span>₹${(item.price * item.quantity).toLocaleString()}</span>
+            </div>
+        `;
+        });
+
+        const tax = Math.round(total * 0.18);
+        const grandTotal = total + tax;
+
+        document.getElementById('checkoutSubtotal').textContent = `₹${total.toLocaleString()}`;
+        document.getElementById('checkoutTax').textContent = `₹${tax.toLocaleString()}`;
+        totalEl.textContent = `₹${grandTotal.toLocaleString()}`;
+    });
+
+    function placeOrder() {
+        document.getElementById('successOverlay').style.display = 'flex';
+    }
+
+    function clearCart() {
+        localStorage.removeItem('cart');
+    }
+</script>
+{% endblock %}

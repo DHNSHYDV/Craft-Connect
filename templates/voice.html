@@ -1,0 +1,362 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ai-hero">
+    <div class="container">
+        <span class="badge">Voice Assistance</span>
+        <h1>Speak Your Heart</h1>
+        <p>Search for your favorite crafts in any Indian language. Our AI understands the soul of your words.</p>
+    </div>
+</section>
+
+<section class="voice-search">
+    <div class="container">
+        <div class="voice-center">
+            <div class="mic-container" id="micBtn">
+                <div class="mic-rings">
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                    <div class="ring"></div>
+                </div>
+                <button class="mic-btn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="voice-status" id="voiceStatus">Click the mic to start speaking...</div>
+
+            <div class="language-selection">
+                <button class="lang-tag active" data-lang="en-US">English</button>
+                <button class="lang-tag" data-lang="hi-IN">हिन्दी (Hindi)</button>
+                <button class="lang-tag" data-lang="ta-IN">தமிழ் (Tamil)</button>
+                <button class="lang-tag" data-lang="bn-IN">বাংলা (Bengali)</button>
+                <button class="lang-tag" data-lang="mr-IN">मराठी (Marathi)</button>
+            </div>
+        </div>
+
+        <div class="transcription-card" id="transcriptionCard" style="display: none;">
+            <div class="transcription-header">
+                <span>Recognized Speech</span>
+                <span class="lang-detected" id="detectedLang">Detected: English</span>
+            </div>
+            <div class="transcription-text" id="transcriptionText">"..."</div>
+            <div class="translation-text" id="translationText" style="display: none;"></div>
+            <div class="action-feedback">
+                <div class="loading-dots">
+                    <span></span><span></span><span></span>
+                </div>
+                Searching for your request...
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .ai-hero {
+        padding: 140px 2rem 4rem;
+        text-align: center;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background: #f4511e;
+        /* Voice theme color */
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .voice-center {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 4rem 0;
+    }
+
+    .mic-container {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin-bottom: 2rem;
+        cursor: pointer;
+    }
+
+    .mic-btn {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: #f4511e;
+        border: none;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 10px 30px rgba(244, 81, 30, 0.3);
+        z-index: 2;
+        position: relative;
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .mic-btn:active {
+        transform: scale(0.9);
+    }
+
+    .mic-rings {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: none;
+    }
+
+    .listening .mic-rings {
+        display: block;
+    }
+
+    .ring {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 2px solid #f4511e;
+        border-radius: 50%;
+        animation: ringRipple 2s infinite ease-out;
+        opacity: 0;
+    }
+
+    .ring:nth-child(2) {
+        animation-delay: 0.5s;
+    }
+
+    .ring:nth-child(3) {
+        animation-delay: 1s;
+    }
+
+    @keyframes ringRipple {
+        0% {
+            transform: scale(1);
+            opacity: 0.8;
+        }
+
+        100% {
+            transform: scale(2.5);
+            opacity: 0;
+        }
+    }
+
+    .voice-status {
+        font-size: 1.25rem;
+        font-weight: 500;
+        opacity: 0.7;
+        margin-bottom: 3rem;
+    }
+
+    .language-selection {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .lang-tag {
+        padding: 8px 18px;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        border-radius: 30px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .lang-tag.active,
+    .lang-tag:hover {
+        background: #f4511e;
+        color: white;
+        border-color: #f4511e;
+    }
+
+    .transcription-card {
+        max-width: 600px;
+        margin: 2rem auto;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 20px;
+        padding: 2.5rem;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
+        animation: slideInUp 0.5s ease;
+    }
+
+    .transcription-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1.5rem;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .lang-detected {
+        color: #f4511e;
+    }
+
+    .transcription-text {
+        font-size: 1.8rem;
+        font-family: var(--font-heading);
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
+
+    .translation-text {
+        font-size: 1.1rem;
+        font-style: italic;
+        opacity: 0.6;
+        margin-bottom: 2rem;
+    }
+
+    .action-feedback {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 600;
+        color: #4caf50;
+    }
+
+    .loading-dots span {
+        width: 8px;
+        height: 8px;
+        background: #4caf50;
+        border-radius: 50%;
+        display: inline-block;
+        animation: jump 1.4s infinite ease-in-out;
+    }
+
+    .loading-dots span:nth-child(1) {
+        animation-delay: -0.32s;
+    }
+
+    .loading-dots span:nth-child(2) {
+        animation-delay: -0.16s;
+    }
+
+    @keyframes jump {
+
+        0%,
+        80%,
+        100% {
+            transform: scale(0);
+        }
+
+        40% {
+            transform: scale(1);
+        }
+    }
+
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    const micBtn = document.getElementById('micBtn');
+    const voiceStatus = document.getElementById('voiceStatus');
+    const transcriptionCard = document.getElementById('transcriptionCard');
+    const transcriptionText = document.getElementById('transcriptionText');
+    const detectedLangEl = document.getElementById('detectedLang');
+    const langTags = document.querySelectorAll('.lang-tag');
+
+    let currentLang = 'en-US';
+    let recognition = null;
+    let isListening = false;
+
+    // Initialize Speech Recognition
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        recognition = new SpeechRecognition();
+        recognition.continuous = false;
+        recognition.interimResults = true;
+
+        recognition.onstart = () => {
+            isListening = true;
+            micBtn.classList.add('listening');
+            voiceStatus.textContent = "Listening...";
+            transcriptionCard.style.display = 'none';
+        };
+
+        recognition.onerror = (event) => {
+            isListening = false;
+            micBtn.classList.remove('listening');
+            voiceStatus.textContent = "Error: " + event.error + ". Click to retry.";
+            console.error('Speech recognition error:', event.error);
+        };
+
+        recognition.onend = () => {
+            isListening = false;
+            micBtn.classList.remove('listening');
+        };
+
+        recognition.onresult = (event) => {
+            let interimTranscript = '';
+            let finalTranscript = '';
+
+            for (let i = event.resultIndex; i < event.results.length; ++i) {
+                if (event.results[i].isFinal) {
+                    finalTranscript += event.results[i][0].transcript;
+                } else {
+                    interimTranscript += event.results[i][0].transcript;
+                }
+            }
+
+            transcriptionCard.style.display = 'block';
+            transcriptionText.textContent = `"${finalTranscript || interimTranscript}"`;
+
+            if (finalTranscript) {
+                voiceStatus.textContent = "Redirecting...";
+                setTimeout(() => {
+                    window.location.href = `/products?search=${encodeURIComponent(finalTranscript)}`;
+                }, 1500);
+            }
+        };
+    } else {
+        voiceStatus.textContent = "Voice search not supported in this browser.";
+        micBtn.style.opacity = '0.5';
+        micBtn.style.pointerEvents = 'none';
+    }
+
+    // Language Selection
+    langTags.forEach(tag => {
+        tag.onclick = () => {
+            langTags.forEach(t => t.classList.remove('active'));
+            tag.classList.add('active');
+            currentLang = tag.dataset.lang;
+            detectedLangEl.textContent = "Detected: " + tag.textContent.split(' ')[0];
+            if (recognition) recognition.lang = currentLang;
+        };
+    });
+
+    micBtn.onclick = () => {
+        if (!recognition || isListening) return;
+        recognition.lang = currentLang;
+        recognition.start();
+    };
+</script>
+{% endblock %}

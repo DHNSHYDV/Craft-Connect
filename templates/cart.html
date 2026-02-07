@@ -1,0 +1,300 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="cart-section">
+    <div class="container">
+        <h1>Your Shopping Cart</h1>
+
+        <div id="cartContainer">
+            <div class="cart-empty" id="cartEmpty" style="display: none;">
+                <div class="empty-icon">🛒</div>
+                <h2>Your cart is empty</h2>
+                <p>Explore our beautiful collections and add some magic to your cart!</p>
+                <a href="/products" class="btn-primary">Browse Products</a>
+            </div>
+
+            <div class="cart-content" id="cartContent">
+                <div class="cart-items" id="cartItemsList">
+                    <!-- Items injected by JS -->
+                </div>
+
+                <div class="cart-summary">
+                    <h3>Order Summary</h3>
+                    <div class="summary-row">
+                        <span>Subtotal (Base)</span>
+                        <span id="cartSubtotal">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>GST (18%)</span>
+                        <span id="cartTax">₹0</span>
+                    </div>
+                    <div class="summary-row">
+                        <span>Shipping</span>
+                        <span class="text-free">FREE</span>
+                    </div>
+                    <hr>
+                    <div class="summary-row total">
+                        <span>Grand Total</span>
+                        <span id="cartTotal">₹0</span>
+                    </div>
+                    <a href="/checkout" class="btn-checkout">Proceed to Checkout</a>
+                    <div class="secure-checkout">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                            <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                        </svg>
+                        Secure Checkout
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .cart-section {
+        padding: 120px 2rem 5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .cart-section h1 {
+        font-family: var(--font-heading);
+        font-size: 2.5rem;
+        margin-bottom: 2rem;
+        color: var(--text-color);
+    }
+
+    .cart-empty {
+        text-align: center;
+        padding: 5rem 0;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+        display: block;
+    }
+
+    .cart-empty h2 {
+        font-family: var(--font-heading);
+        font-size: 2rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .cart-empty p {
+        opacity: 0.7;
+        margin-bottom: 2rem;
+    }
+
+    .cart-content {
+        display: grid;
+        grid-template-columns: 1fr 350px;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .cart-content {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    .cart-items {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+    }
+
+    .cart-item {
+        display: grid;
+        grid-template-columns: 100px 1fr 150px 40px;
+        gap: 1.5rem;
+        align-items: center;
+        padding: 1.5rem;
+        background: var(--card-bg);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .cart-item-img {
+        width: 100px;
+        height: 100px;
+        border-radius: 8px;
+        object-fit: cover;
+    }
+
+    .cart-item-info h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.1rem;
+    }
+
+    .cart-item-info p {
+        margin: 0;
+        font-size: 0.9rem;
+        opacity: 0.7;
+    }
+
+    .cart-item-price {
+        font-weight: bold;
+        font-size: 1.1rem;
+        text-align: right;
+    }
+
+    .cart-item-remove {
+        background: none;
+        border: none;
+        color: #ff5252;
+        cursor: pointer;
+        font-size: 1.2rem;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.2s;
+    }
+
+    .cart-item-remove:hover {
+        transform: scale(1.1);
+    }
+
+    .cart-summary {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        position: sticky;
+        top: 100px;
+    }
+
+    .cart-summary h3 {
+        margin-top: 0;
+        margin-bottom: 1.5rem;
+        font-family: var(--font-heading);
+    }
+
+    .summary-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+        color: var(--text-color);
+    }
+
+    .summary-row.total {
+        font-size: 1.3rem;
+        font-weight: bold;
+        margin-top: 1rem;
+    }
+
+    .text-free {
+        color: #388e3c;
+        font-weight: bold;
+    }
+
+    .btn-checkout {
+        display: block;
+        width: 100%;
+        padding: 1rem;
+        background: var(--accent-color);
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        margin-top: 1.5rem;
+        transition: opacity 0.3s;
+    }
+
+    .btn-checkout:hover {
+        opacity: 0.9;
+    }
+
+    .secure-checkout {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 1rem;
+        font-size: 0.85rem;
+        opacity: 0.6;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        renderCart();
+    });
+
+    function renderCart() {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        const itemsList = document.getElementById('cartItemsList');
+        const emptyDiv = document.getElementById('cartEmpty');
+        const contentDiv = document.getElementById('cartContent');
+        const subtotalEl = document.getElementById('cartSubtotal');
+        const totalEl = document.getElementById('cartTotal');
+
+        if (cart.length === 0) {
+            emptyDiv.style.display = 'block';
+            contentDiv.style.display = 'none';
+            return;
+        }
+
+        emptyDiv.style.display = 'none';
+        contentDiv.style.display = 'grid';
+
+        itemsList.innerHTML = '';
+        let subtotal = 0;
+
+        cart.forEach((item, index) => {
+            const itemTotal = item.price * item.quantity;
+            subtotal += itemTotal;
+
+            itemsList.innerHTML += `
+            <div class="cart-item">
+                <img src="${item.image}" alt="${item.name}" class="cart-item-img">
+                <div class="cart-item-info">
+                    <h4>${item.name}</h4>
+                    <p>${item.state}</p>
+                    <div class="quantity-controls" style="display: flex; align-items: center; gap: 8px; margin-top: 12px; border: 1px solid var(--border-color); width: fit-content; border-radius: 6px; padding: 2px;">
+                        <button onclick="updateQty(${index}, -1)" style="background:var(--bg-color); border:none; color:var(--text-color); padding:4px 10px; cursor:pointer; border-radius:4px; font-weight:bold;">-</button>
+                        <span style="min-width: 24px; text-align: center; font-weight: 600;">${item.quantity}</span>
+                        <button onclick="updateQty(${index}, 1)" style="background:var(--bg-color); border:none; color:var(--text-color); padding:4px 10px; cursor:pointer; border-radius:4px; font-weight:bold;">+</button>
+                    </div>
+                </div>
+                <div class="cart-item-price">₹${itemTotal.toLocaleString()}</div>
+                <button class="cart-item-remove" onclick="removeFromCart(${index})" title="Remove">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                </button>
+            </div>
+        `;
+        });
+
+        subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
+        const tax = Math.round(subtotal * 0.18);
+        const total = subtotal + tax;
+        document.getElementById('cartTax').textContent = `₹${tax.toLocaleString()}`;
+        totalEl.textContent = `₹${total.toLocaleString()}`;
+    }
+
+    function updateQty(index, delta) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cart[index].quantity += delta;
+        if (cart[index].quantity < 1) cart[index].quantity = 1;
+        if (cart[index].quantity > 10) cart[index].quantity = 10;
+
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+        updateCartBadge();
+    }
+
+    function removeFromCart(index) {
+        let cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        cart.splice(index, 1);
+        localStorage.setItem('cart', JSON.stringify(cart));
+        renderCart();
+        updateCartBadge();
+    }
+</script>
+{% endblock %}

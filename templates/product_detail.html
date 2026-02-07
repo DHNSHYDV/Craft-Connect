@@ -1,0 +1,210 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="product-detail-section">
+    <div class="product-container">
+        <div class="product-hero-gallery">
+            <div class="main-visual-canvas">
+                <img src="{{ product.image_url }}" alt="{{ product.name }}" class="pdp-main-visual">
+                <div class="image-premium-overlay"></div>
+            </div>
+            <div class="pdp-badges">
+                <span class="heritage-certified">Heritage Certified</span>
+                <span class="state-origin">{{ product.state }}</span>
+            </div>
+        </div>
+
+        <div class="product-curation-details">
+            <nav class="pdp-breadcrumb">
+                <a href="{{ url_for('index') }}">Home</a>
+                <span class="sep">/</span>
+                <a href="{{ url_for('products') }}">Collection</a>
+                <span class="sep">/</span>
+                <span class="current">{{ product.name }}</span>
+            </nav>
+
+            <div class="pdp-main-header">
+                <span class="pdp-category">{{ product.category }}</span>
+                <h1 class="pdp-title-grand">{{ product.name }}</h1>
+                <div class="pdp-social-proof">
+                    <div class="star-rating">
+                        <span class="stars">★★★★★</span>
+                        <span class="score">{{ product.rating }}</span>
+                    </div>
+                    <span class="review-count">Based on {{ product.reviews }} connoisseurs</span>
+                </div>
+            </div>
+
+            <div class="pdp-pricing-tier">
+                <div class="current-valuation">
+                    <span class="currency">₹</span>
+                    <span class="amount">{{ product.price }}</span>
+                </div>
+                <div class="valuation-meta">
+                    <span class="tax-inclusive">Inclusive of all taxes</span>
+                    <span class="free-shipping">Free Pan-India Delivery</span>
+                </div>
+            </div>
+
+            <div class="pdp-storytelling-block">
+                <h3 class="block-title">The Legacy</h3>
+                <p class="story-narrative">{{ product.story }}</p>
+
+                <div class="artisan-discovery-hint">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    <span>Authenticity guaranteed by local guilds</span>
+                </div>
+            </div>
+
+            <div class="pdp-specs-grid">
+                <div class="spec-item">
+                    <span class="spec-label">Artisan Region</span>
+                    <span class="spec-value">{{ product.state }}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Materiality</span>
+                    <span class="spec-value">Natural & Hand-carved</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Craft Category</span>
+                    <span class="spec-value">{{ product.category }}</span>
+                </div>
+                <div class="spec-item">
+                    <span class="spec-label">Est. Crafting Time</span>
+                    <span class="spec-value">12-18 Days</span>
+                </div>
+            </div>
+
+            <div class="pdp-checkout-orchestrator">
+                <div class="pdp-count-selector">
+                    <button type="button" class="qty-trigger" id="qtyMinus">−</button>
+                    <input type="number" value="1" min="1" max="10" readonly id="pdpQty" class="qty-display">
+                    <button type="button" class="qty-trigger" id="qtyPlus">+</button>
+                </div>
+
+                <div class="pdp-primary-actions">
+                    <button class="btn-pdp-collect add-to-cart-btn" data-id="{{ product.id }}"
+                        data-name="{{ product.name }}" data-price="{{ product.price }}"
+                        data-image="{{ product.image_url }}" data-state="{{ product.state }}" onclick="if(typeof window.addToCart === 'function') window.addToCart({
+                                id: this.dataset.id, 
+                                name: this.dataset.name, 
+                                price: parseFloat(this.dataset.price), 
+                                image: this.dataset.image, 
+                                state: this.dataset.state,
+                                quantity: parseInt(document.getElementById('pdpQty').value || 1)
+                            })">
+                        Add to Collection
+                    </button>
+                    <a href="/ar-vr" class="btn-pdp-ar" title="View in AR">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z">
+                            </path>
+                            <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+                            <line x1="12" y1="22.08" x2="12" y2="12"></line>
+                        </svg>
+                        <span>Preview in AR</span>
+                    </a>
+                </div>
+            </div>
+
+            <div class="pdp-curator-notes">
+                <div class="note-item">
+                    <strong>Curation Insight:</strong> {{ product.description }}
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Related Masterpieces Section -->
+{% if related_products %}
+<section class="related-products-section">
+    <div class="section-decor-header">
+        <span class="decor-label">Complementary Pieces</span>
+        <h2 class="decor-title">Discover Related Masterpieces</h2>
+    </div>
+
+    <div class="related-grid-carousel">
+        {% for rel in related_products %}
+        <div class="related-mini-card">
+            <a href="{{ url_for('product_detail', product_id=rel.id) }}" class="mini-card-link">
+                <div class="mini-visual-wrapper">
+                    <img src="{{ rel.image_url }}" alt="{{ rel.name }}">
+                </div>
+                <div class="mini-info">
+                    <h4 class="mini-title">{{ rel.name }}</h4>
+                    <div class="mini-meta">
+                        <span class="mini-state">{{ rel.state }}</span>
+                        <span class="mini-price">₹{{ rel.price }}</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<section class="reviews-section">
+    <div class="reviews-container">
+        <div class="reviews-curation-header">
+            <h2 class="curation-title">Voice of the Collection</h2>
+            <p class="curation-subtitle">Reviews from global connoisseurs of Indian heritage</p>
+        </div>
+
+        <div class="review-intelligence-grid">
+            <div class="intelligence-summary">
+                <div class="overall-master-score">
+                    <span class="score-val">{{ product.rating }}</span>
+                    <div class="score-stars">★★★★★</div>
+                    <span class="score-count">{{ product.reviews }} Authenticated Reviews</span>
+                </div>
+                <div class="rating-distribution">
+                    {% for i in range(5, 0, -1) %}
+                    <div class="dist-row">
+                        <span class="dist-label">{{ i }}★</span>
+                        <div class="dist-bar">
+                            <div class="dist-fill" style="width: {{ [70, 20, 5, 3, 2][5-i] }}%;"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="connoisseur-reviews">
+                <div class="review-bubble">
+                    <div class="bubble-header">
+                        <div class="connoisseur-avatar">RS</div>
+                        <div class="connoisseur-id">
+                            <span class="name">Rahul Sharma</span>
+                            <span class="status">Verified Collector</span>
+                        </div>
+                        <span class="date">Oct 2025</span>
+                    </div>
+                    <p class="bubble-text">"The texture and historical accuracy are breathtaking. A true tribute to our
+                        ancestors."</p>
+                </div>
+                <div class="review-bubble">
+                    <div class="bubble-header">
+                        <div class="connoisseur-avatar">PK</div>
+                        <div class="connoisseur-id">
+                            <span class="name">Priya Kapoor</span>
+                            <span class="status">Heritage Enthusiast</span>
+                        </div>
+                        <span class="date">Sep 2025</span>
+                    </div>
+                    <p class="bubble-text">"Exquisite detailing. The digital experience doesn't even do justice to how
+                        premium it feels in hand."</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Redundant local script removed to prefer main.js -->
+{% endblock %}

@@ -1,0 +1,488 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ai-hero">
+    <div class="container">
+        <span class="badge">Generative Design</span>
+        <h1>Dream. Describe. Design.</h1>
+        <p>Your imagination, curated by heritage. Describe the artifact you want to build, and watch our AI bring it to
+            life.</p>
+    </div>
+</section>
+
+<section class="designer-tool">
+    <div class="container">
+        <div class="designer-grid">
+            <div class="input-panel card">
+                <div class="panel-header">
+                    <h3>Describe Your Vision</h3>
+                    <div class="word-count">0 / 500</div>
+                </div>
+                <div class="input-wrapper">
+                    <textarea id="designPrompt"
+                        placeholder="E.g., A Madhubani style lamp with floral patterns and a brass metallic base for my living room..."></textarea>
+                    <div class="input-actions">
+                        <button class="btn-icon" title="Voice Input">🎤</button>
+                        <button class="btn-icon" title="Add Inspiration Image">🖼️</button>
+                    </div>
+                </div>
+
+                <div class="style-options">
+                    <label>Style Selection</label>
+                    <div class="style-chips">
+                        <button class="chip active">Traditional</button>
+                        <button class="chip">Contemporary</button>
+                        <button class="chip">Minimalist</button>
+                        <button class="chip">Fusion</button>
+                    </div>
+                </div>
+
+                <div class="material-options">
+                    <label>Base Material</label>
+                    <div class="style-chips">
+                        <button class="chip">Terracotta</button>
+                        <button class="chip active">Metal/Brass</button>
+                        <button class="chip">Silk/Fabric</button>
+                        <button class="chip">Wood</button>
+                    </div>
+                </div>
+
+                <button class="btn-generate btn-primary" id="generateBtn">
+                    <span class="btn-text">Generate AI Design</span>
+                    <div class="btn-loader" style="display: none;"></div>
+                </button>
+            </div>
+
+            <div class="output-panel">
+                <div class="output-placeholder card" id="outputPlaceholder">
+                    <div class="placeholder-content">
+                        <div class="ai-orb"></div>
+                        <h3>Awaiting Your Inspiration</h3>
+                        <p>Your custom AI-generated design will appear here once you hit generate.</p>
+                    </div>
+                </div>
+
+                <div class="output-result card" id="outputResult" style="display: none;">
+                    <div class="result-image">
+                        <img id="generatedImage" src="" alt="AI Generated Design">
+                        <div class="image-overlay">
+                            <span class="ai-label">AI CONCEPT #{{ range(1000, 9999) | random }}</span>
+                        </div>
+                    </div>
+                    <div class="result-info">
+                        <h3>Custom Fusion Lamp Concept</h3>
+                        <p>A unique blend of Madhubani intricate line art and contemporary metal smithing. Optimized for
+                            warm ambiance.</p>
+
+                        <div class="feasibility-metrics">
+                            <div class="metric">
+                                <span class="label">Craft Feasibility</span>
+                                <div class="progress-bar">
+                                    <div class="fill" style="width: 92%;"></div>
+                                </div>
+                            </div>
+                            <div class="metric">
+                                <span class="label">Estimated Time</span>
+                                <span class="val">14-21 Days</span>
+                            </div>
+                        </div>
+
+                        <div class="result-actions">
+                            <button class="btn-primary">Connect with Artisan</button>
+                            <button class="btn-secondary">Download PDF</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .ai-hero {
+        padding: 140px 2rem 4rem;
+        text-align: center;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background: var(--accent-color);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .designer-tool {
+        padding: 0 2rem 8rem;
+    }
+
+    .designer-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.2fr;
+        gap: 2.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+        align-items: start;
+    }
+
+    .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2.5rem;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
+    }
+
+    .panel-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+
+    .word-count {
+        font-size: 0.8rem;
+        opacity: 0.5;
+    }
+
+    .input-wrapper {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    textarea {
+        width: 100%;
+        height: 180px;
+        background: rgba(var(--accent-color-rgb), 0.02);
+        border: 1.5px solid var(--border-color);
+        border-radius: 16px;
+        padding: 1.5rem;
+        font-family: inherit;
+        font-size: 1rem;
+        resize: none;
+        transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+        border-color: var(--accent-color);
+        outline: none;
+        background: transparent;
+    }
+
+    .input-actions {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        display: flex;
+        gap: 8px;
+    }
+
+    .btn-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+    }
+
+    .btn-icon:hover {
+        border-color: var(--accent-color);
+        color: var(--accent-color);
+    }
+
+    .style-options,
+    .material-options {
+        margin-bottom: 2rem;
+    }
+
+    label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        opacity: 0.6;
+        margin-bottom: 1rem;
+    }
+
+    .style-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .chip {
+        padding: 8px 18px;
+        border-radius: 30px;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .chip.active,
+    .chip:hover {
+        background: var(--accent-color);
+        color: white;
+        border-color: var(--accent-color);
+    }
+
+    .btn-generate {
+        width: 100%;
+        padding: 1.2rem;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-loader {
+        width: 20px;
+        height: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-top: 2px solid #fff;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .output-panel {
+        height: 100%;
+    }
+
+    .output-placeholder {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        border: 2px dashed var(--border-color);
+        background: transparent;
+    }
+
+    .ai-orb {
+        width: 100px;
+        height: 100px;
+        background: var(--accent-color);
+        border-radius: 50%;
+        margin: 0 auto 2rem;
+        filter: blur(40px);
+        opacity: 0.2;
+        animation: orbGlow 4s infinite alternate;
+    }
+
+    @keyframes orbGlow {
+        from {
+            transform: scale(1);
+            opacity: 0.2;
+        }
+
+        to {
+            transform: scale(1.5);
+            opacity: 0.4;
+        }
+    }
+
+    .output-result {
+        animation: slideInRight 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .result-image {
+        position: relative;
+        height: 350px;
+        background: #eee;
+    }
+
+    .result-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .ai-label {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: rgba(0, 0, 0, 0.6);
+        color: white;
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 0.7rem;
+        font-weight: 700;
+        backdrop-filter: blur(5px);
+    }
+
+    .result-info {
+        padding: 2.5rem;
+    }
+
+    .result-info h3 {
+        margin-bottom: 0.5rem;
+    }
+
+    .result-info p {
+        opacity: 0.7;
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .feasibility-metrics {
+        margin-bottom: 2.5rem;
+    }
+
+    .metric {
+        margin-bottom: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .metric .label {
+        margin: 0;
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-bar .fill {
+        height: 100%;
+        background: #4caf50;
+    }
+
+    .result-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .result-actions button {
+        flex: 1;
+    }
+
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(50px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @media (max-width: 992px) {
+        .designer-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+
+<script>
+    const generateBtn = document.getElementById('generateBtn');
+    const outputPlaceholder = document.getElementById('outputPlaceholder');
+    const outputResult = document.getElementById('outputResult');
+    const generatedImage = document.getElementById('generatedImage');
+    const promptArea = document.getElementById('designPrompt');
+
+    // UI Result Elements
+    const resultTitle = document.querySelector('.result-info h3');
+    const resultDesc = document.querySelector('.result-info p');
+    const chips = document.querySelectorAll('.chip');
+
+    let selectedStyle = 'Traditional';
+    let selectedMaterial = 'Metal/Brass';
+
+    chips.forEach(chip => {
+        chip.onclick = () => {
+            const parent = chip.closest('.style-options, .material-options');
+            parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+            chip.classList.add('active');
+
+            if (parent.classList.contains('style-options')) {
+                selectedStyle = chip.textContent;
+            } else {
+                selectedMaterial = chip.textContent;
+            }
+        };
+    });
+
+    generateBtn.onclick = async () => {
+        const text = promptArea.value;
+        if (!text) return alert("Please describe your design first!");
+
+        generateBtn.disabled = true;
+        generateBtn.querySelector('.btn-text').textContent = "Dreaming with SambaNova AI...";
+        generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
+
+        // Reset image and show loading state if needed
+        generatedImage.style.opacity = '0.3';
+
+        try {
+            const response = await fetch('/api/generate-design', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    description: text,
+                    style: selectedStyle,
+                    material: selectedMaterial
+                })
+            });
+
+            const data = await response.json();
+            if (data.error) throw new Error(data.error);
+
+            outputPlaceholder.style.display = 'none';
+            outputResult.style.display = 'block';
+
+            resultTitle.textContent = data.title;
+            resultDesc.textContent = data.description;
+
+            // Set image and handle load
+            generatedImage.src = data.image_url;
+            generatedImage.onload = () => {
+                generatedImage.style.opacity = '1';
+            };
+            generatedImage.onerror = () => {
+                console.error("Image failed to load from Polinations");
+                generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
+                generatedImage.style.opacity = '1';
+            };
+
+            outputResult.scrollIntoView({ behavior: 'smooth' });
+        } catch (err) {
+            console.error("Generation failed", err);
+            alert("AI generation failed: " + (err.message || "Please check your connection or daily quota."));
+        } finally {
+            generateBtn.disabled = false;
+            generateBtn.querySelector('.btn-text').textContent = "Design Again";
+            generateBtn.querySelector('.btn-loader').style.display = 'none';
+        }
+    };
+</script>
+{% endblock %}

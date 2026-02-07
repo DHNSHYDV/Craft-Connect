@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ai-hero">
+    <div class="container">
+        <span class="badge">Computer Vision</span>
+        <h1>See Beyond the Surface</h1>
+        <p>Identify, authenticate, and explore the history of any Indian handicraft simply by uploading a photo.</p>
+    </div>
+</section>
+
+<section class="vision-tool">
+    <div class="container">
+        <div class="vision-card">
+            <div class="upload-area" id="dropZone">
+                <div class="upload-placeholder" id="placeholder">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <h3>Drag & Drop Image</h3>
+                    <p>or click to browse from gallery</p>
+                    <input type="file" id="fileInput" hidden accept="image/*">
+                </div>
+                <div class="preview-area" id="previewArea" style="display: none;">
+                    <img id="imagePreview" src="" alt="Preview">
+                    <div class="scanning-bar"></div>
+                </div>
+            </div>
+
+            <div class="analysis-results" id="results" style="display: none;">
+                <div class="result-header">
+                    <span class="status pulse">AI Processing Complete</span>
+                    <h2>Madhubani Painting</h2>
+                </div>
+                <div class="result-grid">
+                    <div class="result-item">
+                        <label>Origin</label>
+                        <p>Mithila Region, Bihar</p>
+                    </div>
+                    <div class="result-item">
+                        <label>Authenticity</label>
+                        <p class="score">98% Match</p>
+                    </div>
+                    <div class="result-item">
+                        <label>Primary Material</label>
+                        <p>Handmade Paper, Natural Pigments</p>
+                    </div>
+                    <div class="result-item">
+                        <label>Artisan Style</label>
+                        <p>Kachni (Line work)</p>
+                    </div>
+                </div>
+                <p class="result-description">
+                    Analysis suggests this is an authentic Madhubani painting from Bihar. The geometric patterns and
+                    natural color variations are consistent with traditional village techniques.
+                </p>
+                <div class="result-actions">
+                    <a href="/products?search=madhubani" class="btn-primary">Shop Similar Crafts</a>
+                    <button class="btn-secondary" onclick="resetVision()">Try Another</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .ai-hero {
+        padding: 140px 2rem 4rem;
+        background: linear-gradient(135deg, rgba(0, 77, 64, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+        text-align: center;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background: var(--accent-color);
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+        letter-spacing: 1px;
+    }
+
+    .ai-hero h1 {
+        font-size: 3.5rem;
+        font-family: var(--font-heading);
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .vision-tool {
+        padding: 0 2rem 8rem;
+    }
+
+    .vision-card {
+        max-width: 900px;
+        margin: 0 auto;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        overflow: hidden;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .upload-area {
+        padding: 4rem;
+        border: 2px dashed var(--border-color);
+        margin: 2rem;
+        border-radius: 16px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        background: rgba(var(--accent-color-rgb), 0.02);
+        position: relative;
+    }
+
+    .upload-area:hover {
+        border-color: var(--accent-color);
+        background: rgba(var(--accent-color-rgb), 0.05);
+    }
+
+    .upload-placeholder h3 {
+        margin: 1.5rem 0 0.5rem;
+        font-size: 1.5rem;
+    }
+
+    .upload-placeholder p {
+        opacity: 0.6;
+    }
+
+    .preview-area {
+        position: relative;
+        max-width: 100%;
+        max-height: 400px;
+        margin: 0 auto;
+    }
+
+    #imagePreview {
+        max-width: 100%;
+        max-height: 400px;
+        border-radius: 12px;
+        display: block;
+    }
+
+    .scanning-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 4px;
+        background: var(--accent-color);
+        box-shadow: 0 0 15px var(--accent-color);
+        animation: scan 2.5s infinite linear;
+        display: none;
+    }
+
+    @keyframes scan {
+        0% {
+            top: 0;
+        }
+
+        100% {
+            top: 100%;
+        }
+    }
+
+    .analysis-results {
+        padding: 0 2rem 3rem;
+        animation: fadeInUp 0.5s ease forwards;
+    }
+
+    .result-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .status {
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #4caf50;
+        margin-bottom: 0.5rem;
+        display: block;
+    }
+
+    .result-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .result-item label {
+        display: block;
+        font-size: 0.8rem;
+        color: #666;
+        margin-bottom: 0.25rem;
+    }
+
+    .result-item p {
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+
+    .score {
+        color: var(--accent-color);
+    }
+
+    .result-description {
+        line-height: 1.6;
+        opacity: 0.8;
+        margin-bottom: 2.5rem;
+        text-align: center;
+    }
+
+    .result-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+    }
+
+    .pulse {
+        animation: pulseAnim 2s infinite;
+    }
+
+    @keyframes pulseAnim {
+        0% {
+            opacity: 0.6;
+        }
+
+        50% {
+            opacity: 1;
+        }
+
+        100% {
+            opacity: 0.6;
+        }
+    }
+
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>
+
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const placeholder = document.getElementById('placeholder');
+    const previewArea = document.getElementById('previewArea');
+    const imagePreview = document.getElementById('imagePreview');
+    const results = document.getElementById('results');
+    const scanningBar = document.querySelector('.scanning-bar');
+
+    // UI Result Elements
+    const resultTitle = document.querySelector('.result-header h2');
+    const resultOrigin = document.querySelector('.result-item:nth-child(1) p');
+    const resultScore = document.querySelector('.score');
+    const resultMaterial = document.querySelector('.result-item:nth-child(3) p');
+    const resultStyle = document.querySelector('.result-item:nth-child(4) p');
+    const resultDesc = document.querySelector('.result-description');
+    const shopLink = document.querySelector('.result-actions .btn-primary');
+
+    dropZone.onclick = () => fileInput.click();
+
+    fileInput.onchange = (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+    };
+
+    function statusDisplay(text) {
+        const statusEl = document.querySelector('.status');
+        if (statusEl) statusEl.textContent = text;
+    }
+
+    function handleFile(file) {
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            imagePreview.src = e.target.result;
+            placeholder.style.display = 'none';
+            previewArea.style.display = 'block';
+            scanningBar.style.display = 'block';
+            results.style.display = 'none';
+
+            statusDisplay("AI Uploading & Analyzing...");
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/api/analyze-craft', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                processResults(data);
+            } catch (err) {
+                console.error("Analysis error", err);
+                statusDisplay("AI Error: Analysis Failed");
+            } finally {
+                scanningBar.style.display = 'none';
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function processResults(data) {
+        statusDisplay("AI Analysis Complete");
+        resultTitle.textContent = data.name;
+        resultOrigin.textContent = data.origin;
+        resultScore.textContent = `${data.score}% Match`;
+        resultMaterial.textContent = data.material;
+        resultStyle.textContent = data.style;
+        resultDesc.textContent = data.description;
+
+        // Link to products page with search query
+        const query = data.name.toLowerCase().split(' ')[0];
+        shopLink.href = `/products?search=${encodeURIComponent(query)}`;
+
+        results.style.display = 'block';
+        results.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function resetVision() {
+        placeholder.style.display = 'block';
+        previewArea.style.display = 'none';
+        results.style.display = 'none';
+        fileInput.value = '';
+        statusDisplay("AI Ready for Analysis");
+    }
+
+    // Drag and Drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.borderColor = 'var(--accent-color)';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.borderColor = 'var(--border-color)';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        const file = e.dataTransfer.files[0];
+        if (file && file.type.startsWith('image/')) {
+            handleFile(file);
+        }
+    });
+</script>
+{% endblock %}

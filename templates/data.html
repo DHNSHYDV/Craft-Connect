@@ -1,0 +1,232 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="ai-hero">
+    <div class="container">
+        <span class="badge">Data Insights</span>
+        <h1>Traditional Crafts, Modern Intelligence</h1>
+        <p>Explore real-time trends, popularity metrics, and regional growth across India's handicraft landscape.</p>
+    </div>
+</section>
+
+<section class="insights-dashboard">
+    <div class="container">
+        <div class="stats-overview">
+            <div class="stat-card">
+                <h3>Total Artisans</h3>
+                <div class="stat-value">42,850</div>
+                <div class="stat-change up">+12% this month</div>
+            </div>
+            <div class="stat-card">
+                <h3>Regional Clusters</h3>
+                <div class="stat-value">750+</div>
+                <div class="stat-change">Across 28 States</div>
+            </div>
+            <div class="stat-card">
+                <h3>Global Interest</h3>
+                <div class="stat-value">High</div>
+                <div class="stat-change up">USA, Japan, France</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-container card">
+                <h3>Popularity by Art Form</h3>
+                <div class="mock-chart bar-chart">
+                    <div class="bar" style="height: 90%;" data-label="Madhubani"></div>
+                    <div class="bar" style="height: 75%;" data-label="Pashmina"></div>
+                    <div class="bar" style="height: 60%;" data-label="Pottery"></div>
+                    <div class="bar" style="height: 85%;" data-label="Dhokra"></div>
+                    <div class="bar" style="height: 50%;" data-label="Warli"></div>
+                </div>
+            </div>
+
+            <div class="chart-container card">
+                <h3>Sales Growth by State</h3>
+                <div class="mock-chart line-chart">
+                    <svg viewBox="0 0 400 200">
+                        <path d="M0,150 Q50,130 100,140 T200,80 T300,60 T400,20" fill="none"
+                            stroke="var(--accent-color)" stroke-width="4" />
+                        <circle cx="100" cy="140" r="6" fill="var(--accent-color)" />
+                        <circle cx="200" cy="80" r="6" fill="var(--accent-color)" />
+                        <circle cx="300" cy="60" r="6" fill="var(--accent-color)" />
+                        <circle cx="400" cy="20" r="6" fill="var(--accent-color)" />
+                    </svg>
+                </div>
+                <div class="chart-legend">
+                    <span>Jan</span><span>Mar</span><span>May</span><span>Jul</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="insights-feed">
+            <div class="card">
+                <h3>AI Predictions</h3>
+                <div class="insight-item">
+                    <div class="icon">🔥</div>
+                    <div class="text">
+                        <strong>Trend Alert:</strong> Blue Pottery is seeing a 40% surge in demand from urban
+                        decorators.
+                    </div>
+                </div>
+                <div class="insight-item">
+                    <div class="icon">🌍</div>
+                    <div class="text">
+                        <strong>Market Expansion:</strong> New exports identified for Channapatna toys in European
+                        wooden toy markets.
+                    </div>
+                </div>
+                <div class="insight-item">
+                    <div class="icon">💡</div>
+                    <div class="text">
+                        <strong>Artisan Support:</strong> Targeted training in Jharkhand could boost Dhokra production
+                        by 25%.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .ai-hero {
+        padding: 140px 2rem 4rem;
+        text-align: center;
+    }
+
+    .badge {
+        display: inline-block;
+        padding: 6px 16px;
+        background: #3f51b5;
+        /* Data theme color */
+        color: white;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 1.5rem;
+    }
+
+    .insights-dashboard {
+        padding: 0 2rem 8rem;
+    }
+
+    .stats-overview {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .stat-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        border-radius: 20px;
+        text-align: center;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .stat-card h3 {
+        font-size: 0.9rem;
+        opacity: 0.6;
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: var(--accent-color);
+        margin-bottom: 0.5rem;
+    }
+
+    .stat-change {
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    .stat-change.up {
+        color: #4caf50;
+    }
+
+    .charts-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+
+    .card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        padding: 2rem;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    }
+
+    .mock-chart {
+        height: 250px;
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        padding: 20px 0;
+        position: relative;
+    }
+
+    .bar {
+        flex: 1;
+        background: var(--accent-color);
+        border-radius: 8px 8px 0 0;
+        position: relative;
+        transition: transform 0.3s ease;
+    }
+
+    .bar:hover {
+        transform: scaleY(1.05);
+        opacity: 0.9;
+    }
+
+    .bar::after {
+        content: attr(data-label);
+        position: absolute;
+        bottom: -30px;
+        left: 50%;
+        transform: translateX(-50%);
+        font-size: 0.8rem;
+        opacity: 0.7;
+        white-space: nowrap;
+    }
+
+    .line-chart svg {
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .chart-legend {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 10px;
+        opacity: 0.6;
+        font-size: 0.8rem;
+    }
+
+    .insight-item {
+        display: flex;
+        gap: 1.5rem;
+        padding: 1.5rem 0;
+        border-bottom: 1px solid var(--border-color);
+    }
+
+    .insight-item:last-child {
+        border-bottom: none;
+    }
+
+    .insight-item .icon {
+        font-size: 1.5rem;
+    }
+
+    .insight-item .text {
+        line-height: 1.5;
+    }
+</style>
+{% endblock %}

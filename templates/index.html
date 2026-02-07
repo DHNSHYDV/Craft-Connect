@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="hero-section">
+    <video autoplay muted loop playsinline class="hero-bg-video">
+        <source src="{{ url_for('static', filename='videos/hero_video.mp4') }}" type="video/mp4">
+        Your browser does not support the video tag.
+    </video>
+    <div class="hero-content">
+        <h1 class="hero-title">Desh Ke Haath</h1>
+        <p class="hero-tagline">States Alag, Jazba Ek</p>
+        <a href="{{ url_for('discover') }}" class="cta-button">Discover The Soul of India</a>
+    </div>
+</section>
+
+<section class="featured-products">
+    <!-- Content will go here -->
+</section>
+{% endblock %}

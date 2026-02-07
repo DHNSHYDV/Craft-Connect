@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="artists-header">
+    <div class="container">
+        <h1>Master Artisans of India</h1>
+        <p>Connecting you directly with the hands that create magic. Explore 40+ master craftsmen from across Bharat.
+        </p>
+    </div>
+</section>
+
+<section class="artists-grid-section">
+    <div class="container">
+        <div class="artists-grid">
+            {% for artist in artists %}
+            <div class="artist-card">
+                <div class="premium-avatar {{ artist.gender }}">
+                    <div class="avatar-icon">
+                        {% if artist.gender == 'male' %}
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z">
+                            </path>
+                        </svg>
+                        {% else %}
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <path
+                                d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z">
+                            </path>
+                            <!-- Female symbol modifier or slightly different icon if needed, but standard user filled is good for start -->
+                        </svg>
+                        {% endif %}
+                    </div>
+                    <div class="artist-badge">{{ artist.experience }} Years Exp</div>
+                </div>
+                <div class="artist-info">
+                    <h3 style="margin-bottom: 0.8rem; text-align: center;">{{ artist.name }}</h3>
+                    <p class="artist-meta">
+                        <span class="artist-location">📍 {{ artist.state }}</span>
+                        <span class="artist-style-tag">{{ artist.style }}</span>
+                    </p>
+                    <p class="artist-desc">{{ artist.description }}</p>
+                    <div class="artist-actions">
+                        <button class="btn-contact" onclick="openChat('{{ artist.name }}')">Contact Specialist</button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<script>
+    function openChat(name) {
+        const chatFab = document.getElementById('chatFab');
+        const chatWindow = document.getElementById('chatWindow');
+        const chatInput = document.querySelector('.chat-input-area input');
+
+        // Toggle chat open
+        if (!chatWindow.classList.contains('active')) {
+            chatWindow.classList.add('active');
+        }
+
+        // Set message
+        if (chatInput) {
+            chatInput.value = `Hi, I'd like to talk to ${name} about their craft.`;
+            chatInput.focus();
+        }
+    }
+</script>
+
+<style>
+    .artists-header {
+        padding: 120px 2rem 3rem;
+        text-align: center;
+        background: var(--bg-color);
+    }
+
+    .artists-header h1 {
+        font-family: var(--font-heading);
+        font-size: 3rem;
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .artists-grid-section {
+        padding: 0 2rem 5rem;
+    }
+
+    .artists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 2.5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .artist-card {
+        background: var(--card-bg);
+        border-radius: 16px;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid var(--border-color);
+        display: flex;
+        flex-direction: column;
+    }
+
+    .artist-card:hover {
+        transform: translateY(-10px);
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .premium-avatar {
+        height: 220px;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        background: #f0f0f0;
+        transition: all 0.5s ease;
+    }
+
+    .premium-avatar.male {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    }
+
+    .premium-avatar.female {
+        background: linear-gradient(135deg, #8e44ad 0%, #e74c74 100%);
+    }
+
+    /* Abstract pattern overlay */
+    .premium-avatar::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+        background-size: 20px 20px;
+        opacity: 0.3;
+    }
+
+    .avatar-icon {
+        width: 100px;
+        height: 100px;
+        color: rgba(255, 255, 255, 0.9);
+        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+        transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .artist-card:hover .avatar-icon {
+        transform: scale(1.15) rotate(5deg);
+    }
+
+    .artist-badge {
+        position: absolute;
+        bottom: 15px;
+        right: 15px;
+        background: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(10px);
+        color: white;
+        padding: 6px 14px;
+        border-radius: 30px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .artist-info {
+        padding: 2rem 1.5rem;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .artist-info h3 {
+        margin: 0;
+        font-size: 1.25rem;
+        font-family: var(--font-heading);
+        text-align: center;
+    }
+
+    .artist-meta {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    body.dark-mode .artist-meta {
+        color: #aaa;
+    }
+
+    .artist-style-tag {
+        color: var(--accent-color);
+        font-weight: 600;
+    }
+
+    .artist-desc {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 1.5rem;
+        color: var(--text-color);
+        opacity: 0.8;
+    }
+
+    .artist-actions {
+        margin-top: auto;
+    }
+
+    .btn-contact {
+        width: 100%;
+        padding: 0.8rem;
+        background: transparent;
+        border: 2px solid var(--accent-color);
+        color: var(--accent-color);
+        border-radius: 8px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .btn-contact:hover {
+        background: var(--accent-color);
+        color: white;
+    }
+
+    @keyframes premiumPulse {
+        0% {
+            transform: translateX(-50%) scale(1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        50% {
+            transform: translateX(-50%) scale(1.08);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        100% {
+            transform: translateX(-50%) scale(1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+    }
+</style>
+{% endblock %}

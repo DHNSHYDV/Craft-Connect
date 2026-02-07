@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block content %}
+<section class="products-header">
+    <div class="header-content">
+        <h1>Handcrafted Masterpieces</h1>
+        <p>Curated from the heart of India</p>
+    </div>
+</section>
+
+
+
+<!-- Filter Toolbar -->
+<section class="filter-section">
+    <form action="{{ url_for('products') }}" method="GET" class="filter-toolbar">
+        <div class="search-box">
+            <input type="text" name="search" placeholder="Search crafts..." value="{{ search_query }}">
+            <a href="/voice" class="voice-search-btn" title="Voice Search"
+                style="padding: 10px; display: flex; align-items: center; color: var(--accent-color);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                    <line x1="12" y1="19" x2="12" y2="23"></line>
+                    <line x1="8" y1="23" x2="16" y2="23"></line>
+                </svg>
+            </a>
+            <button type="submit">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </button>
+        </div>
+
+        <div class="filter-controls">
+
+
+            <select name="state" onchange="this.form.submit()">
+                <option value="all">All States</option>
+                {% for state in all_states %}
+                <option value="{{ state }}" {% if current_state==state %}selected{% endif %}>{{ state }}</option>
+                {% endfor %}
+            </select>
+
+            <select name="category" onchange="this.form.submit()">
+                <option value="All">All Categories</option>
+                {% for category in all_categories %}
+                <option value="{{ category }}" {% if current_category==category %}selected{% endif %}>{{ category }}
+                </option>
+                {% endfor %}
+            </select>
+
+            <select name="sort" onchange="this.form.submit()">
+                <option value="default" {% if current_sort=='default' %}selected{% endif %}>Sort By: Featured</option>
+                <option value="price_low" {% if current_sort=='price_low' %}selected{% endif %}>Price: Low to High
+                </option>
+                <option value="price_high" {% if current_sort=='price_high' %}selected{% endif %}>Price: High to Low
+                </option>
+                <option value="rating" {% if current_sort=='rating' %}selected{% endif %}>Top Rated</option>
+            </select>
+        </div>
+    </form>
+</section>
+
+<section class="products-grid-section">
+    <div class="products-grid">
+        {% for product in products %}
+        <div class="product-card animate-on-scroll">
+            <div class="product-image-canvas">
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-visual-wrapper">
+                    <img src="{{ product.image_url }}" alt="{{ product.name }}" class="product-visual" loading="lazy">
+                    <div class="visual-overlay">
+                        <span class="view-discovery">Discover Heritage</span>
+                    </div>
+                </a>
+                <div class="product-origin-tag">{{ product.state }}</div>
+                <button class="quick-add-cart add-to-cart-btn" data-id="{{ product.id }}" data-name="{{ product.name }}"
+                    data-price="{{ product.price }}" data-image="{{ product.image_url }}"
+                    data-state="{{ product.state }}" title="Add to Collection">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"></path>
+                        <path d="M3 6h18"></path>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="product-master-info">
+                <div class="product-meta-top">
+                    <span class="product-category-label">{{ product.category }}</span>
+                    <div class="product-entry-rating">
+                        <span class="star-icon">★</span>
+                        <span class="rating-val">{{ product.rating }}</span>
+                    </div>
+                </div>
+
+                <a href="{{ url_for('product_detail', product_id=product.id) }}" class="product-title-link">
+                    <h3 class="product-title-main">{{ product.name }}</h3>
+                </a>
+
+                <p class="product-narrative-snippet">"{{ product.fun_fact }}"</p>
+
+                <div class="product-bottom-row">
+                    <div class="product-valuation">
+                        <span class="currency">₹</span>
+                        <span class="price-amount">{{ product.price }}</span>
+                    </div>
+                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="explore-detail-btn">
+                        <span>The Story</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+
+<!-- Redundant script removed -->
+{% endblock %}
