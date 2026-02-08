@@ -226,6 +226,55 @@
         font-size: 0.85rem;
         opacity: 0.6;
     }
+
+    @media (max-width: 600px) {
+        .cart-section {
+            padding: 80px 1rem 2rem;
+        }
+
+        .cart-item {
+            grid-template-columns: 80px 1fr;
+            gap: 1rem;
+            padding: 1rem;
+        }
+
+        .cart-item-img {
+            width: 80px;
+            height: 80px;
+        }
+
+        .cart-item-info {
+            grid-column: 2;
+            grid-row: 1;
+        }
+
+        .cart-item-price {
+            grid-column: 1 / -1;
+            grid-row: 2;
+            text-align: left;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Move remove button to be inline with price or top right */
+        .cart-item-remove {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .cart-item {
+            position: relative;
+            /* For absolute positioning of remove btn */
+            display: grid;
+            /* Reset grid template from desktop */
+            grid-template-columns: 80px 1fr;
+            grid-template-rows: auto auto;
+            align-items: start;
+        }
+    }
 </style>
 
 <script>

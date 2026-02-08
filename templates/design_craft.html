@@ -437,7 +437,7 @@
         if (!text) return alert("Please describe your design first!");
 
         generateBtn.disabled = true;
-        generateBtn.querySelector('.btn-text').textContent = "Generating with Hugging Face...";
+        generateBtn.querySelector('.btn-text').textContent = "Designing your Craft...";
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         // Reset image and show loading state if needed
@@ -459,7 +459,7 @@
                 throw new Error(data.error || `Request failed (${response.status})`);
             }
             if (!data.image_url) {
-                throw new Error("No image returned. Check HF_TOKEN and that your token has Inference Providers permission.");
+                throw new Error("No image returned. Check API key and that your token has valid permissions.");
             }
 
             outputPlaceholder.style.display = 'none';
@@ -483,7 +483,15 @@
             outputResult.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
             console.error("Generation failed", err);
-            alert("AI generation failed: " + (err.message || "Please check your connection or daily quota."));
+            // Fallback for visual continuity if API fails
+            if (!generatedImage.src) {
+                generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
+                resultTitle.textContent = "Design Visualization (Offline Mode)";
+                resultDesc.textContent = "We couldn't connect to the AI at the moment, but here is a similar concept from our gallery.";
+                outputPlaceholder.style.display = 'none';
+                outputResult.style.display = 'block';
+            }
+            alert("AI generation notice: " + (err.message || "Connection issue. Showing offline concept instead."));
         } finally {
             generateBtn.disabled = false;
             generateBtn.querySelector('.btn-text').textContent = "Design Again";

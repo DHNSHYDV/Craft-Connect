@@ -6,6 +6,7 @@ import requests
 import json
 import base64
 import urllib.parse
+import random
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
@@ -287,49 +288,6 @@ def generate_image_hf(image_prompt):
         return None
 
 
-# Route for AI Design Generation (Hugging Face only — no SambaNova)
-@app.route('/api/generate-design', methods=['POST'])
-def generate_design():
-    data = request.json
-    description = data.get('description', '')
-    style = data.get('style', 'Traditional')
-    material = data.get('material', 'Clay')
-
-    if not description or not description.strip():
-        return jsonify({"error": "Please describe your design."}), 400
-
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return jsonify({"error": "Hugging Face API key (HF_TOKEN) is not set. Add it to your .env to generate designs."}), 503
-
-    # Build title and description from user inputs (no SambaNova)
-    title = f"{style} {material} Artisan Concept"
-    desc = f"A {style} Indian handicraft in {material}. {description.strip()}"
-
-    # Image prompt for Hugging Face (fal-ai / Tongyi-MAI Z-Image)
-    image_prompt = f"{style} {material} Indian handicraft, {description}".replace("/", " ").replace("\\", " ").strip()
-
-    try:
-        image_url = generate_image_hf(image_prompt)
-        if image_url is None:
-            return jsonify({
-                "error": "Image generation failed. Check HF_TOKEN and fal-ai availability.",
-                "title": title,
-                "description": desc,
-            }), 502
-        return jsonify({
-            "title": title,
-            "description": desc,
-            "image_url": image_url,
-            "mode": "live",
-            "engine": f"Hugging Face (fal-ai / {HF_IMAGE_MODEL})"
-        })
-    except Exception as e:
-        print(f"DESIGN ERROR: {e}")
-        return jsonify({
-            "error": str(e),
-            "title": title,
-            "description": desc,
-        }), 502
 
 def _analyze_craft_gemini(image_data, mime_type="image/jpeg"):
     """Use Gemini vision to analyze image. Returns (result_dict, error_hint). result_dict is None on failure."""
@@ -590,16 +548,64 @@ def analyze_craft():
         desc += " " + error_hint
     else:
         desc += " Please try again with a clear photo."
-    desc += " You can still browse similar crafts below."
+
+# --- AI Design Generation (Text-to-Image) ---
+@app.route('/api/generate-design', methods=['POST'])
+def generate_design():
+    data = request.json or {}
+    user_prompt = (data.get("description") or "").strip()
+    style = (data.get("style") or "Traditional").strip()
+    material = (data.get("material") or "Clay").strip()
+
+    if not user_prompt:
+        return jsonify({"error": "Please describe your design."}), 400
+
+    # 1. Refine Prompt using Gemini Text
+    refined_prompt = f"{style} {material} Indian handicraft: {user_prompt}"
+    title = "Custom Craft Design"
+    desc = f"A unique {style} design made of {material}."
+
+    if GEMINI_API_KEY:
+        try:
+            # Ask Gemini to create a better image generation prompt
+            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
+            payload = {
+                "systemInstruction": {
+                    "parts": [{"text": "You are an expert prompt engineer for Indian heritage crafts. Your goal is to take a user's rough idea and turn it into a high-quality, photorealistic image generation prompt for AI. Focus on lighting, texture, cultural details, and camera angle. Output ONLY the prompt text, no intro."}]
+                },
+                "contents": [{
+                    "parts": [{"text": f"User Idea: {user_prompt}\nStyle: {style}\nMaterial: {material}\n\nCreate a detailed image prompt:"}]
+                }]
+            }
+            r = requests.post(model_url, json=payload, timeout=8)
+            if r.status_code == 200:
+                gemini_resp = r.json()
+                text = (gemini_resp.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                if text and len(text) > 10:
+                    refined_prompt = text.strip()
+                    # Generate a nice title/desc too?
+                    title = f"{style} {material} Concept"
+                    desc = f"AI-enhanced design based on '{user_prompt}'."
+        except Exception as e:
+            print(f"Gemini prompt refinement failed: {e}")
+
+    # 2. Generate Image URL using Pollinations.ai (Free, High Quality)
+    # Adding 'nologo=true' and 'enhance=true'
+    # We use the refined prompt from Gemini for best results
+    base_url = "https://pollinations.ai/p/"
+    
+    # Encode the prompt
+    encoded_prompt = urllib.parse.quote(refined_prompt)
+    seed = random.randint(1, 99999)
+    image_url = f"{base_url}{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}&model=flux"
+
     return jsonify({
-        "name": "Indian Handicraft",
-        "origin": "India",
-        "score": 85,
-        "material": "—",
-        "style": "Heritage craft",
+        "image_url": image_url,
+        "title": title,
         "description": desc,
-        "mode": "fallback"
+        "prompt_used": refined_prompt
     })
+
 
 
 # --- Whisper speech-to-text (optional, for voice page when browser speech API fails) ---
@@ -981,8 +987,22 @@ def products():
         for item in data['items']:
             if category_filter != 'All' and item['category'] != category_filter:
                 continue
-            if search_query and search_query not in item['name'].lower() and search_query not in state.lower():
-                continue
+            # Improved Search Logic: Token-based
+            if search_query:
+                # normalize query
+                q_tokens = search_query.replace(',', ' ').replace('.', ' ').split()
+                # stop words to ignore
+                stop_words = {'show', 'me', 'find', 'the', 'a', 'an', 'please', 'i', 'want', 'looking', 'for', 'in', 'from', 'of', 'with'}
+                keywords = [w for w in q_tokens if w not in stop_words]
+                
+                if not keywords: # if only stop words, match everything (or nothing? Let's match everything similar to empty search)
+                    pass 
+                else:
+                    # Check if ALL significant keywords appear in the product data (Name, State, Category)
+                    # This allows "Pottery Rajasthan" to find "Blue Pottery" from "Rajasthan"
+                    product_text = f"{item['name']} {state} {item['category']} {item.get('fun_fact','')}".lower()
+                    if not all(k in product_text for k in keywords):
+                        continue
                 
             product_id = f"{state.replace(' ', '_')}_{item['name'].replace(' ', '_')}"
             price = item['price_range'][0] + (len(item['name']) % 10) * (item['price_range'][1] - item['price_range'][0]) // 10
@@ -1196,4 +1216,4 @@ def data():
     return render_template('data.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5001, host='0.0.0.0')
