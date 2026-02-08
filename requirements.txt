@@ -11,6 +11,3 @@ replicate
 torch
 transformers
 accelerate
-# For Voice: set WHISPER_MODEL in .env (e.g. openai/whisper-small or openai/whisper-large-v3). FFmpeg needed for webm.
-# Optional: for local design generation with Qwen-Image-2512 (set USE_DIFFSYNTH_ENGINE=1 in .env)
-# pip install diffsynth-engine
