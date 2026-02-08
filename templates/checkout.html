@@ -757,23 +757,20 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)
             })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.success) {
-                        document.getElementById('orderId').textContent = 'OD' + data.order_id;
+                .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+                .then(({ ok, data }) => {
+                    if (ok && data.success) {
+                        document.getElementById('orderId').textContent = (typeof data.order_id === 'string' ? data.order_id : 'OD' + data.order_id);
                         document.getElementById('successOverlay').classList.add('show');
                         window.clearCart();
-                        // Redirect to orders page after 2 seconds
-                        setTimeout(() => {
-                            window.location.href = '/orders';
-                        }, 2000);
+                        setTimeout(() => { window.location.href = '/orders'; }, 2000);
                     } else {
-                        alert('Failed to place order. Please try again.');
+                        alert(data.error || 'Failed to place order. Please try again.');
                     }
                 })
                 .catch(err => {
                     console.error(err);
-                    alert('Error processing order.');
+                    alert('Error processing order. Check the console.');
                 });
         }
 

@@ -57,6 +57,7 @@
                     Analysis suggests this is an authentic Madhubani painting from Bihar. The geometric patterns and
                     natural color variations are consistent with traditional village techniques.
                 </p>
+                <p class="result-disclaimer" id="resultDisclaimer" style="display: none;">Analysis uses an OCR-style model; descriptions may be generic for non-document images.</p>
                 <div class="result-actions">
                     <a href="/products?search=madhubani" class="btn-primary">Shop Similar Crafts</a>
                     <button class="btn-secondary" onclick="resetVision()">Try Another</button>
@@ -215,8 +216,14 @@
     .result-description {
         line-height: 1.6;
         opacity: 0.8;
-        margin-bottom: 2.5rem;
+        margin-bottom: 0.75rem;
         text-align: center;
+    }
+    .result-disclaimer {
+        font-size: 0.8rem;
+        opacity: 0.65;
+        text-align: center;
+        margin-bottom: 2rem;
     }
 
     .result-actions {
@@ -307,12 +314,13 @@
                 });
 
                 const data = await response.json();
-                if (data.error) throw new Error(data.error);
+                if (!response.ok || data.error) throw new Error(data.error || `Request failed (${response.status})`);
 
                 processResults(data);
             } catch (err) {
                 console.error("Analysis error", err);
-                statusDisplay("AI Error: Analysis Failed");
+                statusDisplay("Analysis failed");
+                alert(err.message || "Analysis failed. Try another image or check your connection.");
             } finally {
                 scanningBar.style.display = 'none';
             }
@@ -322,15 +330,17 @@
 
     function processResults(data) {
         statusDisplay("AI Analysis Complete");
-        resultTitle.textContent = data.name;
-        resultOrigin.textContent = data.origin;
-        resultScore.textContent = `${data.score}% Match`;
-        resultMaterial.textContent = data.material;
-        resultStyle.textContent = data.style;
-        resultDesc.textContent = data.description;
+        resultTitle.textContent = data.name || "Indian Handicraft";
+        resultOrigin.textContent = data.origin || "—";
+        resultScore.textContent = `${data.score != null ? data.score : 85}% Match`;
+        resultMaterial.textContent = data.material || "—";
+        resultStyle.textContent = data.style || "—";
+        resultDesc.textContent = data.description || "Analysis complete.";
 
-        // Link to products page with search query
-        const query = data.name.toLowerCase().split(' ')[0];
+        const disclaimerEl = document.getElementById('resultDisclaimer');
+        if (disclaimerEl) disclaimerEl.style.display = 'block';
+
+        const query = (data.name || "craft").toLowerCase().split(/\s+/)[0];
         shopLink.href = `/products?search=${encodeURIComponent(query)}`;
 
         results.style.display = 'block';
@@ -341,6 +351,8 @@
         placeholder.style.display = 'block';
         previewArea.style.display = 'none';
         results.style.display = 'none';
+        const disclaimerEl = document.getElementById('resultDisclaimer');
+        if (disclaimerEl) disclaimerEl.style.display = 'none';
         fileInput.value = '';
         statusDisplay("AI Ready for Analysis");
     }

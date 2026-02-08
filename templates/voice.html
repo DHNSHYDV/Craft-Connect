@@ -29,10 +29,20 @@
                 </button>
             </div>
 
-            <div class="voice-status" id="voiceStatus">Click the mic to start speaking...</div>
+            <div class="voice-status" id="voiceStatus">Click mic to start recording (Whisper). Click again to stop and send.</div>
 
             <div class="language-selection">
                 <button class="lang-tag active" data-lang="en-US">English</button>
+            </div>
+            <br>
+
+            <div class="type-instead-box">
+                <p class="type-instead-title">Or type here and click Ask Gemini</p>
+                <div class="type-instead">
+                    <input type="text" id="voiceTextInput" placeholder="e.g. Show me pottery from Rajasthan" class="voice-text-input">
+                    <button type="button" id="voiceAskBtn" class="voice-ask-btn">Ask Gemini</button>
+                </div>
+                <p class="voice-fallback-hint">Voice uses Whisper on the server. If transcribe fails, install FFmpeg or use the text box.</p>
             </div>
         </div>
 
@@ -42,12 +52,18 @@
                 <span class="lang-detected" id="detectedLang">Detected: English</span>
             </div>
             <div class="transcription-text" id="transcriptionText">"..."</div>
-            <div class="translation-text" id="translationText" style="display: none;"></div>
-            <div class="action-feedback">
+            <div class="assistant-reply" id="assistantReply" style="display: none;">
+                <div class="assistant-label">Assistant (Gemini)</div>
+                <div class="assistant-text" id="assistantText"></div>
+            </div>
+            <div class="action-feedback" id="actionFeedback">
                 <div class="loading-dots">
                     <span></span><span></span><span></span>
                 </div>
-                Searching for your request...
+                <span id="actionFeedbackText">Asking Gemini...</span>
+            </div>
+            <div class="voice-actions" id="voiceActions" style="display: none;">
+                <a class="btn-search-products" id="searchProductsBtn" href="#">Search products with this</a>
             </div>
         </div>
     </div>
@@ -155,14 +171,57 @@
         font-size: 1.25rem;
         font-weight: 500;
         opacity: 0.7;
-        margin-bottom: 3rem;
+        margin-bottom: 1rem;
     }
+    .type-instead-box {
+        width: 100%;
+        max-width: 520px;
+        margin: 0 auto 2rem;
+        padding: 1.5rem;
+        background: rgba(244, 81, 30, 0.08);
+        border: 2px solid #f4511e;
+        border-radius: 16px;
+    }
+    .type-instead-title {
+        font-size: 1rem;
+        font-weight: 600;
+        margin: 0 0 1rem;
+        color: #f4511e;
+        text-align: center;
+    }
+    .type-instead {
+        display: flex;
+        gap: 10px;
+        max-width: 100%;
+    }
+    .voice-text-input {
+        flex: 1;
+        padding: 12px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        font-size: 1rem;
+        background: var(--card-bg);
+        color: var(--text-color);
+    }
+    .voice-ask-btn {
+        padding: 12px 24px;
+        background: #f4511e;
+        color: white;
+        border: none;
+        border-radius: 30px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+    .voice-ask-btn:hover { opacity: 0.9; }
 
     .language-selection {
         display: flex;
         gap: 1rem;
         flex-wrap: wrap;
         justify-content: center;
+        margin-bottom: 1.5rem;
     }
 
     .lang-tag {
@@ -219,6 +278,46 @@
         font-style: italic;
         opacity: 0.6;
         margin-bottom: 2rem;
+    }
+
+    .assistant-reply {
+        margin: 1.5rem 0;
+        padding: 1.25rem;
+        background: rgba(244, 81, 30, 0.08);
+        border-radius: 12px;
+        border-left: 4px solid #f4511e;
+    }
+    .assistant-label {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: #f4511e;
+        margin-bottom: 0.5rem;
+    }
+    .assistant-text {
+        font-size: 1.05rem;
+        line-height: 1.5;
+        color: var(--text-color);
+    }
+    .voice-actions {
+        margin-top: 1.5rem;
+    }
+    .btn-search-products {
+        display: inline-block;
+        padding: 10px 20px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        font-size: 0.9rem;
+        color: var(--text-color);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    .btn-search-products:hover {
+        background: #f4511e;
+        color: white;
+        border-color: #f4511e;
     }
 
     .action-feedback {
@@ -280,79 +379,156 @@
     const detectedLangEl = document.getElementById('detectedLang');
     const langTags = document.querySelectorAll('.lang-tag');
 
-    let currentLang = 'en-US';
-    let recognition = null;
-    let isListening = false;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+    let stream = null;
 
-    // Initialize Speech Recognition
-    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
-        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        recognition = new SpeechRecognition();
-        recognition.continuous = false;
-        recognition.interimResults = true;
-
-        recognition.onstart = () => {
-            isListening = true;
-            micBtn.classList.add('listening');
-            voiceStatus.textContent = "Listening...";
-            transcriptionCard.style.display = 'none';
-        };
-
-        recognition.onerror = (event) => {
-            isListening = false;
-            micBtn.classList.remove('listening');
-            voiceStatus.textContent = "Error: " + event.error + ". Click to retry.";
-            console.error('Speech recognition error:', event.error);
-        };
-
-        recognition.onend = () => {
-            isListening = false;
-            micBtn.classList.remove('listening');
-        };
-
-        recognition.onresult = (event) => {
-            let interimTranscript = '';
-            let finalTranscript = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-                if (event.results[i].isFinal) {
-                    finalTranscript += event.results[i][0].transcript;
-                } else {
-                    interimTranscript += event.results[i][0].transcript;
+    function sendTranscriptToGemini(transcript) {
+        if (!transcript || !transcript.trim()) return;
+        transcriptionCard.style.display = 'block';
+        transcriptionText.textContent = '"' + transcript + '"';
+        voiceStatus.textContent = "Asking Gemini...";
+        var actionFeedback = document.getElementById('actionFeedback');
+        var actionFeedbackText = document.getElementById('actionFeedbackText');
+        var assistantReply = document.getElementById('assistantReply');
+        var assistantText = document.getElementById('assistantText');
+        var voiceActions = document.getElementById('voiceActions');
+        var searchProductsBtn = document.getElementById('searchProductsBtn');
+        if (actionFeedbackText) actionFeedbackText.textContent = 'Asking Gemini...';
+        assistantReply.style.display = 'none';
+        voiceActions.style.display = 'none';
+        actionFeedback.style.display = 'flex';
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: transcript })
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                voiceStatus.textContent = "Done";
+                if (actionFeedback) actionFeedback.style.display = 'none';
+                if (data.reply) {
+                    assistantText.textContent = data.reply;
+                    assistantReply.style.display = 'block';
                 }
-            }
-
-            transcriptionCard.style.display = 'block';
-            transcriptionText.textContent = `"${finalTranscript || interimTranscript}"`;
-
-            if (finalTranscript) {
-                voiceStatus.textContent = "Redirecting...";
-                setTimeout(() => {
-                    window.location.href = `/products?search=${encodeURIComponent(finalTranscript)}`;
-                }, 1500);
-            }
-        };
-    } else {
-        voiceStatus.textContent = "Voice search not supported in this browser.";
-        micBtn.style.opacity = '0.5';
-        micBtn.style.pointerEvents = 'none';
+                searchProductsBtn.href = '/products?search=' + encodeURIComponent(transcript);
+                voiceActions.style.display = 'block';
+            })
+            .catch(function () {
+                voiceStatus.textContent = "Error. Try again.";
+                if (actionFeedbackText) actionFeedbackText.textContent = 'Could not reach assistant.';
+            });
     }
 
-    // Language Selection
-    langTags.forEach(tag => {
-        tag.onclick = () => {
-            langTags.forEach(t => t.classList.remove('active'));
+    langTags.forEach(function (tag) {
+        tag.onclick = function () {
+            langTags.forEach(function (t) { t.classList.remove('active'); });
             tag.classList.add('active');
-            currentLang = tag.dataset.lang;
             detectedLangEl.textContent = "Detected: " + tag.textContent.split(' ')[0];
-            if (recognition) recognition.lang = currentLang;
         };
     });
 
-    micBtn.onclick = () => {
-        if (!recognition || isListening) return;
-        recognition.lang = currentLang;
-        recognition.start();
+    micBtn.onclick = function () {
+        if (isRecording) {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+                isRecording = false;
+                micBtn.classList.remove('listening');
+            }
+            return;
+        }
+        recordedChunks = [];
+        voiceStatus.textContent = "Getting microphone...";
+        voiceStatus.style.color = '';
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(function (s) {
+                stream = s;
+                var options = { mimeType: 'audio/webm;codecs=opus' };
+                if (!MediaRecorder.isTypeSupported(options.mimeType)) options = {};
+                mediaRecorder = new MediaRecorder(stream);
+                mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) recordedChunks.push(e.data); };
+                mediaRecorder.onstop = function () {
+                    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
+                    voiceStatus.textContent = "Transcribing with Whisper...";
+                    var blob = new Blob(recordedChunks, { type: 'audio/webm' });
+                    var fd = new FormData();
+                    fd.append('audio', blob, 'recording.webm');
+                    fetch('/api/transcribe', { method: 'POST', body: fd })
+                        .then(function (r) { return r.json(); })
+                        .then(function (data) {
+                            if (data.error) {
+                                voiceStatus.textContent = "Transcribe: " + data.error + ". Try typing below.";
+                                voiceStatus.style.color = "var(--accent-color, #f4511e)";
+                                return;
+                            }
+                            var text = (data.text || '').trim();
+                            if (text) sendTranscriptToGemini(text);
+                            else {
+                                voiceStatus.textContent = "No speech detected. Try again or type below.";
+                                voiceStatus.style.color = "var(--accent-color, #f4511e)";
+                            }
+                        })
+                        .catch(function () {
+                            voiceStatus.textContent = "Server error. Try typing below.";
+                            voiceStatus.style.color = "var(--accent-color, #f4511e)";
+                        });
+                };
+                mediaRecorder.start();
+                isRecording = true;
+                micBtn.classList.add('listening');
+                voiceStatus.textContent = "Recording... Click again to stop and send.";
+                transcriptionCard.style.display = 'none';
+            })
+            .catch(function (err) {
+                voiceStatus.textContent = "Microphone denied or unavailable. Use the text box below.";
+                voiceStatus.style.color = "var(--accent-color, #f4511e)";
+            });
     };
+
+    // Type-instead: ask Gemini with typed text (works when voice has network error)
+    function askGeminiWithText(text) {
+        text = (text || '').trim();
+        if (!text) return;
+        transcriptionCard.style.display = 'block';
+        transcriptionText.textContent = '"' + text + '"';
+        voiceStatus.textContent = "Asking Gemini...";
+        var actionFeedback = document.getElementById('actionFeedback');
+        var actionFeedbackText = document.getElementById('actionFeedbackText');
+        var assistantReply = document.getElementById('assistantReply');
+        var assistantText = document.getElementById('assistantText');
+        var voiceActions = document.getElementById('voiceActions');
+        var searchProductsBtn = document.getElementById('searchProductsBtn');
+        if (actionFeedbackText) actionFeedbackText.textContent = 'Asking Gemini...';
+        assistantReply.style.display = 'none';
+        voiceActions.style.display = 'none';
+        actionFeedback.style.display = 'flex';
+        fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: text })
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                voiceStatus.textContent = "Done";
+                if (actionFeedback) actionFeedback.style.display = 'none';
+                if (data.reply) {
+                    assistantText.textContent = data.reply;
+                    assistantReply.style.display = 'block';
+                }
+                searchProductsBtn.href = '/products?search=' + encodeURIComponent(text);
+                voiceActions.style.display = 'block';
+            })
+            .catch(function () {
+                voiceStatus.textContent = "Error. Try again.";
+                if (actionFeedbackText) actionFeedbackText.textContent = 'Could not reach assistant.';
+            });
+    }
+    var voiceTextInput = document.getElementById('voiceTextInput');
+    var voiceAskBtn = document.getElementById('voiceAskBtn');
+    if (voiceAskBtn && voiceTextInput) {
+        voiceAskBtn.onclick = function () { askGeminiWithText(voiceTextInput.value); voiceTextInput.value = ''; };
+        voiceTextInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') { askGeminiWithText(voiceTextInput.value); voiceTextInput.value = ''; } });
+    }
 </script>
 {% endblock %}

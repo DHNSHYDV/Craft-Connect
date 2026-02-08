@@ -437,7 +437,7 @@
         if (!text) return alert("Please describe your design first!");
 
         generateBtn.disabled = true;
-        generateBtn.querySelector('.btn-text').textContent = "Dreaming with SambaNova AI...";
+        generateBtn.querySelector('.btn-text').textContent = "Generating with Hugging Face...";
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         // Reset image and show loading state if needed
@@ -455,7 +455,12 @@
             });
 
             const data = await response.json();
-            if (data.error) throw new Error(data.error);
+            if (!response.ok || data.error) {
+                throw new Error(data.error || `Request failed (${response.status})`);
+            }
+            if (!data.image_url) {
+                throw new Error("No image returned. Check HF_TOKEN and that your token has Inference Providers permission.");
+            }
 
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
@@ -469,9 +474,10 @@
                 generatedImage.style.opacity = '1';
             };
             generatedImage.onerror = () => {
-                console.error("Image failed to load from Polinations");
-                generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
+                console.error("Image failed to load", data.image_url?.substring(0, 50));
                 generatedImage.style.opacity = '1';
+                alert("Image failed to load. Ensure HF_TOKEN in .env has 'Inference Providers' permission at huggingface.co/settings/tokens.");
+                generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
             };
 
             outputResult.scrollIntoView({ behavior: 'smooth' });
