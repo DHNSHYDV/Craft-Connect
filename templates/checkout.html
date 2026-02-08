@@ -708,10 +708,20 @@
         };
 
         // Place Order
-        document.getElementById('btnPlaceOrder').onclick = () => placeOrder(grandTotal);
+        const btnPlaceOrder = document.getElementById('btnPlaceOrder');
+        btnPlaceOrder.onclick = () => {
+            const checkedPayment = document.querySelector('input[name="payment"]:checked');
+            if (!checkedPayment) {
+                alert('Please select a payment method');
+                document.getElementById('stepPayment')?.scrollIntoView({ behavior: 'smooth' });
+                return;
+            }
+            placeOrder(grandTotal, checkedPayment.value);
+        };
 
-        function placeOrder(amount) {
-            const method = document.querySelector('input[name="payment"]:checked').value;
+        function placeOrder(amount, method) {
+            btnPlaceOrder.disabled = true;
+            btnPlaceOrder.textContent = 'Processing...';
 
             // ... (validation logic for payment methods - keep this part, it is good) ...
             if (method === 'upi') {
@@ -752,7 +762,7 @@
                 // ... extract other fields similarly if needed for new address logic
             }
 
-            fetch('/api/place_order', {
+            fetch('/api/place-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)

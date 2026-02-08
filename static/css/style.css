@@ -24,6 +24,29 @@ body.dark-mode {
     --card-bg: #111111;
 }
 
+/* About Page Sections */
+.about-hero {
+    height: 60vh;
+    min-height: 400px;
+}
+
+.about-content {
+    padding: 5rem 10%;
+    background: var(--bg-color);
+}
+
+.about-title {
+    font-family: var(--font-heading);
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    margin-bottom: 2rem;
+}
+
+.about-text {
+    font-size: 1.1rem;
+    margin-bottom: 2rem;
+}
+
 body.dark-mode .main-header {
     background: rgba(18, 18, 18, 0.9);
 }
@@ -421,6 +444,96 @@ body.dark-mode .nav-dropdown a:hover {
     opacity: 0.8;
 }
 
+/* Map Containers & Tooltips (Used on /map page) */
+.hero-map-container,
+.map-page-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: fadeIn 1.2s ease-out;
+}
+
+#india-map-wrapper svg {
+    width: 100%;
+    height: auto;
+    max-height: 70vh;
+    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+}
+
+#india-map-wrapper path {
+    fill: rgba(0, 77, 64, 0.1);
+    stroke: var(--accent-color);
+    stroke-width: 0.5;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    pointer-events: auto;
+}
+
+#india-map-wrapper path:hover {
+    fill: var(--accent-color);
+    stroke-width: 1.5;
+    filter: brightness(1.2);
+}
+
+body.dark-mode #india-map-wrapper path {
+    fill: rgba(128, 203, 196, 0.1);
+    stroke: var(--accent-color);
+}
+
+body.dark-mode #india-map-wrapper path:hover {
+    fill: var(--accent-color);
+}
+
+.map-tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    border-radius: 12px;
+    padding: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+    z-index: 2000;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s, transform 0.3s;
+    min-width: 200px;
+}
+
+body.dark-mode .map-tooltip {
+    background: rgba(30, 30, 30, 0.7);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.map-tooltip.active {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.tooltip-state {
+    margin: 0 0 0.5rem 0;
+    color: var(--accent-color);
+    font-family: var(--font-heading);
+    font-size: 1.1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.3rem;
+}
+
+.tooltip-items {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.tooltip-items li {
+    font-size: 0.85rem;
+    margin-bottom: 0.2rem;
+    opacity: 0.9;
+}
+
 .hero-bg-video {
     position: absolute;
     top: 0;
@@ -429,8 +542,7 @@ body.dark-mode .nav-dropdown a:hover {
     height: 100%;
     object-fit: cover;
     z-index: 0;
-    opacity: 0.4;
-    /* Translucent mode */
+    opacity: 0.3;
     pointer-events: none;
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
     mask-image: linear-gradient(to bottom, transparent 0%, black 20%, black 80%, transparent 100%), linear-gradient(to right, transparent 0%, black 20%, black 80%, transparent 100%);
@@ -438,7 +550,16 @@ body.dark-mode .nav-dropdown a:hover {
     mask-composite: intersect;
 }
 
-/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -1035,6 +1156,14 @@ body.dark-mode .review-text {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
+    pointer-events: none;
+    /* Let clicks pass through to content below */
+}
+
+.chat-fab,
+.chat-window {
+    pointer-events: auto;
+    /* Re-enable for the actual interaction elements */
 }
 
 .chat-fab {

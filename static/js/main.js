@@ -290,4 +290,125 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initialize badge
     window.updateCartBadge();
+
+    // --- INTERACTIVE INDIA MAP LOGIC ---
+    const mapTooltip = document.getElementById('map-tooltip');
+    const statePaths = document.querySelectorAll('#india-map-wrapper path');
+    const connectorSvg = document.getElementById('map-connector-svg');
+    const connectorLine = document.getElementById('map-connector-line');
+    const connectorDot = document.getElementById('map-connector-dot');
+
+    // Quick mapping of State Names to popular handicrafts (sync with heritage data)
+    const stateHandicrafts = {
+        "Andhra Pradesh": ["Kondapalli Toys", "Uppada Silk", "Temple Jewellery"],
+        "Arunachal Pradesh": ["Bamboo Crafts", "Bead Jewellery", "Wooden Masks"],
+        "Assam": ["Jaapi Hat", "Muga Silk", "Bell Metal Crafts"],
+        "Bihar": ["Madhubani Painting", "Tussar Silk", "Sikki Grass Crafts"],
+        "Chhattisgarh": ["Dhokra Metal", "Kosa Silk", "Wrought Iron"],
+        "Goa": ["Coconut Shell Crafts", "Azulejos Tiles", "Kunbi Saree"],
+        "Gujarat": ["Bandhani Textile", "Patola Saree", "Kutch Embroidery"],
+        "Haryana": ["Phulkari", "Jhajjar Pottery", "Brass Utensils"],
+        "Himachal Pradesh": ["Kullu Shawls", "Chamba Rumal", "Silver Jewellery"],
+        "Jharkhand": ["Sohrai Painting", "Tussar Silk", "Bamboo Crafts"],
+        "Karnataka": ["Mysore Silk", "Channapatna Toys", "Sandalwood Carvings"],
+        "Kerala": ["Kasavu Saree", "Coir Crafts", "Nettur Petti"],
+        "Madhya Pradesh": ["Gond Art", "Chanderi Saree", "Maheshwari Fabric"],
+        "Maharashtra": ["Warli Art", "Paithani Saree", "Kolhapuri Jewellery"],
+        "Meghalaya": ["Bamboo Bowls", "Eri Silk", "Black Pottery"],
+        "Mizoram": ["Puan Saree", "Bamboo Hats", "Beadwork"],
+        "Nagaland": ["Warrior Shawls", "Hornbill Art", "Beaded Necklaces"],
+        "Odisha": ["Pattachitra", "Sambalpuri Saree", "Silver Filigree"],
+        "Punjab": ["Phulkari", "Punjabi Jutti", "Parandi"],
+        "Rajasthan": ["Blue Pottery", "Bandhani", "Thewa Jewellery"],
+        "Sikkim": ["Thangka Painting", "Lepcha Weaving", "Wooden Tables"],
+        "Tamil Nadu": ["Kanchipuram Silk", "Tanjore Painting", "Temple Jewellery"],
+        "Telangana": ["Pochampally Ikat", "Bidriware", "Nirmal Paintings"],
+        "Tripura": ["Bamboo Art", "Handloom", "Cane Furniture"],
+        "Uttar Pradesh": ["Chikan Embroidery", "Banarasi Silk", "Brassware"],
+        "Uttarakhand": ["Pichora Saree", "Ringaal Basketry", "Aipan Art"],
+        "West Bengal": ["Baluchari Silk", "Terracotta Horse", "Kantha Embroidery"],
+        "Jammu and Kashmir": ["Pashmina Shawl", "Papier Mache", "Walnut Carving"],
+        "Ladakh": ["Tibetan Jewelry", "Woolen Rugs", "Prayer Wheels"]
+    };
+
+    if (statePaths.length > 0 && mapTooltip) {
+        const tooltipState = mapTooltip.querySelector('.tooltip-state');
+        const tooltipItems = mapTooltip.querySelector('.tooltip-items');
+
+        statePaths.forEach(path => {
+            path.addEventListener('mouseenter', (e) => {
+                const stateName = path.getAttribute('name');
+                const crafts = stateHandicrafts[stateName] || ["Traditional Handicrafts", "Heritage Textiles"];
+
+                tooltipState.textContent = stateName;
+                tooltipItems.innerHTML = crafts.map(item => `<li>• ${item}</li>`).join('');
+
+                mapTooltip.classList.add('active');
+
+                if (connectorLine && connectorDot) {
+                    connectorLine.style.opacity = '0.5';
+                    connectorDot.style.opacity = '1';
+                }
+            });
+
+            path.addEventListener('mousemove', (e) => {
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+
+                // Offset below and to the right of cursor
+                let x = mouseX + 25;
+                let y = mouseY + 25;
+
+                const tooltipWidth = mapTooltip.offsetWidth;
+                const tooltipHeight = mapTooltip.offsetHeight;
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+
+                // Improved Viewport Bounds Checking
+                if (x + tooltipWidth > windowWidth - 20) {
+                    x = mouseX - tooltipWidth - 25;
+                }
+
+                if (y + tooltipHeight > windowHeight - 20) {
+                    y = mouseY - tooltipHeight - 25;
+                }
+
+                if (x < 20) x = 20;
+                if (y < 20) y = 20;
+
+                mapTooltip.style.left = `${x}px`;
+                mapTooltip.style.top = `${y}px`;
+
+                // Update Connector Line
+                if (connectorLine && connectorSvg && path) {
+                    const svgRect = connectorSvg.getBoundingClientRect();
+                    const pathRect = path.getBoundingClientRect();
+
+                    // State attachment (center)
+                    const startX = pathRect.left + pathRect.width / 2 - svgRect.left;
+                    const startY = pathRect.top + pathRect.height / 2 - svgRect.top;
+
+                    // Tooltip attachment (center)
+                    const endX = x + tooltipWidth / 2 - svgRect.left;
+                    const endY = y + tooltipHeight / 2 - svgRect.top;
+
+                    connectorLine.setAttribute('x1', startX);
+                    connectorLine.setAttribute('y1', startY);
+                    connectorLine.setAttribute('x2', endX);
+                    connectorLine.setAttribute('y2', endY);
+
+                    connectorDot.setAttribute('cx', startX);
+                    connectorDot.setAttribute('cy', startY);
+                }
+            });
+
+            path.addEventListener('mouseleave', () => {
+                mapTooltip.classList.remove('active');
+                if (connectorLine && connectorDot) {
+                    connectorLine.style.opacity = '0';
+                    connectorDot.style.opacity = '0';
+                }
+            });
+        });
+    }
 });

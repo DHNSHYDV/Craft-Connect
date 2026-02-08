@@ -26,6 +26,7 @@
         <nav class="main-nav">
             <ul>
                 <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('map_page') }}">Map</a></li>
                 <li><a href="{{ url_for('products') }}">Products</a></li>
                 <li><a href="{{ url_for('artisans') }}">Artists</a></li>
                 <li><a href="{{ url_for('about') }}">About</a></li>
@@ -131,8 +132,8 @@
                 </div>
             </div>
             <div class="chat-input-area">
-                <input type="text" placeholder="Type a message..." disabled>
-                <button disabled>Send</button>
+                <input type="text" placeholder="Type a message...">
+                <button>Send</button>
             </div>
         </div>
         <button class="chat-fab" id="chatFab">

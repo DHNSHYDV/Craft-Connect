@@ -26,8 +26,9 @@ class User(UserMixin, db.Model):
     city = db.Column(db.String(100), nullable=True)
     state = db.Column(db.String(100), nullable=True)
     pincode = db.Column(db.String(10), nullable=True)
+<<<<<<< HEAD
 
-    # Relationships
+    # Relationship to Order
     orders = db.relationship('Order', backref='user', lazy=True)
 
     def set_password(self, password):
