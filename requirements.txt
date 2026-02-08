@@ -1,3 +1,7 @@
+# Production Server
+gunicorn
+
+# Core dependencies
 Flask
 dotenv
 requests
@@ -7,7 +11,8 @@ flask-login
 google-generativeai
 huggingface_hub
 replicate
-# Optional: for local AI Craft (GLM-OCR) and Voice (Whisper)
-torch
-transformers
-accelerate
+
+# Optional: Heavy ML libraries (Commented out for free tier deployment to save space/build time)
+# torch
+# transformers
+# accelerate
