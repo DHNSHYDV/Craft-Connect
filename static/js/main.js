@@ -15,10 +15,14 @@ document.addEventListener('DOMContentLoaded', () => {
             const opening = !nav.classList.contains('active');
             nav.classList.toggle('active');
             menuToggle.classList.toggle('active');
-            if (opening) document.body.classList.add('mobile-nav-open');
-            else document.body.classList.remove('mobile-nav-open');
-            if (!nav.classList.contains('active')) document.querySelectorAll('.nav-item-has-dropdown').forEach(el => el.classList.remove('nav-open'));
+            document.body.classList.toggle('mobile-nav-open', opening);
+            if (!nav.classList.contains('active')) {
+                document.body.classList.remove('mobile-nav-open');
+                document.querySelectorAll('.nav-item-has-dropdown').forEach(el => el.classList.remove('nav-open'));
+            }
         });
+        const backdrop = document.getElementById('mobileNavBackdrop');
+        if (backdrop) backdrop.addEventListener('click', closeMobileMenu);
         // Close menu when a real nav link is clicked (navigate)
         nav.querySelectorAll('a[href]').forEach(link => {
             link.addEventListener('click', (e) => {
@@ -46,13 +50,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Smooth Scroll for anchor links
+    // Smooth Scroll for anchor links (skip href="#" which is not a valid selector)
     document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        const href = anchor.getAttribute('href');
+        if (!href || href === '#') return;
         anchor.addEventListener('click', function (e) {
+            const target = document.querySelector(href);
+            if (!target) return;
             e.preventDefault();
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
-            });
+            target.scrollIntoView({ behavior: 'smooth' });
         });
     });
 
