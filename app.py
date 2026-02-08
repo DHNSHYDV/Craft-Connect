@@ -16,8 +16,11 @@ app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-pro
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import db, User
+from models import db, User, Order, OrderItem
 db.init_app(app)
+
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'entry'  # /entry = splash (video + auth)
@@ -80,6 +83,27 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
     except Exception as e:
         raise Exception(f"SambaNova Request Failed: {str(e)}")
 
+def generate_image_hf(image_prompt):
+    """Generate image via Hugging Face InferenceClient (fal-ai, Tongyi-MAI/Z-Image). Returns data URL or None."""
+    if not HF_TOKEN or not HF_TOKEN.strip():
+        return None
+    try:
+        from huggingface_hub import InferenceClient
+        import io
+        client = InferenceClient(provider="fal-ai", api_key=HF_TOKEN.strip())
+        image = client.text_to_image(image_prompt, model="Tongyi-MAI/Z-Image")
+        if image is None:
+            return None
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        buf.seek(0)
+        b64 = base64.b64encode(buf.read()).decode("utf-8")
+        return f"data:image/png;base64,{b64}"
+    except Exception as e:
+        print(f"HF image generation failed: {e}")
+        return None
+
+
 # Route for AI Design Generation
 @app.route('/api/generate-design', methods=['POST'])
 def generate_design():
@@ -88,6 +112,9 @@ def generate_design():
     style = data.get('style', 'Traditional')
     material = data.get('material', 'Clay')
     
+    # Image prompt used for HF or Pollinations
+    image_prompt = f"{style} {material} Indian handicraft, {description}".replace("/", " ").replace("\\", " ").strip()
+
     try:
         prompt = f"Act as a master Indian artisan. Design a unique handicraft based on: {description}. Style: {style}, Material: {material}. Give me a short title, a poetic description, and a visual prompt for an image generator. Format your response exactly as: TITLE: [title] DESCRIPTION: [description]"
         
@@ -101,30 +128,33 @@ def generate_design():
             title = parts[0].replace("TITLE:", "").strip()
             desc = parts[1].strip()
 
-        # Clean and encode the prompt for Pollinations
-        image_prompt = f"{style} {material} Indian handicraft {description}".replace("/", " ").replace("\\", " ")
-        safe_query = urllib.parse.quote(image_prompt)
-        image_url = f"https://pollinations.ai/p/{safe_query}?width=1024&height=1024&nologo=true&model=flux"
-        
-        print(f"DEBUG: Generated Image URL: {image_url}")
+        # Prefer Hugging Face (fal-ai + Tongyi-MAI/Z-Image) when HF_TOKEN is set
+        image_url = generate_image_hf(image_prompt)
+        engine = "SambaNova+fal-ai (Z-Image)"
+        if image_url is None:
+            safe_query = urllib.parse.quote(image_prompt)
+            image_url = f"https://pollinations.ai/p/{safe_query}?width=1024&height=1024&nologo=true&model=flux"
+            engine = "SambaNova"
         
         return jsonify({
             "title": title,
             "description": desc,
             "image_url": image_url,
             "mode": "live",
-            "engine": "SambaNova"
+            "engine": engine
         })
     except Exception as e:
         print(f"DESIGN ERROR (Fallback active): {str(e)}")
-        fallback_prompt = f"{style} {material} Indian handicraft {description}".replace("/", " ").replace("\\", " ")
-        safe_query = urllib.parse.quote(fallback_prompt)
-        image_url = f"https://pollinations.ai/p/{safe_query}?width=1024&height=1024&nologo=true&model=flux"
+        image_url = generate_image_hf(image_prompt)
+        if image_url is None:
+            safe_query = urllib.parse.quote(image_prompt)
+            image_url = f"https://pollinations.ai/p/{safe_query}?width=1024&height=1024&nologo=true&model=flux"
         return jsonify({
             "title": f"The {style} {material} Artisan Concept",
             "description": f"A beautiful conceptualization of {description}. This piece combines the heritage of {style} techniques with the structural integrity of {material}. [SIMULATED DUE TO API LIMIT]",
             "image_url": image_url,
-            "mode": "simulation"
+            "mode": "simulation",
+            "engine": "fal-ai (Z-Image)" if image_url.startswith("data:") else "Pollinations"
         })
 
 # Route for AI Image Analysis (Computer Vision)
@@ -165,6 +195,164 @@ Return the result in JSON format only with keys: name, origin, score, material, 
             "description": "Our high-speed vision engine analyzed the structural patterns of this artifact. It shows authentic characteristics of traditional Indian handicraft. [SIMULATED]",
             "mode": "simulation"
         })
+
+
+# --- Craft Assistant Chatbot (Gemini-powered) ---
+def build_chatbot_context():
+    """Build context for the Craft Assistant from site data."""
+    from data.products_heritage import HERITAGE_DATA
+
+    # Full product list with details for semantic matching
+    all_items = []
+    for state, data in HERITAGE_DATA.items():
+        for item in data["items"]:
+            price = item["price_range"][0] + (len(item["name"]) % 10) * (item["price_range"][1] - item["price_range"][0]) // 10
+            rating = 4.0 + (len(item["name"]) % 10) / 10
+            all_items.append({
+                "name": item["name"], "state": state, "category": item["category"],
+                "price": price, "rating": rating, "fun_fact": item.get("fun_fact", "")
+            })
+    all_items.sort(key=lambda x: x["rating"], reverse=True)
+    top_products = all_items[:15]
+
+    # Pottery/pots/clay products for queries like "what pots do you have?"
+    pottery_products = [
+        {"name": "Jhajjar Pottery", "state": "Haryana", "desc": "Clay water pots that keep water cool naturally", "price": "₹199-1499"},
+        {"name": "Blue Pottery Vase", "state": "Rajasthan", "desc": "Jaipur blue pottery, made from quartz not clay", "price": "₹399-14999"},
+        {"name": "Black Pottery", "state": "Meghalaya", "desc": "Fire-proof pots from Sung Valley", "price": "₹299-3499"},
+        {"name": "Bell Metal Crafts", "state": "Assam", "desc": "Utensils, bowls that last generations", "price": "₹999-9999"},
+        {"name": "Brass Utensils", "state": "Haryana", "desc": "Traditional brass cooking utensils", "price": "₹999-14999"},
+        {"name": "Terracotta Horse", "state": "West Bengal", "desc": "Bankura terracotta art icon", "price": "₹199-8999"},
+        {"name": "Clay Diyas", "state": "Jharkhand", "desc": "Handmade festival lamps", "price": "₹49-499"},
+        {"name": "Mud Clay Toys", "state": "Bihar", "desc": "Eco-friendly clay toys", "price": "₹149-999"},
+    ]
+
+    context = f"""
+You are the Craft Assistant for Desh Ke Haath, an Indian heritage craft e-commerce site.
+Answer ONLY from the data below. Be helpful and cite specific products when relevant.
+
+ABOUT / MISSION (from our website—use when user asks "mission", "about", "who are you"):
+Desh Ke Haath: "Connecting India's Soul to the Digital World." We empower Indian artisans by bridging traditional craftsmanship and modern technology. "States Alag, Jazba Ek" (Different States, One Spirit) reflects our commitment to unifying India's diverse artistic heritage.
+
+SITE: deshkehaath.in | Pages: Home, Products, Artists, About, AI Craft (Computer Vision, Voice, Data Insights, AR/VR, Design Your Own)
+
+POTTERY / POTS / CLAY / VASES / UTENSILS (when user asks about pots, pottery, clay, vases, utensils):
+{json.dumps(pottery_products, indent=2)}
+
+ALL PRODUCTS (use for "what do you have", "best selling", or specific queries):
+{json.dumps([{"name": p["name"], "state": p["state"], "category": p["category"], "price": f"₹{p['price']}", "fun_fact": p["fun_fact"][:80]} for p in all_items[:80]], indent=2)}
+
+SHIPPING: India-wide, 5-7 business days. RETURN: 7 days for damaged items. CONTACT: support@deshkehaath.in
+PAYMENT: UPI, Card, Net Banking, COD. GST 3%.
+"""
+    return context
+
+
+def get_user_orders_context():
+    """Get user's orders for chatbot context (if logged in)."""
+    if not current_user.is_authenticated:
+        return "User is NOT logged in. For order tracking, user must sign in."
+    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(10).all()
+    if not orders:
+        return "User has no orders yet."
+    lines = []
+    for o in orders:
+        items_str = ", ".join([f"{i.product_name} x{i.quantity}" for i in o.items])
+        lines.append(f"- Order {o.order_number}: ₹{o.total_amount:.0f}, Status: {o.status}, Items: {items_str}, Date: {o.created_at.strftime('%Y-%m-%d')}")
+    return "User's recent orders:\n" + "\n".join(lines)
+
+
+def _fallback_response(msg):
+    """Rule-based fallback when Gemini fails."""
+    m = msg.lower()
+    if any(x in m for x in ["hello", "hi", "namaste"]):
+        return "Namaste! Welcome to Desh Ke Haath. How can I help you explore Indian crafts today?"
+    if any(x in m for x in ["mission", "about", "who are you", "what do you do"]):
+        return "Desh Ke Haath bridges traditional Indian craftsmanship with modern technology. 'States Alag, Jazba Ek'—Different States, One Spirit. We connect India's artisans to the digital world."
+    if any(x in m for x in ["pot", "pottery", "clay", "vase", "utensils"]):
+        return "We have Jhajjar clay pots (Haryana), Blue Pottery vases (Rajasthan), Black Pottery (Meghalaya), Bell Metal utensils (Assam), Brass utensils (Haryana), Terracotta horses (West Bengal), Clay diyas (Jharkhand), Mud clay toys (Bihar) & more. Check the Products page!"
+    if any(x in m for x in ["saree", "sari"]):
+        return "We stock Patola, Banarasi, Kanjeevaram, Bandhani & other sarees from Gujarat, UP, Tamil Nadu & more. Browse the Products page to explore."
+    if any(x in m for x in ["track", "order"]):
+        return "To track your order, please sign in first. Go to the profile icon and log in. Then I can show your order history."
+    if any(x in m for x in ["return", "refund"]):
+        return "We accept returns within 7 days of delivery for damaged items. Contact support@deshkehaath.in to initiate a return."
+    if any(x in m for x in ["shipping", "delivery"]):
+        return "We ship across India! Delivery usually takes 5-7 business days. Free shipping on orders over ₹2000."
+    if any(x in m for x in ["contact", "support"]):
+        return "Email us at support@deshkehaath.in for any queries. We typically respond within 24 hours."
+    if any(x in m for x in ["best", "selling", "popular", "top"]):
+        return "Check our Products page—we have Madhubani paintings, Patola sarees, Kutch embroidery, Dhokra crafts & more from across India!"
+    if any(x in m for x in ["price", "cost"]):
+        return "Prices vary by craft and artisan. Filter by price on the Products page. Most items range from ₹299 to ₹50,000+."
+    return "You can browse Products, track orders (when logged in), or email support@deshkehaath.in. How else can I help?"
+
+
+def call_gemini_chat(user_message, context):
+    """Call Gemini API for chat response. Falls back to rule-based only when API fails."""
+    if not GEMINI_API_KEY:
+        return _fallback_response(user_message)
+    orders_ctx = get_user_orders_context()
+    # Use system instruction + user message so Gemini reliably uses the data
+    system_instruction = """You are the Craft Assistant for Desh Ke Haath. NEVER give generic replies like "browse products" or "contact support" when the user asks about specific products. ALWAYS cite actual product names, states, and details from the data below."""
+    user_content = context + "\n\n" + orders_ctx + "\n\nUser asks: " + user_message + "\n\nReply using the data above. List specific products when asked (e.g. pots, pottery, sarees). Keep it concise but informative."
+
+    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
+        payload = {
+            "systemInstruction": {"parts": [{"text": system_instruction}]},
+            "contents": [{"parts": [{"text": user_content}]}],
+            "generationConfig": {"maxOutputTokens": 512, "temperature": 0.5}
+        }
+        try:
+            r = requests.post(url, json=payload, timeout=15)
+            if r.status_code == 200:
+                data = r.json()
+                text = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                if text and text.strip():
+                    return text.strip()
+        except Exception:
+            continue
+    return _fallback_response(user_message)
+
+
+@app.route('/api/chat', methods=['GET', 'POST'])
+def chat():
+    """Craft Assistant chat endpoint - Gemini-powered."""
+    if request.method == 'GET':
+        return jsonify({"status": "ok", "message": "Craft Assistant API"})
+    data = request.json or {}
+    message = (data.get("message") or "").strip()
+    if not message:
+        return jsonify({"reply": "Please type a message."})
+    context = build_chatbot_context()
+    reply = call_gemini_chat(message, context)
+    return jsonify({"reply": reply})
+
+
+@app.route('/api/place-order', methods=['POST'])
+@login_required
+def place_order():
+    """Save order to DB when checkout completes."""
+    data = request.json or {}
+    items = data.get("items", [])
+    total = float(data.get("total", 0))
+    address = data.get("address", "")
+    if not items or total <= 0:
+        return jsonify({"error": "Invalid order data"}), 400
+    import random
+    order_num = "OD" + str(random.randint(10000, 99999))
+    while Order.query.filter_by(order_number=order_num).first():
+        order_num = "OD" + str(random.randint(10000, 99999))
+    order = Order(user_id=current_user.id, order_number=order_num, total_amount=total, delivery_address=address, status="Placed")
+    db.session.add(order)
+    db.session.flush()
+    for it in items:
+        oi = OrderItem(order_id=order.id, product_name=it.get("name", ""), product_state=it.get("state", ""), quantity=int(it.get("quantity", 1)), price=float(it.get("price", 0)))
+        db.session.add(oi)
+    db.session.commit()
+    return jsonify({"order_id": order_num, "success": True})
+
 
 @app.route('/')
 def index():

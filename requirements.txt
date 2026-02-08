@@ -4,3 +4,5 @@ requests
 gdown
 flask-sqlalchemy
 flask-login
+google-generativeai
+huggingface_hub

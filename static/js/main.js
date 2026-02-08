@@ -116,38 +116,46 @@ document.addEventListener('DOMContentLoaded', () => {
             msgDiv.classList.add('message');
             msgDiv.classList.add(isUser ? 'user-message' : 'bot-message');
             msgDiv.textContent = text;
-            chatBody.insertBefore(msgDiv, chatBody.querySelector('.chat-options')); // Insert before options or at end if options moved
-            // Better: just append to chatBody, but keep options at bottom? 
-            // Actually, usually options scroll up. Let's append to chatBody.
-            // But we have options in the HTML. Let's re-structure: 
-            // We'll insert before the options div if it exists, or just append.
-            // Simplified: Append to chatBody.
-            chatBody.appendChild(msgDiv);
+            const opts = chatBody.querySelector('.chat-options');
+            if (opts) chatBody.insertBefore(msgDiv, opts);
+            else chatBody.appendChild(msgDiv);
             chatBody.scrollTop = chatBody.scrollHeight;
         }
 
-        function getBotResponse(input) {
-            const lowerInput = input.toLowerCase();
-            if (lowerInput.includes('hello') || lowerInput.includes('hi')) return "Namasate! How can I help you explore Indian crafts?";
-            if (lowerInput.includes('track') || lowerInput.includes('order')) return "Please provide your Order ID (e.g., #12345) to track your shipment.";
-            if (lowerInput.includes('return') || lowerInput.includes('refund')) return "We accept returns within 7 days of delivery for damaged items. Please visit our Returns page.";
-            if (lowerInput.includes('price') || lowerInput.includes('cost')) return "Prices vary by artist and craft. You can filter products by price on the Products page.";
-            if (lowerInput.includes('shipping') || lowerInput.includes('delivery')) return "We ship across India! Delivery usually takes 5-7 business days.";
-            if (lowerInput.includes('craft') || lowerInput.includes('art')) return "We feature 10+ authentic Indian art forms like Madhubani, Warli, and Blue Pottery.";
-            return "I'm still learning! You can browse our Products section or contact support@deshkehaath.in.";
+        async function getBotResponse(input) {
+            const url = (typeof window.CHAT_API_URL !== 'undefined' && window.CHAT_API_URL) || '/api/chat';
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: input })
+                });
+                if (!resp.ok) {
+                    return "Server error. Make sure Flask is running (flask run) and refresh the page.";
+                }
+                const data = await resp.json();
+                return data.reply || "I couldn't process that. Please try again or contact support@deshkehaath.in.";
+            } catch (e) {
+                return "Connection failed. Start the server with: flask run. Then refresh and try again.";
+            }
         }
 
-        function handleSend() {
+        async function handleSend() {
             const text = chatInput.value.trim();
             if (text) {
                 addMessage(text, true);
                 chatInput.value = '';
 
-                // Simulate typing delay
-                setTimeout(() => {
-                    const response = getBotResponse(text);
-                    addMessage(response, false);
-                }, 1000); // 1 second delay
+                const typingIndicator = document.createElement('div');
+                typingIndicator.classList.add('message', 'bot-message');
+                typingIndicator.textContent = '...';
+                typingIndicator.dataset.typing = '1';
+                chatBody.appendChild(typingIndicator);
+                chatBody.scrollTop = chatBody.scrollHeight;
+
+                const response = await getBotResponse(text);
+                typingIndicator.remove();
+                addMessage(response, false);
             }
         }
 
@@ -163,13 +171,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Handle Option Buttons
         optionBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
+            btn.addEventListener('click', async () => {
                 const text = btn.textContent;
                 addMessage(text, true);
-                setTimeout(() => {
-                    const response = getBotResponse(text);
-                    addMessage(response, false);
-                }, 800);
+                const typingIndicator = document.createElement('div');
+                typingIndicator.classList.add('message', 'bot-message');
+                typingIndicator.textContent = '...';
+                typingIndicator.dataset.typing = '1';
+                chatBody.appendChild(typingIndicator);
+                chatBody.scrollTop = chatBody.scrollHeight;
+                const response = await getBotResponse(text);
+                typingIndicator.remove();
+                addMessage(response, false);
             });
         });
     }

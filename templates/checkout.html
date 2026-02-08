@@ -198,7 +198,7 @@
             <p>Order ID: <strong id="orderId">OD---</strong></p>
             <p>Estimated Delivery: <strong>5-7 Business Days</strong></p>
         </div>
-        <a href="/" class="btn-primary" onclick="clearCart()">Continue Shopping</a>
+        <a href="/home" class="btn-primary" onclick="clearCart()">Continue Shopping</a>
     </div>
 </div>
 
@@ -495,7 +495,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Place Order
     document.getElementById('btnPlaceOrder').onclick = () => placeOrder(grandTotal);
 
-    function placeOrder(amount) {
+    async function placeOrder(amount) {
         const method = document.querySelector('input[name="payment"]:checked').value;
 
         if (method === 'upi') {
@@ -535,7 +535,28 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
 
-        document.getElementById('orderId').textContent = 'OD' + Math.floor(10000 + Math.random() * 90000);
+        const selectedAddr = document.querySelector('.address-card.selected .address-content');
+        const addrText = selectedAddr ? Array.from(selectedAddr.querySelectorAll('span')).map(s => s.textContent).join(', ') : '';
+        const orderPayload = {
+            items: cart.map(i => ({ name: i.name, state: i.state || '', quantity: i.quantity, price: i.price })),
+            total: amount,
+            address: addrText
+        };
+        try {
+            const resp = await fetch('/api/place-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(orderPayload)
+            });
+            const data = await resp.json();
+            if (data.success && data.order_id) {
+                document.getElementById('orderId').textContent = data.order_id;
+            } else {
+                document.getElementById('orderId').textContent = 'OD' + Math.floor(10000 + Math.random() * 90000);
+            }
+        } catch (e) {
+            document.getElementById('orderId').textContent = 'OD' + Math.floor(10000 + Math.random() * 90000);
+        }
         document.getElementById('successOverlay').classList.add('show');
     }
 

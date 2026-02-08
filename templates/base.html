@@ -111,11 +111,12 @@
                 <div class="message bot-message">
                     Hello! Welcome to Indian Craft. How can I help you today?
                 </div>
-                <!-- Static options for now -->
                 <div class="chat-options">
-                    <button class="chat-option-btn">Track Order</button>
-                    <button class="chat-option-btn">Return Policy</button>
-                    <button class="chat-option-btn">Contact Support</button>
+                    <button class="chat-option-btn">Track my order</button>
+                    <button class="chat-option-btn">Best selling products</button>
+                    <button class="chat-option-btn">Return policy</button>
+                    <button class="chat-option-btn">Contact support</button>
+                    <button class="chat-option-btn">Shipping & delivery</button>
                 </div>
             </div>
             <div class="chat-input-area">
@@ -135,6 +136,7 @@
         </button>
     </div>
 
+    <script>window.CHAT_API_URL = "{{ url_for('chat') }}";</script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 
