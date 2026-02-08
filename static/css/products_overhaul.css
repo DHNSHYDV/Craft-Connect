@@ -369,6 +369,39 @@ body.dark-mode .spec-item {
     font-size: 1.05rem;
 }
 
+.pdp-checkout-orchestrator {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.pdp-count-selector {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.btn-pdp-add-minimal {
+    padding: 12px 20px;
+    background: var(--accent-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.btn-pdp-add-minimal:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
 .btn-pdp-collect {
     flex: 2;
     background: var(--accent-color);

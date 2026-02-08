@@ -377,6 +377,13 @@ body.dark-mode .nav-dropdown a:hover {
     font-weight: 500;
 }
 
+.dropdown-user {
+    display: block;
+    padding: 0.8rem 1.2rem;
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-color);
+}
+
 .dropdown-item:hover {
     background-color: rgba(0, 77, 64, 0.05);
     color: var(--accent-color);

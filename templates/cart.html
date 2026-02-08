@@ -25,7 +25,7 @@
                         <span id="cartSubtotal">₹0</span>
                     </div>
                     <div class="summary-row">
-                        <span>GST (18%)</span>
+                        <span>GST (3%)</span>
                         <span id="cartTax">₹0</span>
                     </div>
                     <div class="summary-row">
@@ -272,7 +272,7 @@
         });
 
         subtotalEl.textContent = `₹${subtotal.toLocaleString()}`;
-        const tax = Math.round(subtotal * 0.18);
+        const tax = Math.round(subtotal * 0.03);
         const total = subtotal + tax;
         document.getElementById('cartTax').textContent = `₹${tax.toLocaleString()}`;
         totalEl.textContent = `₹${total.toLocaleString()}`;

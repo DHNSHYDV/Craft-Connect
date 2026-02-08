@@ -7,127 +7,206 @@
 
         <div class="checkout-container">
             <div class="checkout-form">
-                <div class="checkout-step active">
+                <!-- Step 1: Address -->
+                <div class="checkout-step active" id="stepAddress">
                     <h3>1. Delivery Address</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Full Name</label>
-                            <input type="text" placeholder="e.g. Rahul Sharma" value="Rahul Sharma">
-                        </div>
-                        <div class="form-group">
-                            <label>Phone Number</label>
-                            <input type="text" placeholder="10-digit mobile number" value="9876543210">
-                        </div>
-                        <div class="form-group full">
-                            <label>Address (Area and Street)</label>
-                            <textarea rows="3"
-                                placeholder="Apartment, suite, unit, building, floor, etc.">123, Heritage Lane, near City Center</textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>City/District/Town</label>
-                            <input type="text" placeholder="City" value="Jaipur">
-                        </div>
-                        <div class="form-group">
-                            <label>State</label>
-                            <select>
-                                <option>Rajasthan</option>
-                                <option>Delhi</option>
-                                <option>Maharashtra</option>
-                                <option>Karnataka</option>
-                                <option>West Bengal</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Pincode</label>
-                            <input type="text" placeholder="6-digit code" value="302001">
-                        </div>
+                    <div class="address-actions">
+                        <button type="button" class="btn-add-address" id="btnAddAddress">+ Add New Address</button>
                     </div>
+                    <div class="saved-addresses" id="savedAddresses">
+                        <label class="address-card selected">
+                            <input type="radio" name="address" value="1" checked>
+                            <div class="address-content">
+                                <strong>Rahul Sharma</strong>
+                                <span>123, Heritage Lane, near City Center, Jaipur, Rajasthan - 302001</span>
+                                <span class="phone">Phone: 9876543210</span>
+                            </div>
+                        </label>
+                    </div>
+                    <div class="address-form hidden" id="addressForm">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Full Name</label>
+                                <input type="text" id="addrName" placeholder="e.g. Rahul Sharma">
+                            </div>
+                            <div class="form-group">
+                                <label>Phone Number</label>
+                                <input type="tel" id="addrPhone" placeholder="10-digit mobile" maxlength="10">
+                            </div>
+                            <div class="form-group full">
+                                <label>Address (Area and Street)</label>
+                                <textarea id="addrStreet" rows="3" placeholder="Apartment, building, floor, landmark"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label>City / District / Town</label>
+                                <input type="text" id="addrCity" placeholder="City">
+                            </div>
+                            <div class="form-group">
+                                <label>State</label>
+                                <select id="addrState">
+                                    <option value="">Select State</option>
+                                    <option>Rajasthan</option>
+                                    <option>Delhi</option>
+                                    <option>Maharashtra</option>
+                                    <option>Karnataka</option>
+                                    <option>West Bengal</option>
+                                    <option>Tamil Nadu</option>
+                                    <option>Gujarat</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Pincode</label>
+                                <input type="text" id="addrPincode" placeholder="6-digit code" maxlength="6">
+                            </div>
+                        </div>
+                        <button type="button" class="btn-save-address" id="btnSaveAddress">Save & Deliver Here</button>
+                    </div>
+                    <button type="button" class="btn-continue" id="btnContinueAddress">Deliver to this Address →</button>
                 </div>
 
-                <div class="checkout-step">
+                <!-- Step 2: Payment -->
+                <div class="checkout-step hidden" id="stepPayment">
                     <h3>2. Payment Method</h3>
                     <div class="payment-options">
-                        <label class="payment-option active">
-                            <input type="radio" name="payment" checked>
+                        <label class="payment-option active" data-method="upi">
+                            <input type="radio" name="payment" value="upi" checked>
+                            <span class="pay-icon">📱</span>
                             <div class="payment-details">
-                                <span class="method-name">UPI (GPay, PhonePe, Paytm)</span>
-                                <span class="method-desc">Pay securely using your UPI app</span>
+                                <span class="method-name">UPI</span>
+                                <span class="method-desc">GPay, PhonePe, Paytm, BHIM & more</span>
                             </div>
                         </label>
-                        <label class="payment-option">
-                            <input type="radio" name="payment">
+                        <label class="payment-option" data-method="qr">
+                            <input type="radio" name="payment" value="qr">
+                            <span class="pay-icon">📷</span>
+                            <div class="payment-details">
+                                <span class="method-name">QR Code</span>
+                                <span class="method-desc">Scan & Pay</span>
+                            </div>
+                        </label>
+                        <label class="payment-option" data-method="debit">
+                            <input type="radio" name="payment" value="debit">
+                            <span class="pay-icon">💳</span>
+                            <div class="payment-details">
+                                <span class="method-name">Debit Card</span>
+                                <span class="method-desc">Visa, Mastercard, RuPay</span>
+                            </div>
+                        </label>
+                        <label class="payment-option" data-method="credit">
+                            <input type="radio" name="payment" value="credit">
+                            <span class="pay-icon">💳</span>
+                            <div class="payment-details">
+                                <span class="method-name">Credit Card</span>
+                                <span class="method-desc">Visa, Mastercard</span>
+                            </div>
+                        </label>
+                        <label class="payment-option" data-method="netbanking">
+                            <input type="radio" name="payment" value="netbanking">
+                            <span class="pay-icon">🏦</span>
+                            <div class="payment-details">
+                                <span class="method-name">Net Banking</span>
+                                <span class="method-desc">All major banks</span>
+                            </div>
+                        </label>
+                        <label class="payment-option" data-method="cod">
+                            <input type="radio" name="payment" value="cod">
+                            <span class="pay-icon">💵</span>
                             <div class="payment-details">
                                 <span class="method-name">Cash on Delivery</span>
-                                <span class="method-desc">Pay when your craft reaches home</span>
+                                <span class="method-desc">Pay when delivered</span>
                             </div>
                         </label>
+                    </div>
+
+                    <!-- Payment method inputs -->
+                    <div class="payment-inputs">
+                        <div class="payment-input-panel active" id="panelUpi">
+                            <label>Enter UPI ID</label>
+                            <input type="text" id="upiId" placeholder="e.g. rahul@paytm, 9876543210@ybl, name@okaxis" maxlength="50">
+                            <span class="input-hint">Format: xxxxx@xxx (e.g. name@paytm, phone@ybl)</span>
+                        </div>
+                        <div class="payment-input-panel" id="panelQr">
+                            <div class="qr-placeholder">
+                                <div class="qr-fake"></div>
+                                <p>Scan QR with any UPI app</p>
+                                <span class="qr-amount" id="qrAmount">₹0</span>
+                            </div>
+                        </div>
+                        <div class="payment-input-panel" id="panelCard">
+                            <label>Card Number</label>
+                            <input type="text" id="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+                            <div class="card-row">
+                                <div class="form-group">
+                                    <label>Expiry (MM/YY)</label>
+                                    <input type="text" id="cardExpiry" placeholder="MM/YY" maxlength="5">
+                                </div>
+                                <div class="form-group">
+                                    <label>CVV</label>
+                                    <input type="text" id="cardCvv" placeholder="123" maxlength="4">
+                                </div>
+                            </div>
+                            <span class="input-hint">Enter 15 or 16 digit card number</span>
+                        </div>
+                        <div class="payment-input-panel" id="panelNetbanking">
+                            <label>Select Bank</label>
+                            <select id="netBank">
+                                <option value="">Choose your bank</option>
+                                <option>State Bank of India</option>
+                                <option>HDFC Bank</option>
+                                <option>ICICI Bank</option>
+                                <option>Axis Bank</option>
+                                <option>Kotak Mahindra Bank</option>
+                                <option>Punjab National Bank</option>
+                                <option>Bank of Baroda</option>
+                                <option>Canara Bank</option>
+                            </select>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <div class="checkout-summary">
-                <h3>Final Order</h3>
-                <div id="checkoutItems">
-                    <!-- Items list -->
-                </div>
+                <h3>Order Summary</h3>
+                <div id="checkoutItems"></div>
                 <hr>
                 <div class="summary-row">
                     <span>Subtotal</span>
                     <span id="checkoutSubtotal">₹0</span>
                 </div>
                 <div class="summary-row">
-                    <span>GST (18%)</span>
+                    <span>GST (3%)</span>
                     <span id="checkoutTax">₹0</span>
                 </div>
                 <div class="summary-row total">
                     <span>Amount Payable</span>
                     <span id="checkoutTotal">₹0</span>
                 </div>
-                <button class="btn-primary full-width" onclick="placeOrder()">Place Your Order</button>
+                <button class="btn-primary full-width btn-place-order" id="btnPlaceOrder">Place Your Order</button>
                 <p class="terms">By placing your order, you agree to our Terms of Use and Privacy Policy.</p>
             </div>
         </div>
     </div>
 </section>
 
-<!-- Success Modal Overlay -->
+<!-- Success Overlay -->
 <div id="successOverlay" class="success-overlay">
     <div class="success-card">
-        <div class="success-icon">🎉</div>
-        <h2>Order Placed Successfully!</h2>
-        <p>Thank you for supporting Indian Artisans. Your order #OD{{ range(1000, 9999) | random }} will be delivered
-            soon.</p>
+        <div class="success-check">✓</div>
+        <h2 class="success-title">Thanks for shopping!</h2>
+        <p class="success-msg">Your order has been placed successfully.</p>
         <div class="order-details">
+            <p>Order ID: <strong id="orderId">OD---</strong></p>
             <p>Estimated Delivery: <strong>5-7 Business Days</strong></p>
         </div>
-        <a href="/" class="btn-primary" onclick="clearCart()">Back to Home</a>
+        <a href="/" class="btn-primary" onclick="clearCart()">Continue Shopping</a>
     </div>
 </div>
 
 <style>
-    .checkout-section {
-        padding: 120px 2rem 5rem;
-        max-width: 1200px;
-        margin: 0 auto;
-    }
-
-    .checkout-section h1 {
-        font-family: var(--font-heading);
-        margin-bottom: 2rem;
-    }
-
-    .checkout-container {
-        display: grid;
-        grid-template-columns: 1fr 400px;
-        gap: 3rem;
-        align-items: start;
-    }
-
-    @media (max-width: 900px) {
-        .checkout-container {
-            grid-template-columns: 1fr;
-        }
-    }
+    .checkout-section { padding: 120px 2rem 5rem; max-width: 1200px; margin: 0 auto; }
+    .checkout-section h1 { font-family: var(--font-heading); margin-bottom: 2rem; }
+    .checkout-container { display: grid; grid-template-columns: 1fr 400px; gap: 3rem; align-items: start; }
+    @media (max-width: 900px) { .checkout-container { grid-template-columns: 1fr; } }
 
     .checkout-step {
         background: var(--card-bg);
@@ -136,75 +215,117 @@
         border: 1px solid var(--border-color);
         margin-bottom: 2rem;
     }
-
+    .checkout-step.hidden { display: none !important; }
     .checkout-step h3 {
-        margin-top: 0;
-        margin-bottom: 1.5rem;
+        margin-top: 0; margin-bottom: 1.5rem;
         color: var(--accent-color);
         border-bottom: 1px solid var(--border-color);
         padding-bottom: 0.5rem;
     }
 
-    .form-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1.5rem;
-    }
-
-    .form-group.full {
-        grid-column: span 2;
-    }
-
-    .form-group label {
-        display: block;
-        margin-bottom: 0.5rem;
+    .address-actions { margin-bottom: 1rem; }
+    .btn-add-address {
+        padding: 8px 16px;
+        border: 1px dashed var(--border-color);
+        background: transparent;
+        color: var(--accent-color);
+        border-radius: 8px;
+        cursor: pointer;
         font-weight: 600;
-        font-size: 0.9rem;
     }
+    .btn-add-address:hover { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.05); }
 
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-        width: 100%;
-        padding: 0.8rem;
+    .address-card {
+        display: flex;
+        gap: 1rem;
+        padding: 1rem;
+        border: 2px solid var(--border-color);
+        border-radius: 12px;
+        cursor: pointer;
+        margin-bottom: 0.75rem;
+        transition: all 0.2s;
+    }
+    .address-card:hover, .address-card.selected { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.04); }
+    .address-content { display: flex; flex-direction: column; gap: 4px; }
+    .address-content .phone { font-size: 0.85rem; opacity: 0.8; }
+    .address-form.hidden { display: none; }
+    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .form-group.full { grid-column: span 2; }
+    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; }
+    .form-group input, .form-group select, .form-group textarea {
+        width: 100%; padding: 0.7rem;
         border: 1px solid var(--border-color);
         border-radius: 8px;
         background: var(--bg-color);
         color: var(--text-color);
-        font-family: inherit;
+    }
+    .btn-save-address {
+        margin-top: 1rem;
+        padding: 10px 20px;
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+    .btn-continue {
+        margin-top: 1.5rem;
+        padding: 12px 24px;
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 1rem;
     }
 
-    .payment-options {
-        display: flex;
-        flex-direction: column;
-        gap: 1rem;
-    }
-
+    .payment-options { display: flex; flex-direction: column; gap: 0.75rem; }
     .payment-option {
         display: flex;
+        align-items: center;
         gap: 1rem;
         padding: 1rem;
-        border: 1px solid var(--border-color);
+        border: 2px solid var(--border-color);
         border-radius: 12px;
         cursor: pointer;
         transition: all 0.2s;
     }
+    .payment-option:hover { border-color: var(--accent-color); }
+    .payment-option.active { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.06); }
+    .pay-icon { font-size: 1.5rem; }
+    .method-name { display: block; font-weight: 700; }
+    .method-desc { font-size: 0.8rem; opacity: 0.7; }
 
-    .payment-option.active {
-        border-color: var(--accent-color);
-        background: var(--primary-color);
-        opacity: 0.9;
+    .payment-inputs { margin-top: 1.5rem; }
+    .payment-input-panel { display: none; padding: 1rem; background: var(--bg-color); border-radius: 12px; }
+    .payment-input-panel.active { display: block; }
+    .payment-input-panel label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
+    .payment-input-panel input, .payment-input-panel select {
+        width: 100%; padding: 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        margin-bottom: 0.5rem;
     }
-
-    .method-name {
-        display: block;
-        font-weight: bold;
+    .input-hint { font-size: 0.75rem; opacity: 0.6; }
+    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .qr-placeholder {
+        text-align: center;
+        padding: 2rem;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
     }
-
-    .method-desc {
-        font-size: 0.85rem;
-        opacity: 0.7;
+    .qr-fake {
+        width: 140px; height: 140px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, #333 25%, transparent 25%, transparent 75%, #333 75%),
+                    linear-gradient(135deg, transparent 25%, #333 25%, #333 75%, transparent 75%);
+        background-size: 20px 20px;
+        border-radius: 8px;
     }
+    .qr-amount { font-weight: 700; font-size: 1.2rem; display: block; margin-top: 0.5rem; }
 
     .checkout-summary {
         background: var(--card-bg);
@@ -214,99 +335,211 @@
         position: sticky;
         top: 100px;
     }
+    .summary-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; }
+    .full-width { width: 100%; margin-top: 1rem; }
+    .terms { font-size: 0.75rem; text-align: center; margin-top: 1rem; opacity: 0.6; }
 
-    .summary-item {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 0.5rem;
-        font-size: 0.9rem;
-    }
-
-    .full-width {
-        width: 100%;
-        margin-top: 1.5rem;
-    }
-
-    .terms {
-        font-size: 0.75rem;
-        text-align: center;
-        margin-top: 1rem;
-        opacity: 0.6;
-    }
-
-    /* Success Modal */
+    /* Success */
     .success-overlay {
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: rgba(0,0,0,0.85);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 2000;
-        backdrop-filter: blur(8px);
+        backdrop-filter: blur(10px);
     }
-
+    .success-overlay.show { display: flex; animation: fadeIn 0.4s ease; }
     .success-card {
         background: var(--card-bg);
         padding: 3rem;
         border-radius: 24px;
         text-align: center;
-        max-width: 500px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        max-width: 480px;
+        box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
-
-    .success-icon {
-        font-size: 4rem;
-        margin-bottom: 1.5rem;
+    .success-check {
+        width: 70px; height: 70px;
+        margin: 0 auto 1.5rem;
+        background: #22c55e;
+        color: white;
+        font-size: 2.5rem;
+        font-weight: bold;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: checkPulse 0.8s ease 0.3s both;
     }
-
+    .success-title {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        margin-bottom: 0.5rem;
+        animation: fadeSlide 0.5s ease 0.4s both;
+    }
+    .success-msg { opacity: 0.8; margin-bottom: 1.5rem; animation: fadeSlide 0.5s ease 0.5s both; }
     .order-details {
         background: var(--bg-color);
-        padding: 1rem;
+        padding: 1rem 1.5rem;
         border-radius: 12px;
         margin: 1.5rem 0;
+        text-align: left;
+        animation: fadeSlide 0.5s ease 0.6s both;
     }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes successPop {
+        from { opacity: 0; transform: scale(0.8); }
+        to { opacity: 1; transform: scale(1); }
+    }
+    @keyframes checkPulse {
+        0% { transform: scale(0); opacity: 0; }
+        50% { transform: scale(1.2); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    @keyframes fadeSlide {
+        from { opacity: 0; transform: translateY(15px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .input-error { border-color: #ef4444 !important; }
 </style>
 
 <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-        const itemsList = document.getElementById('checkoutItems');
-        const totalEl = document.getElementById('checkoutTotal');
+document.addEventListener('DOMContentLoaded', () => {
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (cart.length === 0) { window.location.href = '/products'; return; }
 
-        if (cart.length === 0) {
-            window.location.href = '/products';
+    let total = 0;
+    const itemsList = document.getElementById('checkoutItems');
+    cart.forEach(item => {
+        total += item.price * item.quantity;
+        itemsList.innerHTML += `<div class="summary-item"><span>${item.name} x ${item.quantity}</span><span>₹${(item.price * item.quantity).toLocaleString()}</span></div>`;
+    });
+    const tax = Math.round(total * 0.03);
+    const grandTotal = total + tax;
+    document.getElementById('checkoutSubtotal').textContent = `₹${total.toLocaleString()}`;
+    document.getElementById('checkoutTax').textContent = `₹${tax.toLocaleString()}`;
+    document.getElementById('checkoutTotal').textContent = `₹${grandTotal.toLocaleString()}`;
+    document.getElementById('qrAmount').textContent = `₹${grandTotal.toLocaleString()}`;
+
+    // Address
+    document.getElementById('btnAddAddress').onclick = () => {
+        document.getElementById('addressForm').classList.remove('hidden');
+    };
+    document.getElementById('btnSaveAddress').onclick = () => {
+        const name = document.getElementById('addrName').value.trim();
+        const phone = document.getElementById('addrPhone').value.trim();
+        const street = document.getElementById('addrStreet').value.trim();
+        const city = document.getElementById('addrCity').value.trim();
+        const state = document.getElementById('addrState').value;
+        const pincode = document.getElementById('addrPincode').value.trim();
+        if (!name || !phone || !street || !city || !state || !pincode) {
+            alert('Please fill all address fields');
             return;
         }
+        if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+            alert('Enter valid 10-digit phone');
+            return;
+        }
+        if (pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+            alert('Enter valid 6-digit pincode');
+            return;
+        }
+        const html = `<label class="address-card selected"><input type="radio" name="address" value="new" checked><div class="address-content"><strong>${name}</strong><span>${street}, ${city}, ${state} - ${pincode}</span><span class="phone">Phone: ${phone}</span></div></label>`;
+        document.getElementById('savedAddresses').innerHTML = html;
+        document.getElementById('addressForm').classList.add('hidden');
+    };
 
-        let total = 0;
-        cart.forEach(item => {
-            total += item.price * item.quantity;
-            itemsList.innerHTML += `
-            <div class="summary-item">
-                <span>${item.name} x ${item.quantity}</span>
-                <span>₹${(item.price * item.quantity).toLocaleString()}</span>
-            </div>
-        `;
-        });
-
-        const tax = Math.round(total * 0.18);
-        const grandTotal = total + tax;
-
-        document.getElementById('checkoutSubtotal').textContent = `₹${total.toLocaleString()}`;
-        document.getElementById('checkoutTax').textContent = `₹${tax.toLocaleString()}`;
-        totalEl.textContent = `₹${grandTotal.toLocaleString()}`;
+    // Address card selection
+    document.getElementById('savedAddresses').addEventListener('change', (e) => {
+        if (e.target.name === 'address') {
+            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+            e.target.closest('.address-card').classList.add('selected');
+        }
     });
 
-    function placeOrder() {
-        document.getElementById('successOverlay').style.display = 'flex';
+    // Step: Address -> Payment
+    document.getElementById('btnContinueAddress').onclick = () => {
+        document.getElementById('stepAddress').classList.add('hidden');
+        document.getElementById('stepPayment').classList.remove('hidden');
+    };
+
+    // Payment method switch
+    document.querySelectorAll('.payment-option').forEach(opt => {
+        opt.onclick = () => {
+            document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+            opt.classList.add('active');
+            opt.querySelector('input').checked = true;
+            const m = opt.dataset.method;
+            document.querySelectorAll('.payment-input-panel').forEach(p => p.classList.remove('active'));
+            if (m === 'upi') document.getElementById('panelUpi').classList.add('active');
+            else if (m === 'qr') document.getElementById('panelQr').classList.add('active');
+            else if (m === 'debit' || m === 'credit') document.getElementById('panelCard').classList.add('active');
+            else if (m === 'netbanking') document.getElementById('panelNetbanking').classList.add('active');
+        };
+    });
+
+    // Card number format
+    document.getElementById('cardNumber').oninput = function() {
+        let v = this.value.replace(/\D/g, '');
+        this.value = v.replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+    };
+    document.getElementById('cardExpiry').oninput = function() {
+        let v = this.value.replace(/\D/g, '');
+        if (v.length >= 2) this.value = v.slice(0,2) + '/' + v.slice(2,4);
+        else this.value = v;
+    };
+
+    // Place Order
+    document.getElementById('btnPlaceOrder').onclick = () => placeOrder(grandTotal);
+
+    function placeOrder(amount) {
+        const method = document.querySelector('input[name="payment"]:checked').value;
+
+        if (method === 'upi') {
+            const upi = document.getElementById('upiId').value.trim();
+            if (!/^[\w.-]+@[\w.-]+$/.test(upi)) {
+                document.getElementById('upiId').classList.add('input-error');
+                alert('Enter valid UPI ID (e.g. name@paytm, 9876543210@ybl)');
+                return;
+            }
+            document.getElementById('upiId').classList.remove('input-error');
+        } else if (method === 'debit' || method === 'credit') {
+            const card = document.getElementById('cardNumber').value.replace(/\s/g, '');
+            const exp = document.getElementById('cardExpiry').value;
+            const cvv = document.getElementById('cardCvv').value;
+            if (card.length < 15 || card.length > 16) {
+                document.getElementById('cardNumber').classList.add('input-error');
+                alert('Enter valid 15 or 16 digit card number');
+                return;
+            }
+            if (!/^\d{2}\/\d{2}$/.test(exp)) {
+                document.getElementById('cardExpiry').classList.add('input-error');
+                alert('Enter expiry as MM/YY');
+                return;
+            }
+            if (cvv.length < 3) {
+                document.getElementById('cardCvv').classList.add('input-error');
+                alert('Enter valid CVV');
+                return;
+            }
+            document.getElementById('cardNumber').classList.remove('input-error');
+            document.getElementById('cardExpiry').classList.remove('input-error');
+            document.getElementById('cardCvv').classList.remove('input-error');
+        } else if (method === 'netbanking') {
+            if (!document.getElementById('netBank').value) {
+                alert('Please select your bank');
+                return;
+            }
+        }
+
+        document.getElementById('orderId').textContent = 'OD' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('successOverlay').classList.add('show');
     }
 
-    function clearCart() {
-        localStorage.removeItem('cart');
-    }
+    window.clearCart = () => { localStorage.removeItem('cart'); };
+});
 </script>
 {% endblock %}

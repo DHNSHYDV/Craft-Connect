@@ -17,14 +17,14 @@
 <body>
     <header class="main-header">
         <div class="logo-container">
-            <a href="/" class="logo-link">
+            <a href="{{ url_for('home') }}" class="logo-link">
                 <img src="{{ url_for('static', filename='images/logo_map.png') }}" alt="Desh Ke Haath Logo"
                     class="site-logo">
             </a>
         </div>
         <nav class="main-nav">
             <ul>
-                <li><a href="{{ url_for('index') }}">Home</a></li>
+                <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('products') }}">Products</a></li>
                 <li><a href="{{ url_for('artisans') }}">Artists</a></li>
                 <li><a href="{{ url_for('about') }}">About</a></li>
@@ -72,17 +72,16 @@
                 <span class="cart-count">0</span>
             </a>
             <div class="profile-menu">
-                <button class="profile-icon" aria-label="Profile Options">
+                <button class="profile-icon" aria-label="Account">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                        class="feather feather-user">
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
                 </button>
                 <div class="profile-dropdown">
-                    <a href="#" class="dropdown-item">Log In</a>
-                    <a href="#" class="dropdown-item">Sign Up</a>
+                    <span class="dropdown-user">{{ current_user.name }}</span>
+                    <a href="{{ url_for('logout') }}" class="dropdown-item">Log Out</a>
                 </div>
             </div>
         </div>

@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Welcome - Desh Ke Haath</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Outfit', sans-serif;
+            min-height: 100vh;
+            background: #0a0a0a;
+            color: #e0f2f1;
+        }
+        .splash-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+        }
+        .video-panel {
+            flex: 1.2;
+            position: relative;
+            overflow: hidden;
+        }
+        .video-panel video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            transform: translate(-50%, -50%);
+            object-fit: cover;
+        }
+        .video-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 40%, transparent 70%);
+            pointer-events: none;
+        }
+        .auth-panel {
+            width: 420px;
+            min-width: 380px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 3rem;
+            background: rgba(10, 10, 10, 0.98);
+            border-left: 1px solid rgba(128, 203, 196, 0.15);
+        }
+        .auth-panel h1 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.9rem;
+            margin-bottom: 0.4rem;
+            color: #80cbc4;
+        }
+        .auth-panel .subtitle {
+            opacity: 0.85;
+            margin-bottom: 2rem;
+            font-size: 0.95rem;
+        }
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+        }
+        .auth-tabs button {
+            flex: 1;
+            padding: 0.8rem;
+            border: none;
+            background: transparent;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.25s;
+        }
+        .auth-tabs button.active {
+            color: #80cbc4;
+            border-bottom-color: #80cbc4;
+        }
+        .auth-tabs button:hover:not(.active) {
+            color: rgba(255,255,255,0.9);
+        }
+        .auth-form {
+            display: none;
+        }
+        .auth-form.active {
+            display: block;
+        }
+        .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 0.45rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1px solid rgba(128, 203, 196, 0.25);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.06);
+            color: #e0f2f1;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: #80cbc4;
+            box-shadow: 0 0 0 2px rgba(128, 203, 196, 0.15);
+        }
+        .form-group input::placeholder {
+            color: rgba(255,255,255,0.35);
+        }
+        .btn-primary {
+            width: 100%;
+            padding: 0.9rem;
+            margin-top: 0.3rem;
+            border: none;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #004d40 0%, #00695c 100%);
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(0, 77, 64, 0.4);
+        }
+        .flash {
+            padding: 0.7rem 1rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+        }
+        .flash-error {
+            background: rgba(220, 38, 38, 0.2);
+            color: #fca5a5;
+            border: 1px solid rgba(220, 38, 38, 0.4);
+        }
+        .flash-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.4);
+        }
+        @media (max-width: 900px) {
+            .splash-container { flex-direction: column; overflow-y: auto; }
+            .video-panel { min-height: 35vh; flex: none; }
+            .auth-panel { width: 100%; min-width: auto; flex: 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="splash-container">
+        <div class="video-panel">
+            <video autoplay muted loop playsinline id="splashVideo">
+                <source src="{{ url_for('static', filename='videos/splash-video.mp4') }}?v=1" type="video/mp4">
+            </video>
+            <div class="video-overlay"></div>
+        </div>
+        <div class="auth-panel">
+            <h1>Desh Ke Haath</h1>
+            <p class="subtitle">States Alag, Jazba Ek. Sign in to discover the soul of India.</p>
+
+            {% if current_user.is_authenticated %}
+            <a href="{{ url_for('home') }}" class="btn-primary" style="text-decoration:none;text-align:center;display:block;">Enter Site</a>
+            <p style="margin-top:1.5rem;opacity:0.7;font-size:0.9rem;">Signed in as {{ current_user.name }}</p>
+            <a href="{{ url_for('logout') }}" style="color:#80cbc4;font-size:0.85rem;margin-top:0.5rem;display:inline-block;">Log Out</a>
+            {% else %}
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, msg in messages %}
+                        <div class="flash flash-{{ category }}">{{ msg }}</div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="auth-tabs">
+                <button type="button" class="tab-btn active" data-tab="login">Log In</button>
+                <button type="button" class="tab-btn" data-tab="signup">Sign Up</button>
+            </div>
+
+            <form method="POST" action="{{ url_for('login') }}" class="auth-form active" id="form-login">
+                <div class="form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" name="email" placeholder="you@example.com" required autofocus>
+                </div>
+                <div class="form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" name="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit" class="btn-primary">Log In</button>
+            </form>
+
+            <form method="POST" action="{{ url_for('signup') }}" class="auth-form" id="form-signup">
+                <div class="form-group">
+                    <label for="signup-name">Full Name</label>
+                    <input type="text" id="signup-name" name="name" placeholder="Rahul Sharma" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" name="email" placeholder="you@example.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" name="password" placeholder="Min 6 characters" required minlength="6">
+                </div>
+                <button type="submit" class="btn-primary">Create Account</button>
+            </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.auth-form').forEach(f => f.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById('form-' + btn.dataset.tab).classList.add('active');
+            });
+        });
+        // Ensure video plays (some browsers require user interaction - autoplay should work when muted)
+        document.getElementById('splashVideo').play().catch(() => {});
+    </script>
+</body>
+</html>

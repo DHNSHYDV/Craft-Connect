@@ -52,25 +52,37 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Quantity Selector
+    // Quantity Selector (generic .quantity-selector)
     const quantitySelector = document.querySelector('.quantity-selector');
     if (quantitySelector) {
         const input = quantitySelector.querySelector('input');
         const minusBtn = quantitySelector.querySelector('button:first-child');
         const plusBtn = quantitySelector.querySelector('button:last-child');
 
-        minusBtn.addEventListener('click', () => {
-            let val = parseInt(input.value);
-            if (val > 1) {
-                input.value = val - 1;
-            }
-        });
+        if (input && minusBtn && plusBtn) {
+            minusBtn.addEventListener('click', () => {
+                let val = parseInt(input.value) || 1;
+                if (val > 1) input.value = val - 1;
+            });
+            plusBtn.addEventListener('click', () => {
+                let val = parseInt(input.value) || 1;
+                if (val < 10) input.value = val + 1;
+            });
+        }
+    }
 
-        plusBtn.addEventListener('click', () => {
-            let val = parseInt(input.value);
-            if (val < 10) { // Max limit 10
-                input.value = val + 1;
-            }
+    // PDP Quantity Selector (.pdp-count-selector on product detail page)
+    const pdpQtyInput = document.getElementById('pdpQty');
+    const qtyMinus = document.getElementById('qtyMinus');
+    const qtyPlus = document.getElementById('qtyPlus');
+    if (pdpQtyInput && qtyMinus && qtyPlus) {
+        qtyMinus.addEventListener('click', () => {
+            let val = parseInt(pdpQtyInput.value) || 1;
+            if (val > 1) pdpQtyInput.value = val - 1;
+        });
+        qtyPlus.addEventListener('click', () => {
+            let val = parseInt(pdpQtyInput.value) || 1;
+            if (val < 10) pdpQtyInput.value = val + 1;
         });
     }
 

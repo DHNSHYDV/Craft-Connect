@@ -1,1 +1,6 @@
 Flask
+dotenv
+requests
+gdown
+flask-sqlalchemy
+flask-login

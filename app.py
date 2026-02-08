@@ -3,7 +3,8 @@ import requests
 import json
 import base64
 import urllib.parse
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
+from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
 
 # Load environment variables
@@ -11,6 +12,30 @@ load_dotenv()
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+from models import db, User
+db.init_app(app)
+
+login_manager = LoginManager(app)
+login_manager.login_view = 'entry'  # /entry = splash (video + auth)
+login_manager.login_message = 'Please sign in to continue.'
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    try:
+        return User.query.get(int(user_id))
+    except (ValueError, TypeError):
+        return None
+
+
+with app.app_context():
+    db.create_all()
+
+
 
 # SambaNova Helper
 def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None):
@@ -143,11 +168,90 @@ Return the result in JSON format only with keys: name, origin, score, material, 
 
 @app.route('/')
 def index():
+    # Redirect to /entry to bypass browser cache - splash is the gate
+    resp = redirect(url_for('entry'))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    return resp
+
+
+@app.route('/entry')
+def entry():
+    """Splash gate: Grok video + login/signup. Always shown first."""
+    resp = make_response(render_template('splash.html'))
+    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
+    resp.headers['Pragma'] = 'no-cache'
+    resp.headers['Expires'] = '0'
+    return resp
+
+
+@app.route('/splash')
+def splash():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return render_template('splash.html')
+
+
+@app.route('/home')
+@login_required
+def home():
     return render_template('index.html')
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    email = request.form.get('email', '').strip().lower()
+    password = request.form.get('password', '')
+    user = User.query.filter_by(email=email).first()
+    if user and user.check_password(password):
+        login_user(user)
+        return redirect(url_for('home'))
+    flash('Invalid email or password.', 'error')
+    return redirect(url_for('entry'))
+
+
+@app.route('/signup', methods=['POST'])
+def signup():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    email = request.form.get('email', '').strip().lower()
+    name = request.form.get('name', '').strip()
+    password = request.form.get('password', '')
+    if not email or not name or not password:
+        flash('All fields are required.', 'error')
+    elif User.query.filter_by(email=email).first():
+        flash('An account with this email already exists.', 'error')
+    elif len(password) < 6:
+        flash('Password must be at least 6 characters.', 'error')
+    else:
+        user = User(email=email, name=name)
+        user.set_password(password)
+        db.session.add(user)
+        db.session.commit()
+        login_user(user)
+        return redirect(url_for('home'))
+    return redirect(url_for('entry'))
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('entry'))
+
+
+@app.route('/reset')
+def reset_session():
+    """Clear session and show splash - useful when stuck or testing."""
+    logout_user()
+    return redirect(url_for('entry'))
+
 
 from data.products_heritage import HERITAGE_DATA
 
 @app.route('/products')
+@login_required
 def products():
     search_query = request.args.get('search', '').lower()
     sort_by = request.args.get('sort', 'default')
@@ -209,6 +313,7 @@ def products():
                          search_query=search_query)
 
 @app.route('/product/<product_id>')
+@login_required
 def product_detail(product_id):
     # Parse ID: State_ItemName
     found_state = None
@@ -285,18 +390,22 @@ def product_detail(product_id):
     return render_template('product_detail.html', product=product, related_products=related)
 
 @app.route('/discover')
+@login_required
 def discover():
     return render_template('discover.html')
 
 @app.route('/ai-craft')
+@login_required
 def ai_craft():
     return render_template('ai_craft.html')
 
 @app.route('/voice')
+@login_required
 def voice():
     return render_template('voice.html')
 
 @app.route('/ar-vr')
+@login_required
 def ar_vr():
     return render_template('ar_vr.html')
 
@@ -342,27 +451,33 @@ def get_artists():
     return artists
 
 @app.route('/artisans')
+@login_required
 def artisans():
     artists_list = get_artists()
     return render_template('artisans.html', artists=artists_list)
 
 @app.route('/cart')
+@login_required
 def cart():
     return render_template('cart.html')
 
 @app.route('/checkout')
+@login_required
 def checkout():
     return render_template('checkout.html')
 
 @app.route('/design-craft')
+@login_required
 def design_craft():
     return render_template('design_craft.html')
 
 @app.route('/data')
+@login_required
 def data():
     return render_template('data.html')
 
 @app.route('/about')
+@login_required
 def about():
     return render_template('about.html')
 
