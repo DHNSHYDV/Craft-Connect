@@ -350,7 +350,7 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
     b64 = base64.b64encode(image_data).decode("utf-8")
     last_error = None
     # Use current model IDs that support image input (see https://ai.google.dev/gemini-api/docs/models)
-    for model in ["gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]:
+    for model in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY.strip()}"
         payload = {
             "contents": [{
@@ -569,7 +569,7 @@ def analyze_craft():
     if not mime.startswith("image/"):
         mime = "image/jpeg"
 
-    # Use Gemini API when key is set; otherwise fall back to local GLM-OCR
+    # Try Gemini when key is set; on failure (e.g. invalid/expired key) try local GLM-OCR so user still gets an analysis
     error_hint = None
     if GEMINI_API_KEY and GEMINI_API_KEY.strip():
         result, error_hint = _analyze_craft_gemini(image_data, mime_type=mime)
@@ -577,13 +577,13 @@ def analyze_craft():
             result["mode"] = "live"
             result["engine"] = "Gemini Vision"
             return jsonify(result)
-        # Gemini failed (quota, etc.) — do not fall back to GLM-OCR when using Gemini API
-    else:
-        # No Gemini key: use local GLM-OCR
-        result = _analyze_craft_local_fallback(image_data)
-        if result:
-            result["mode"] = "live"
-            return jsonify(result)
+    # No Gemini key or Gemini failed: try local GLM-OCR
+    result = _analyze_craft_local_fallback(image_data)
+    if result:
+        result["mode"] = "live"
+        if error_hint and ("invalid" in error_hint.lower() or "expired" in error_hint.lower() or "401" in error_hint or "403" in error_hint):
+            result["description"] = (result.get("description") or "") + " (Gemini key invalid or expired. Get a new key at https://aistudio.google.com/apikey and add to .env as GEMINI_API_KEY for better analysis.)"
+        return jsonify(result)
 
     desc = "We couldn't run a full analysis on this image."
     if error_hint:

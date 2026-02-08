@@ -762,12 +762,16 @@
                 // ... extract other fields similarly if needed for new address logic
             }
 
-            fetch('/api/place-order', {
+            fetch('/api/place_order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(orderData)
             })
-                .then(res => res.json().then(data => ({ ok: res.ok, status: res.status, data })))
+                .then(res => res.text().then(text => {
+                    let data;
+                    try { data = text ? JSON.parse(text) : {}; } catch (e) { data = { error: 'Invalid response from server' }; }
+                    return { ok: res.ok, status: res.status, data };
+                }))
                 .then(({ ok, data }) => {
                     if (ok && data.success) {
                         document.getElementById('orderId').textContent = (typeof data.order_id === 'string' ? data.order_id : 'OD' + data.order_id);
