@@ -801,14 +801,9 @@ def get_user_orders_context():
     orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(10).all()
     lines = []
     for o in orders:
-<<<<<<< HEAD
         order_label = o.order_number or f"#{o.id}"
         items_str = ", ".join([f"{i.product_name} x{i.quantity}" for i in o.items])
         lines.append(f"- Order {order_label}: ₹{o.total_amount:.0f}, Status: {o.status}, Items: {items_str}, Date: {o.created_at.strftime('%Y-%m-%d')}")
-=======
-        items_str = ", ".join([f"{i.product_name} x{i.quantity}" for i in o.line_items])
-        lines.append(f"- Order {o.order_number}: ₹{o.total_amount:.0f}, Status: {o.status}, Items: {items_str}, Date: {o.created_at.strftime('%Y-%m-%d')}")
->>>>>>> de7d9b1 (Fix theming issues on About, Data, and Artists pages, and refine interactive map)
     return "User's recent orders:\n" + "\n".join(lines)
 
 
@@ -886,51 +881,6 @@ def chat():
     return jsonify({"reply": reply})
 
 
-<<<<<<< HEAD
-=======
-@app.route('/api/place-order', methods=['POST'])
-@login_required
-def place_order_api():
-    """Save order to DB when checkout completes."""
-    data = request.json or {}
-    items = data.get("items", [])
-    total = float(data.get("totalAmount", 0))
-    address = data.get("address", "")
-    
-    if not items or total <= 0:
-        return jsonify({"error": "Invalid order data"}), 400
-        
-    # Update user profile with latest shipping info
-    current_user.phone = data.get('phone')
-    current_user.address = data.get('address')
-    current_user.city = data.get('city')
-    current_user.state = data.get('state')
-    current_user.pincode = data.get('pincode')
-    
-    import random
-    order_num = "OD" + str(random.randint(10000, 99999))
-    while Order.query.filter_by(order_number=order_num).first():
-        order_num = "OD" + str(random.randint(10000, 99999))
-        
-    full_address = f"{data.get('address')}, {data.get('city')}, {data.get('state')} - {data.get('pincode')}"
-    order = Order(user_id=current_user.id, order_number=order_num, total_amount=total, delivery_address=full_address, status="Placed")
-    db.session.add(order)
-    db.session.flush()
-    
-    for it in items:
-        oi = OrderItem(
-            order_id=order.id, 
-            product_name=it.get("name", ""), 
-            product_state=it.get("state", ""), 
-            quantity=int(it.get("quantity", 1)), 
-            price=float(it.get("price", 0))
-        )
-        db.session.add(oi)
-        
-    db.session.commit()
-    return jsonify({"order_id": order_num, "success": True})
-
-
 @app.route('/')
 def index():
     # Redirect to /entry to bypass browser cache - splash is the gate
@@ -949,7 +899,6 @@ def entry():
     return resp
 
 
->>>>>>> de7d9b1 (Fix theming issues on About, Data, and Artists pages, and refine interactive map)
 @app.route('/splash')
 def splash():
     if current_user.is_authenticated:
@@ -957,8 +906,6 @@ def splash():
     return render_template('splash.html')
 
 
-<<<<<<< HEAD
-=======
 @app.route('/home')
 @login_required
 def home():
@@ -997,7 +944,6 @@ def signup():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        # login_user(user)  <-- Removed auto-login for better security/UX
         flash('Account created successfully! Please log in.', 'success')
         return redirect(url_for('entry'))
     return redirect(url_for('entry'))
@@ -1010,8 +956,6 @@ def logout():
     return redirect(url_for('entry'))
 
 
-
->>>>>>> de7d9b1 (Fix theming issues on About, Data, and Artists pages, and refine interactive map)
 @app.route('/reset')
 def reset_session():
     """Clear session and show splash - useful when stuck or testing."""
