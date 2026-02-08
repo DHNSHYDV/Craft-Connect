@@ -6,8 +6,11 @@ flask-sqlalchemy
 flask-login
 google-generativeai
 huggingface_hub
+replicate
 # Optional: for local AI Craft (GLM-OCR) and Voice (Whisper)
 torch
 transformers
 accelerate
 # For Voice: set WHISPER_MODEL in .env (e.g. openai/whisper-small or openai/whisper-large-v3). FFmpeg needed for webm.
+# Optional: for local design generation with Qwen-Image-2512 (set USE_DIFFSYNTH_ENGINE=1 in .env)
+# pip install diffsynth-engine

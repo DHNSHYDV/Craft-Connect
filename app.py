@@ -14,6 +14,9 @@ from sqlalchemy import text
 
 # Load environment variables
 load_dotenv()
+# Diffsynth model cache: default to project folder (E:\craft-site\.diffsynth_cache) so downloads stay with the app
+if not os.getenv("DIFFSYNTH_CACHE"):
+    os.environ["DIFFSYNTH_CACHE"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".diffsynth_cache")
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
 app = Flask(__name__)
@@ -260,33 +263,305 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
 
 # fal-ai text-to-image model (use one that supports HF token: e.g. zai-org/GLM-Image)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
+USE_DIFFSYNTH_ENGINE = os.getenv("USE_DIFFSYNTH_ENGINE", "").strip().lower() in ("1", "true", "yes")
+# Design image provider: "replicate" | "together" (default replicate)
+DESIGN_IMAGE_PROVIDER = (os.getenv("DESIGN_IMAGE_PROVIDER", "replicate").strip().lower() or "replicate")
+REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN", "").strip()
+TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "").strip()
+
+_diffsynth_pipe = None
 
 
-def generate_image_hf(image_prompt):
-    """Generate image via Hugging Face InferenceClient (fal-ai). Returns data URL or None."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None
+def generate_image_diffsynth(image_prompt):
+    """Generate image locally with Diffsynth-Engine (Qwen-Image-2512). Returns (data_url, error_message). Optional: set USE_DIFFSYNTH_ENGINE=1 in .env."""
+    global _diffsynth_pipe
+    if not USE_DIFFSYNTH_ENGINE:
+        return None, None
     try:
-        from huggingface_hub import InferenceClient
+        import math
+        import sys
+        import types
+        # PyTorch 2.10+ removed torch.distributed.tensor.parallel._utils; shim for diffsynth_engine
+        import torch.distributed.tensor.parallel  # noqa: F401
+        if not hasattr(torch.distributed.tensor.parallel, "_utils"):
+            _utils_mod = types.ModuleType("torch.distributed.tensor.parallel._utils")
+            def _validate_tp_mesh_dim(device_mesh):
+                pass
+            _utils_mod._validate_tp_mesh_dim = _validate_tp_mesh_dim
+            torch.distributed.tensor.parallel._utils = _utils_mod
+            sys.modules["torch.distributed.tensor.parallel._utils"] = _utils_mod
+        from diffsynth_engine import fetch_model, QwenImagePipeline, QwenImagePipelineConfig
         import io
-        client = InferenceClient(provider="fal-ai", api_key=HF_TOKEN.strip())
-        image = client.text_to_image(image_prompt, model=HF_IMAGE_MODEL)
-        if image is None or not hasattr(image, "save"):
-            print("HF image generation: no valid PIL Image returned")
-            return None
+    except ImportError as e:
+        msg = str(e)
+        if "diffsynth" in msg.lower() or "No module named 'diffsynth" in msg:
+            return None, "Diffsynth not installed. Run: pip install diffsynth-engine"
+        return None, f"Diffsynth dependency error: {msg}. Try: pip install -U torch"
+    try:
+        if _diffsynth_pipe is None:
+            print("Loading Diffsynth-Engine (Qwen-Image-2512)...")
+            config = QwenImagePipelineConfig.basic_config(
+                model_path=fetch_model("Qwen/Qwen-Image-2512", path="transformer/*.safetensors"),
+                encoder_path=fetch_model("Qwen/Qwen-Image-2512", path="text_encoder/*.safetensors"),
+                vae_path=fetch_model("Qwen/Qwen-Image-2512", path="vae/*.safetensors"),
+                offload_mode="cpu_offload",
+            )
+            _diffsynth_pipe = QwenImagePipeline.from_pretrained(config)
+            try:
+                _diffsynth_pipe.load_lora(
+                    path=fetch_model("Wuli-art/Qwen-Image-2512-Turbo-LoRA-2-Steps", path="Wuli-Qwen-Image-2512-Turbo-LoRA-2steps-V1.0-bf16.safetensors"),
+                    scale=1.0,
+                    fused=True,
+                )
+            except Exception as e:
+                print(f"Diffsynth LoRA load skipped: {e}")
+            scheduler_config = {
+                "exponential_shift_mu": math.log(2.5),
+                "use_dynamic_shifting": True,
+                "shift_terminal": 0.7155,
+            }
+            _diffsynth_pipe.apply_scheduler_config(scheduler_config)
+        import random
+        output = _diffsynth_pipe(
+            prompt=image_prompt[:1000],
+            cfg_scale=1,
+            num_inference_steps=2,
+            seed=random.randint(0, 2**31 - 1),
+            width=1024,
+            height=1024,
+        )
         buf = io.BytesIO()
-        image.save(buf, format="PNG")
+        output.save(buf, format="PNG")
         buf.seek(0)
         raw = buf.read()
         if len(raw) < 100:
-            print("HF image generation: image data too small (likely error)")
-            return None
+            return None, "Diffsynth image too small"
         b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:image/png;base64,{b64}"
+        return f"data:image/png;base64,{b64}", None
     except Exception as e:
-        print(f"HF image generation failed: {e}")
-        return None
+        print(f"Diffsynth-Engine failed: {e}")
+        import traceback
+        traceback.print_exc()
+        return None, str(e)
 
+
+def generate_image_hf(image_prompt):
+    """Generate image via Hugging Face. Uses free Inference API first (no fal-ai credits needed). Returns (data_url, error_message)."""
+    if not HF_TOKEN or not HF_TOKEN.strip():
+        return None, "HF_TOKEN is not set in .env"
+    token = HF_TOKEN.strip()
+    err_msg = "Hugging Face inference is busy (503). Wait a minute and try again, or set USE_DIFFSYNTH_ENGINE=1 in .env for local generation."
+    # 1) Free HF Inference API first (no 402 / pre-paid credits); retry once on 503
+    for model_id in ["stabilityai/stable-diffusion-xl-base-1.0", "runwayml/stable-diffusion-v1-5", "CompVis/stable-diffusion-v1-4"]:
+        for attempt in range(2):
+            try:
+                url = f"https://router.huggingface.co/models/{model_id}"
+                r = requests.post(
+                    url,
+                    headers={"Authorization": f"Bearer {token}"},
+                    json={"inputs": image_prompt[:1000]},
+                    timeout=90,
+                )
+                if r.status_code == 200 and len(r.content) >= 100:
+                    b64 = base64.b64encode(r.content).decode("utf-8")
+                    return f"data:image/png;base64,{b64}", None
+                if r.status_code == 401 or r.status_code == 403:
+                    return None, "HF token invalid or no permission. Use a token with 'Inference' at huggingface.co/settings/tokens."
+                if r.status_code == 503:
+                    if attempt == 0:
+                        time.sleep(5)
+                        continue
+                    break
+            except Exception as e:
+                print(f"HF Inference API {model_id} failed: {e}")
+                err_msg = str(e)
+                break
+    # 2) Optional: fal-ai (requires pre-paid credits; skip if you hit 402)
+    try:
+        from huggingface_hub import InferenceClient
+        import io
+        client = InferenceClient(provider="fal-ai", api_key=token)
+        image = client.text_to_image(image_prompt, model=HF_IMAGE_MODEL)
+        if image is not None and hasattr(image, "save"):
+            buf = io.BytesIO()
+            image.save(buf, format="PNG")
+            buf.seek(0)
+            raw = buf.read()
+            if len(raw) >= 100:
+                b64 = base64.b64encode(raw).decode("utf-8")
+                return f"data:image/png;base64,{b64}", None
+    except Exception as e:
+        if "402" not in str(e):
+            err_msg = str(e)
+        print(f"HF image (fal-ai) failed: {e}")
+    return None, err_msg or "Image generation failed. Free HF models may be loading (503). Try again in a minute."
+
+
+# FLUX design generation: Replicate, Together AI, or Hugging Face
+FLUX_MODEL = "black-forest-labs/FLUX.1-dev"
+
+
+def generate_image_replicate(prompt_text):
+    """Generate image via Replicate FLUX 1.1 Pro. Returns (data_url, error_message)."""
+    if not REPLICATE_API_TOKEN:
+        return None, "REPLICATE_API_TOKEN is not set in .env. Get a token at replicate.com/account/api-tokens"
+    try:
+        import replicate
+        output = replicate.run(
+            "black-forest-labs/flux-1.1-pro",
+            input={
+                "prompt": prompt_text[:1000],
+                "prompt_upsampling": True,
+            },
+        )
+        if output is None:
+            return None, "No image returned from Replicate."
+        # FileOutput: .url and .read()
+        raw = output.read() if hasattr(output, "read") else None
+        if not raw or len(raw) < 100:
+            url = getattr(output, "url", None) if output else None
+            if url and isinstance(url, str):
+                r = requests.get(url, timeout=60)
+                r.raise_for_status()
+                raw = r.content
+            if not raw or len(raw) < 100:
+                return None, "Image too small or invalid Replicate output."
+        b64 = base64.b64encode(raw).decode("utf-8")
+        return f"data:image/png;base64,{b64}", None
+    except Exception as e:
+        err = str(e)
+        print(f"Replicate FLUX error: {err}")
+        if "401" in err or "403" in err or "Unauthorized" in err:
+            return None, "Replicate token invalid. Check REPLICATE_API_TOKEN."
+        return None, err[:500]
+
+
+def generate_image_together(prompt_text):
+    """Generate image via Together AI FLUX. Returns (data_url, error_message)."""
+    if not TOGETHER_API_KEY:
+        return None, "TOGETHER_API_KEY is not set in .env. Get a key at together.ai"
+    url = "https://api.together.xyz/v1/images/generations"
+    headers = {"Authorization": f"Bearer {TOGETHER_API_KEY}", "Content-Type": "application/json"}
+    payload = {
+        "model": "black-forest-labs/FLUX.1-schnell",
+        "prompt": prompt_text[:1000],
+        "steps": 4,
+        "n": 1,
+    }
+    try:
+        r = requests.post(url, json=payload, headers=headers, timeout=120)
+        r.raise_for_status()
+        data = r.json()
+        items = (data or {}).get("data") or []
+        if not items:
+            return None, "No image in Together response."
+        item = items[0]
+        b64 = item.get("b64_json")
+        if b64:
+            return f"data:image/png;base64,{b64}", None
+        img_url = item.get("url")
+        if img_url:
+            r2 = requests.get(img_url, timeout=60)
+            r2.raise_for_status()
+            raw = r2.content
+            if len(raw) < 100:
+                return None, "Image too small."
+            b64 = base64.b64encode(raw).decode("utf-8")
+            return f"data:image/png;base64,{b64}", None
+        return None, "Together response had no b64_json or url."
+    except requests.RequestException as e:
+        err = str(e)
+        if hasattr(e, "response") and e.response is not None:
+            try:
+                err = e.response.text or err
+            except Exception:
+                pass
+        print(f"Together FLUX error: {err}")
+        if "401" in err or "403" in err:
+            return None, "Together API key invalid. Check TOGETHER_API_KEY."
+        return None, err[:500]
+    except Exception as e:
+        err = str(e)
+        print(f"Together FLUX error: {err}")
+        return None, err[:500]
+
+
+def generate_image_flux(prompt_text):
+    """Generate image via Hugging Face FLUX.1-dev using InferenceClient. Returns (data_url, error_message)."""
+    if not HF_TOKEN or not HF_TOKEN.strip():
+        return None, "HF_TOKEN is not set in .env. Get a token at hf.co/settings/tokens"
+    try:
+        import io
+        from huggingface_hub import InferenceClient
+        client = InferenceClient(token=HF_TOKEN.strip())
+        image = client.text_to_image(
+            prompt_text[:1000],
+            model=FLUX_MODEL,
+            guidance_scale=3.5,
+            num_inference_steps=50,
+        )
+        if image is None:
+            return None, "No image returned from FLUX."
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        raw = buf.getvalue()
+        if len(raw) < 100:
+            return None, "Image too small."
+        b64 = base64.b64encode(raw).decode("utf-8")
+        return f"data:image/png;base64,{b64}", None
+    except Exception as e:
+        err = str(e)
+        print(f"FLUX InferenceClient error: {err}")
+        if "401" in err or "403" in err or "Unauthorized" in err:
+            return None, "HF token invalid. Use a token with Inference at hf.co/settings/tokens"
+        if "503" in err or "loading" in err.lower():
+            return None, "FLUX model is loading (503). Try again in a minute."
+        return None, err[:500]
+
+
+def generate_image_design(prompt_text):
+    """Generate design image using DESIGN_IMAGE_PROVIDER (replicate | together). Falls back to HF if configured."""
+    if DESIGN_IMAGE_PROVIDER == "replicate":
+        url, err = generate_image_replicate(prompt_text)
+        if url is not None:
+            return url, None
+        if err and "not set" in err.lower():
+            if TOGETHER_API_KEY:
+                return generate_image_together(prompt_text)
+            if HF_TOKEN and HF_TOKEN.strip():
+                return generate_image_flux(prompt_text)
+        return None, err
+    if DESIGN_IMAGE_PROVIDER == "together":
+        url, err = generate_image_together(prompt_text)
+        if url is not None:
+            return url, None
+        if err and "not set" in err.lower():
+            if REPLICATE_API_TOKEN:
+                return generate_image_replicate(prompt_text)
+            if HF_TOKEN and HF_TOKEN.strip():
+                return generate_image_flux(prompt_text)
+        return None, err
+    # default or unknown: try HF
+    return generate_image_flux(prompt_text)
+
+
+@app.route('/api/generate-design-flux', methods=['POST'])
+def generate_design_flux():
+    """Generate design image with FLUX (Replicate, Together AI, or HF). Returns image_url or error."""
+    data = request.json or {}
+    description = data.get('description', '').strip()
+    style = data.get('style', 'Traditional')
+    material = data.get('material', 'Metal/Brass')
+    if not description:
+        return jsonify({"error": "Please describe your design."}), 400
+    prompt_text = f"{style} {material} Indian handicraft, {description}"
+    title = f"{style} {material} Artisan Concept"
+    desc = f"A {style} Indian handicraft in {material}. {description}"
+    image_url, err_msg = generate_image_design(prompt_text)
+    if image_url is None:
+        print(f"Design FLUX failed: {err_msg}")
+        return jsonify({"error": err_msg or "Image generation failed", "title": title, "description": desc}), 502
+    return jsonify({"title": title, "description": desc, "image_url": image_url})
 
 
 def _analyze_craft_gemini(image_data, mime_type="image/jpeg"):
@@ -548,6 +823,8 @@ def analyze_craft():
         desc += " " + error_hint
     else:
         desc += " Please try again with a clear photo."
+    return jsonify({"error": desc}), 502
+
 
 # --- AI Design Generation (Text-to-Image) ---
 @app.route('/api/generate-design', methods=['POST'])
@@ -873,6 +1150,57 @@ def call_gemini_chat(user_message, context):
     return _fallback_response(user_message)
 
 
+def _refine_design_prompt_gemini(raw_prompt):
+    """Use Gemini to refine a design description into a strong image-generation prompt. Returns (refined_text, error)."""
+    if not GEMINI_API_KEY or not GEMINI_API_KEY.strip():
+        return None, "GEMINI_API_KEY is not set in .env."
+    raw = (raw_prompt or "").strip()
+    if not raw:
+        return None, "No prompt to refine."
+    instruction = """You are a prompt engineer for text-to-image (FLUX). The user will give a short or rough description of an Indian handicraft/artifact they want to visualize.
+
+Your task: rewrite it as a single, clear image-generation prompt. Rules:
+- One paragraph only, no bullet points, no markdown, no code.
+- Include: subject, style (e.g. Madhubani, traditional, studio photo), materials if mentioned, lighting/quality (e.g. high resolution, sharp focus, clean background) if it helps.
+- Keep it under 400 characters. Output ONLY the refined prompt, nothing else."""
+
+    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY.strip()}"
+        payload = {
+            "contents": [{"parts": [{"text": instruction + "\n\nUser's description:\n" + raw[:800]}]}],
+            "generationConfig": {"maxOutputTokens": 256, "temperature": 0.2}
+        }
+        for attempt in range(2):  # normal try + one retry on 429
+            try:
+                r = requests.post(url, json=payload, timeout=15)
+                if r.status_code == 200:
+                    data = r.json()
+                    text = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    if text and text.strip():
+                        return text.strip()[:500], None
+                if r.status_code == 429:
+                    if attempt == 0:
+                        time.sleep(4)  # wait then retry once
+                        continue
+                    return None, "Gemini is busy (rate limit). Wait 30–60 seconds and click ✨ again, or use your text as-is and hit Generate."
+            except Exception:
+                break
+    return None, "Could not refine prompt. Check GEMINI_API_KEY in .env."
+
+
+@app.route('/api/refine-design-prompt', methods=['POST'])
+def refine_design_prompt():
+    """Refine the user's design description using Gemini. Body: { \"prompt\": \"...\" }. Returns { \"prompt\": \"refined...\" } or error."""
+    data = request.json or {}
+    raw = (data.get("prompt") or "").strip()
+    if not raw:
+        return jsonify({"error": "No prompt provided."}), 400
+    refined, err = _refine_design_prompt_gemini(raw)
+    if err:
+        return jsonify({"error": err}), 502
+    return jsonify({"prompt": refined})
+
+
 @app.route('/api/chat', methods=['GET', 'POST'])
 def chat():
     """Craft Assistant chat endpoint - Gemini-powered."""
@@ -974,33 +1302,26 @@ from data.products_heritage import HERITAGE_DATA
 @app.route('/products')
 @login_required
 def products():
-    search_query = request.args.get('search', '').lower()
+    search_query = request.args.get('search', '').lower().strip()
     sort_by = request.args.get('sort', 'default')
     category_filter = request.args.get('category', 'All')
     state_filter = request.args.get('state', 'all')
-    
+
     all_products = []
     for state, data in HERITAGE_DATA.items():
         if state_filter != 'all' and state != state_filter:
             continue
-            
+
         for item in data['items']:
             if category_filter != 'All' and item['category'] != category_filter:
                 continue
-            # Improved Search Logic: Token-based
+            # Improved Search Logic: Token-based (stop words, all keywords); include image_query
             if search_query:
-                # normalize query
                 q_tokens = search_query.replace(',', ' ').replace('.', ' ').split()
-                # stop words to ignore
                 stop_words = {'show', 'me', 'find', 'the', 'a', 'an', 'please', 'i', 'want', 'looking', 'for', 'in', 'from', 'of', 'with'}
                 keywords = [w for w in q_tokens if w not in stop_words]
-                
-                if not keywords: # if only stop words, match everything (or nothing? Let's match everything similar to empty search)
-                    pass 
-                else:
-                    # Check if ALL significant keywords appear in the product data (Name, State, Category)
-                    # This allows "Pottery Rajasthan" to find "Blue Pottery" from "Rajasthan"
-                    product_text = f"{item['name']} {state} {item['category']} {item.get('fun_fact','')}".lower()
+                if keywords:
+                    product_text = f"{item['name']} {state} {item['category']} {item.get('fun_fact','')} {item.get('image_query','')}".lower()
                     if not all(k in product_text for k in keywords):
                         continue
                 

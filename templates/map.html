@@ -69,11 +69,12 @@
     .map-page-container {
         position: relative;
         width: 100%;
-        max-width: 1000px;
+        max-width: 900px;
         margin: 0 auto;
         display: flex;
         justify-content: center;
         align-items: center;
+        gap: 1.5rem;
         filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.15));
     }
 
@@ -93,15 +94,28 @@
     }
 
     #india-map-wrapper {
-        width: 100%;
+        flex: 0 1 55%;
         display: flex;
         justify-content: center;
     }
 
     #india-map-wrapper svg {
-        width: 90%;
+        width: 100%;
         height: auto;
         max-height: 70vh;
+    }
+
+    #map-tooltip {
+        position: relative;
+        left: auto !important;
+        top: auto !important;
+        flex: 0 0 280px;
+        min-height: 120px;
+        opacity: 0;
+    }
+
+    #map-tooltip.active {
+        opacity: 1;
     }
 
     #india-map-wrapper path {
@@ -146,6 +160,21 @@
 
         .map-header {
             margin-bottom: 2rem;
+        }
+
+        .map-page-container {
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        #india-map-wrapper {
+            flex: 0 1 auto;
+        }
+
+        #map-tooltip {
+            flex: 0 0 auto;
+            width: 100%;
+            max-width: 320px;
         }
     }
 </style>

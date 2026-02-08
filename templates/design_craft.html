@@ -3,10 +3,9 @@
 {% block content %}
 <section class="ai-hero">
     <div class="container">
-        <span class="badge">Generative Design</span>
+        <span class="badge">Design Your Artifact</span>
         <h1>Dream. Describe. Design.</h1>
-        <p>Your imagination, curated by heritage. Describe the artifact you want to build, and watch our AI bring it to
-            life.</p>
+        <p>Your imagination, curated by heritage. Describe the artifact you want to build.</p>
     </div>
 </section>
 
@@ -22,8 +21,7 @@
                     <textarea id="designPrompt"
                         placeholder="E.g., A Madhubani style lamp with floral patterns and a brass metallic base for my living room..."></textarea>
                     <div class="input-actions">
-                        <button class="btn-icon" title="Voice Input">🎤</button>
-                        <button class="btn-icon" title="Add Inspiration Image">🖼️</button>
+                        <button type="button" class="btn-icon btn-magic-prompt" id="magicPromptBtn" title="Refine prompt with AI">✨</button>
                     </div>
                 </div>
 
@@ -48,7 +46,7 @@
                 </div>
 
                 <button class="btn-generate btn-primary" id="generateBtn">
-                    <span class="btn-text">Generate AI Design</span>
+                    <span class="btn-text">Generate design</span>
                     <div class="btn-loader" style="display: none;"></div>
                 </button>
             </div>
@@ -58,39 +56,16 @@
                     <div class="placeholder-content">
                         <div class="ai-orb"></div>
                         <h3>Awaiting Your Inspiration</h3>
-                        <p>Your custom AI-generated design will appear here once you hit generate.</p>
+                        <p>Your design will appear here once you hit generate.</p>
                     </div>
                 </div>
-
                 <div class="output-result card" id="outputResult" style="display: none;">
                     <div class="result-image">
-                        <img id="generatedImage" src="" alt="AI Generated Design">
-                        <div class="image-overlay">
-                            <span class="ai-label">AI CONCEPT #{{ range(1000, 9999) | random }}</span>
-                        </div>
+                        <img id="generatedImage" src="" alt="Generated design">
                     </div>
                     <div class="result-info">
-                        <h3>Custom Fusion Lamp Concept</h3>
-                        <p>A unique blend of Madhubani intricate line art and contemporary metal smithing. Optimized for
-                            warm ambiance.</p>
-
-                        <div class="feasibility-metrics">
-                            <div class="metric">
-                                <span class="label">Craft Feasibility</span>
-                                <div class="progress-bar">
-                                    <div class="fill" style="width: 92%;"></div>
-                                </div>
-                            </div>
-                            <div class="metric">
-                                <span class="label">Estimated Time</span>
-                                <span class="val">14-21 Days</span>
-                            </div>
-                        </div>
-
-                        <div class="result-actions">
-                            <button class="btn-primary">Connect with Artisan</button>
-                            <button class="btn-secondary">Download PDF</button>
-                        </div>
+                        <h3 id="resultTitle"></h3>
+                        <p id="resultDesc"></p>
                     </div>
                 </div>
             </div>
@@ -196,6 +171,17 @@
     .btn-icon:hover {
         border-color: var(--accent-color);
         color: var(--accent-color);
+    }
+
+    .btn-magic-prompt {
+        font-size: 1.2rem;
+    }
+    .btn-magic-prompt:hover {
+        background: rgba(var(--accent-color-rgb), 0.08);
+    }
+    .btn-magic-prompt.loading {
+        pointer-events: none;
+        opacity: 0.7;
     }
 
     .style-options,
@@ -306,19 +292,25 @@
     .output-result {
         animation: slideInRight 0.6s cubic-bezier(0.23, 1, 0.32, 1);
         padding: 0;
-        overflow: hidden;
+        overflow: visible;
     }
 
     .result-image {
         position: relative;
-        height: 350px;
+        min-height: 200px;
         background: #eee;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     .result-image img {
+        display: block;
+        max-width: 100%;
         width: 100%;
-        height: 100%;
-        object-fit: cover;
+        height: auto;
+        object-fit: contain;
+        vertical-align: middle;
     }
 
     .ai-label {
@@ -401,20 +393,50 @@
             grid-template-columns: 1fr;
         }
     }
+
+    @media (max-width: 768px) {
+        .ai-hero {
+            padding: 100px 1rem 3rem;
+        }
+        .designer-tool {
+            padding: 0 1rem 4rem;
+        }
+        .card {
+            padding: 1.5rem;
+        }
+        .btn-generate,
+        .btn-magic-prompt {
+            min-height: 44px;
+        }
+        .result-info {
+            padding: 1.5rem;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .ai-hero h1 {
+            font-size: 1.75rem;
+        }
+        .style-chips,
+        .material-options .style-chips {
+            gap: 8px;
+        }
+        .chip {
+            padding: 10px 14px;
+            font-size: 0.85rem;
+        }
+    }
 </style>
 
 <script>
+    const promptArea = document.getElementById('designPrompt');
     const generateBtn = document.getElementById('generateBtn');
     const outputPlaceholder = document.getElementById('outputPlaceholder');
     const outputResult = document.getElementById('outputResult');
     const generatedImage = document.getElementById('generatedImage');
-    const promptArea = document.getElementById('designPrompt');
-
-    // UI Result Elements
-    const resultTitle = document.querySelector('.result-info h3');
-    const resultDesc = document.querySelector('.result-info p');
+    const resultTitle = document.getElementById('resultTitle');
+    const resultDesc = document.getElementById('resultDesc');
     const chips = document.querySelectorAll('.chip');
-
     let selectedStyle = 'Traditional';
     let selectedMaterial = 'Metal/Brass';
 
@@ -423,7 +445,6 @@
             const parent = chip.closest('.style-options, .material-options');
             parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
             chip.classList.add('active');
-
             if (parent.classList.contains('style-options')) {
                 selectedStyle = chip.textContent;
             } else {
@@ -432,19 +453,59 @@
         };
     });
 
-    generateBtn.onclick = async () => {
-        const text = promptArea.value;
-        if (!text) return alert("Please describe your design first!");
+    if (promptArea) {
+        const wordCountEl = document.querySelector('.word-count');
+        promptArea.addEventListener('input', () => {
+            if (wordCountEl) wordCountEl.textContent = (promptArea.value.length) + ' / 500';
+        });
+    }
 
+    const magicPromptBtn = document.getElementById('magicPromptBtn');
+    if (magicPromptBtn) {
+        magicPromptBtn.onclick = async () => {
+            const text = promptArea.value.trim();
+            if (!text) {
+                alert("Type a short description first, then click ✨ to refine it.");
+                return;
+            }
+            magicPromptBtn.classList.add('loading');
+            magicPromptBtn.title = "Refining...";
+            try {
+                const response = await fetch('/api/refine-design-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text })
+                });
+                const data = await response.json().catch(() => ({}));
+                if (!response.ok || data.error) {
+                    throw new Error(data.error || "Refine failed");
+                }
+                if (data.prompt) {
+                    promptArea.value = data.prompt;
+                    const wordCountEl = document.querySelector('.word-count');
+                    if (wordCountEl) wordCountEl.textContent = (data.prompt.length) + ' / 500';
+                }
+            } catch (err) {
+                alert("Could not refine prompt: " + (err.message || "Try again."));
+            } finally {
+                magicPromptBtn.classList.remove('loading');
+                magicPromptBtn.title = "Refine prompt with AI";
+            }
+        };
+    }
+
+    generateBtn.onclick = async () => {
+        const text = promptArea.value.trim();
+        if (!text) {
+            alert("Please describe your design first!");
+            return;
+        }
         generateBtn.disabled = true;
         generateBtn.querySelector('.btn-text').textContent = "Designing your Craft...";
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
-        // Reset image and show loading state if needed
-        generatedImage.style.opacity = '0.3';
-
         try {
-            const response = await fetch('/api/generate-design', {
+            const response = await fetch('/api/generate-design-flux', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -453,33 +514,18 @@
                     material: selectedMaterial
                 })
             });
-
-            const data = await response.json();
+            const data = await response.json().catch(() => ({}));
             if (!response.ok || data.error) {
-                throw new Error(data.error || `Request failed (${response.status})`);
+                throw new Error(data.error || "Request failed");
             }
             if (!data.image_url) {
                 throw new Error("No image returned. Check API key and that your token has valid permissions.");
             }
-
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
-
-            resultTitle.textContent = data.title;
-            resultDesc.textContent = data.description;
-
-            // Set image and handle load
+            resultTitle.textContent = data.title || "";
+            resultDesc.textContent = data.description || "";
             generatedImage.src = data.image_url;
-            generatedImage.onload = () => {
-                generatedImage.style.opacity = '1';
-            };
-            generatedImage.onerror = () => {
-                console.error("Image failed to load", data.image_url?.substring(0, 50));
-                generatedImage.style.opacity = '1';
-                alert("Image failed to load. Ensure HF_TOKEN in .env has 'Inference Providers' permission at huggingface.co/settings/tokens.");
-                generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
-            };
-
             outputResult.scrollIntoView({ behavior: 'smooth' });
         } catch (err) {
             console.error("Generation failed", err);
@@ -494,7 +540,7 @@
             alert("AI generation notice: " + (err.message || "Connection issue. Showing offline concept instead."));
         } finally {
             generateBtn.disabled = false;
-            generateBtn.querySelector('.btn-text').textContent = "Design Again";
+            generateBtn.querySelector('.btn-text').textContent = "Generate design";
             generateBtn.querySelector('.btn-loader').style.display = 'none';
         }
     };

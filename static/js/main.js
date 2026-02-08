@@ -3,10 +3,34 @@ document.addEventListener('DOMContentLoaded', () => {
     const menuToggle = document.querySelector('.mobile-menu-toggle');
     const nav = document.querySelector('.main-nav');
 
-    if (menuToggle) {
+    function closeMobileMenu() {
+        if (nav) nav.classList.remove('active');
+        if (menuToggle) menuToggle.classList.remove('active');
+        document.body.classList.remove('mobile-nav-open');
+        document.querySelectorAll('.nav-item-has-dropdown').forEach(el => el.classList.remove('nav-open'));
+    }
+
+    if (menuToggle && nav) {
         menuToggle.addEventListener('click', () => {
+            const opening = !nav.classList.contains('active');
             nav.classList.toggle('active');
             menuToggle.classList.toggle('active');
+            if (opening) document.body.classList.add('mobile-nav-open');
+            else document.body.classList.remove('mobile-nav-open');
+            if (!nav.classList.contains('active')) document.querySelectorAll('.nav-item-has-dropdown').forEach(el => el.classList.remove('nav-open'));
+        });
+        // Close menu when a real nav link is clicked (navigate)
+        nav.querySelectorAll('a[href]').forEach(link => {
+            link.addEventListener('click', (e) => {
+                const href = link.getAttribute('href');
+                if (href === '#' || href === '') {
+                    e.preventDefault();
+                    const parent = link.closest('.nav-item-has-dropdown');
+                    if (parent) parent.classList.toggle('nav-open');
+                    return;
+                }
+                closeMobileMenu();
+            });
         });
     }
 
@@ -134,6 +158,21 @@ document.addEventListener('DOMContentLoaded', () => {
             chatBody.scrollTop = chatBody.scrollHeight;
         }
 
+        function addSearchProductsLink(userQuery) {
+            if (!userQuery || !chatBody) return;
+            const wrap = document.createElement('div');
+            wrap.classList.add('message', 'bot-message', 'chat-search-link-wrap');
+            const link = document.createElement('a');
+            link.href = '/products?search=' + encodeURIComponent(userQuery.trim());
+            link.textContent = "Search products for \"" + userQuery.trim().replace(/"/g, '') + "\" \u2192";
+            link.classList.add('chat-search-products-link');
+            wrap.appendChild(link);
+            const opts = chatBody.querySelector('.chat-options');
+            if (opts) chatBody.insertBefore(wrap, opts);
+            else chatBody.appendChild(wrap);
+            chatBody.scrollTop = chatBody.scrollHeight;
+        }
+
         async function getBotResponse(input) {
             const url = (typeof window.CHAT_API_URL !== 'undefined' && window.CHAT_API_URL) || '/api/chat';
             try {
@@ -168,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await getBotResponse(text);
                 typingIndicator.remove();
                 addMessage(response, false);
+                addSearchProductsLink(text);
             }
         }
 
@@ -195,6 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await getBotResponse(text);
                 typingIndicator.remove();
                 addMessage(response, false);
+                addSearchProductsLink(text);
             });
         });
     }
@@ -361,48 +402,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     connectorLine.style.opacity = '0.5';
                     connectorDot.style.opacity = '1';
                 }
+                path.dispatchEvent(new Event('mousemove'));
             });
 
-            path.addEventListener('mousemove', (e) => {
-                const mouseX = e.clientX;
-                const mouseY = e.clientY;
+            path.addEventListener('mousemove', () => {
+                // Tooltip stays in layout (right of map); only connector line moves
+                const tooltipRect = mapTooltip.getBoundingClientRect();
+                const tooltipWidth = tooltipRect.width;
+                const tooltipHeight = tooltipRect.height;
 
-                // Offset below and to the right of cursor
-                let x = mouseX + 25;
-                let y = mouseY + 25;
-
-                const tooltipWidth = mapTooltip.offsetWidth;
-                const tooltipHeight = mapTooltip.offsetHeight;
-                const windowWidth = window.innerWidth;
-                const windowHeight = window.innerHeight;
-
-                // Improved Viewport Bounds Checking
-                if (x + tooltipWidth > windowWidth - 20) {
-                    x = mouseX - tooltipWidth - 25;
-                }
-
-                if (y + tooltipHeight > windowHeight - 20) {
-                    y = mouseY - tooltipHeight - 25;
-                }
-
-                if (x < 20) x = 20;
-                if (y < 20) y = 20;
-
-                mapTooltip.style.left = `${x}px`;
-                mapTooltip.style.top = `${y}px`;
-
-                // Update Connector Line
+                // Update Connector Line: state center -> left edge of card
                 if (connectorLine && connectorSvg && path) {
                     const svgRect = connectorSvg.getBoundingClientRect();
                     const pathRect = path.getBoundingClientRect();
 
-                    // State attachment (center)
                     const startX = pathRect.left + pathRect.width / 2 - svgRect.left;
                     const startY = pathRect.top + pathRect.height / 2 - svgRect.top;
 
-                    // Tooltip attachment (center)
-                    const endX = x + tooltipWidth / 2 - svgRect.left;
-                    const endY = y + tooltipHeight / 2 - svgRect.top;
+                    const endX = tooltipRect.left + 8 - svgRect.left;
+                    const endY = tooltipRect.top + tooltipHeight / 2 - svgRect.top;
 
                     connectorLine.setAttribute('x1', startX);
                     connectorLine.setAttribute('y1', startY);
