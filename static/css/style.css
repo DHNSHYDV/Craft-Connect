@@ -15,13 +15,13 @@
 }
 
 body.dark-mode {
-    --primary-color: #1a1a1a;
+    --primary-color: #000000;
     --accent-color: #80cbc4;
     /* Lighter teal for dark mode */
     --text-color: #e0f2f1;
-    --bg-color: #121212;
+    --bg-color: #000000;
     --border-color: #333333;
-    --card-bg: #1e1e1e;
+    --card-bg: #111111;
 }
 
 body.dark-mode .main-header {

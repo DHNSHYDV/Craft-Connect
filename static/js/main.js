@@ -193,8 +193,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const sunIcon = document.querySelector('.sun-icon');
     const moonIcon = document.querySelector('.moon-icon');
 
-    // Check local storage
-    if (localStorage.getItem('theme') === 'dark') {
+    // Check local storage (Default to Dark)
+    const currentTheme = localStorage.getItem('theme');
+    if (currentTheme === 'dark' || !currentTheme) {
         body.classList.add('dark-mode');
         sunIcon.style.display = 'none';
         moonIcon.style.display = 'block';

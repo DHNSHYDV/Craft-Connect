@@ -18,8 +18,9 @@
     <header class="main-header">
         <div class="logo-container">
             <a href="{{ url_for('home') }}" class="logo-link">
-                <img src="{{ url_for('static', filename='images/logo_map.png') }}" alt="Desh Ke Haath Logo"
-                    class="site-logo">
+                <img src="{{ url_for('static', filename='images/custom_logo.png') }}"
+                    onerror="this.src='{{ url_for('static', filename='images/logo_map.png') }}';"
+                    alt="Desh Ke Haath Logo" class="site-logo">
             </a>
         </div>
         <nav class="main-nav">
@@ -59,7 +60,6 @@
                     style="display: none;">
                     <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
                 </svg>
-                </svg>
             </button>
             <a href="/cart" class="cart-btn" aria-label="Shopping Cart">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -72,15 +72,27 @@
                 <span class="cart-count">0</span>
             </a>
             <div class="profile-menu">
-                <button class="profile-icon" aria-label="Account">
+                <button class="profile-icon" aria-label="Account"
+                    onclick="document.querySelector('.profile-dropdown').classList.toggle('active')">
+                    {% if current_user.is_authenticated and current_user.profile_image and current_user.profile_image !=
+                    'default.jpg' %}
+                    <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_image) }}"
+                        alt="{{ current_user.name }}"
+                        style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                    {% else %}
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                         <circle cx="12" cy="7" r="4"></circle>
                     </svg>
+                    {% endif %}
                 </button>
                 <div class="profile-dropdown">
-                    <span class="dropdown-user">{{ current_user.name }}</span>
+                    <span class="dropdown-user">Hello, {{ current_user.name }}</span>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('profile') }}" class="dropdown-item">My Profile</a>
+                    <a href="{{ url_for('orders') }}" class="dropdown-item">My Orders</a>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
                     <a href="{{ url_for('logout') }}" class="dropdown-item">Log Out</a>
                 </div>
             </div>

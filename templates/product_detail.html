@@ -84,9 +84,9 @@
                     <input type="number" value="1" min="1" max="10" readonly id="pdpQty" class="qty-display">
                     <button type="button" class="qty-trigger" id="qtyPlus">+</button>
                 </div>
-                <button class="btn-pdp-add-minimal add-to-cart-btn" data-id="{{ product.id }}"
-                    data-name="{{ product.name }}" data-price="{{ product.price }}"
-                    data-image="{{ product.image_url }}" data-state="{{ product.state }}" onclick="event.stopPropagation(); if(typeof window.addToCart === 'function') window.addToCart({
+                <button class="btn-pdp-add-minimal" data-id="{{ product.id }}" data-name="{{ product.name }}"
+                    data-price="{{ product.price }}" data-image="{{ product.image_url }}"
+                    data-state="{{ product.state }}" onclick="event.stopPropagation(); if(typeof window.addToCart === 'function') window.addToCart({
                             id: this.dataset.id, 
                             name: this.dataset.name, 
                             price: parseFloat(this.dataset.price), 

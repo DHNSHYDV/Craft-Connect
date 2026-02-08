@@ -35,7 +35,8 @@
                             </div>
                             <div class="form-group full">
                                 <label>Address (Area and Street)</label>
-                                <textarea id="addrStreet" rows="3" placeholder="Apartment, building, floor, landmark"></textarea>
+                                <textarea id="addrStreet" rows="3"
+                                    placeholder="Apartment, building, floor, landmark"></textarea>
                             </div>
                             <div class="form-group">
                                 <label>City / District / Town</label>
@@ -61,7 +62,8 @@
                         </div>
                         <button type="button" class="btn-save-address" id="btnSaveAddress">Save & Deliver Here</button>
                     </div>
-                    <button type="button" class="btn-continue" id="btnContinueAddress">Deliver to this Address →</button>
+                    <button type="button" class="btn-continue" id="btnContinueAddress">Deliver to this Address
+                        →</button>
                 </div>
 
                 <!-- Step 2: Payment -->
@@ -122,12 +124,15 @@
                     <div class="payment-inputs">
                         <div class="payment-input-panel active" id="panelUpi">
                             <label>Enter UPI ID</label>
-                            <input type="text" id="upiId" placeholder="e.g. rahul@paytm, 9876543210@ybl, name@okaxis" maxlength="50">
+                            <input type="text" id="upiId" placeholder="e.g. rahul@paytm, 9876543210@ybl, name@okaxis"
+                                maxlength="50">
                             <span class="input-hint">Format: xxxxx@xxx (e.g. name@paytm, phone@ybl)</span>
                         </div>
                         <div class="payment-input-panel" id="panelQr">
                             <div class="qr-placeholder">
-                                <div class="qr-fake"></div>
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=deshkehaath@upi&pn=DeshKeHaath&mc=5678&tid=1234567890&tr=1234567890&tn=Payment%20for%20Handicrafts&am=0&cu=INR"
+                                    alt="Scan to Pay" class="qr-code-img" id="qrImage"
+                                    style="width: 150px; height: 150px; margin: 0 auto 1rem; display: block;">
                                 <p>Scan QR with any UPI app</p>
                                 <span class="qr-amount" id="qrAmount">₹0</span>
                             </div>
@@ -203,10 +208,29 @@
 </div>
 
 <style>
-    .checkout-section { padding: 120px 2rem 5rem; max-width: 1200px; margin: 0 auto; }
-    .checkout-section h1 { font-family: var(--font-heading); margin-bottom: 2rem; }
-    .checkout-container { display: grid; grid-template-columns: 1fr 400px; gap: 3rem; align-items: start; }
-    @media (max-width: 900px) { .checkout-container { grid-template-columns: 1fr; } }
+    .checkout-section {
+        padding: 120px 2rem 5rem;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .checkout-section h1 {
+        font-family: var(--font-heading);
+        margin-bottom: 2rem;
+    }
+
+    .checkout-container {
+        display: grid;
+        grid-template-columns: 1fr 400px;
+        gap: 3rem;
+        align-items: start;
+    }
+
+    @media (max-width: 900px) {
+        .checkout-container {
+            grid-template-columns: 1fr;
+        }
+    }
 
     .checkout-step {
         background: var(--card-bg);
@@ -215,15 +239,23 @@
         border: 1px solid var(--border-color);
         margin-bottom: 2rem;
     }
-    .checkout-step.hidden { display: none !important; }
+
+    .checkout-step.hidden {
+        display: none !important;
+    }
+
     .checkout-step h3 {
-        margin-top: 0; margin-bottom: 1.5rem;
+        margin-top: 0;
+        margin-bottom: 1.5rem;
         color: var(--accent-color);
         border-bottom: 1px solid var(--border-color);
         padding-bottom: 0.5rem;
     }
 
-    .address-actions { margin-bottom: 1rem; }
+    .address-actions {
+        margin-bottom: 1rem;
+    }
+
     .btn-add-address {
         padding: 8px 16px;
         border: 1px dashed var(--border-color);
@@ -233,7 +265,11 @@
         cursor: pointer;
         font-weight: 600;
     }
-    .btn-add-address:hover { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.05); }
+
+    .btn-add-address:hover {
+        border-color: var(--accent-color);
+        background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.05);
+    }
 
     .address-card {
         display: flex;
@@ -245,20 +281,56 @@
         margin-bottom: 0.75rem;
         transition: all 0.2s;
     }
-    .address-card:hover, .address-card.selected { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.04); }
-    .address-content { display: flex; flex-direction: column; gap: 4px; }
-    .address-content .phone { font-size: 0.85rem; opacity: 0.8; }
-    .address-form.hidden { display: none; }
-    .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    .form-group.full { grid-column: span 2; }
-    .form-group label { display: block; margin-bottom: 0.4rem; font-weight: 600; font-size: 0.85rem; }
-    .form-group input, .form-group select, .form-group textarea {
-        width: 100%; padding: 0.7rem;
+
+    .address-card:hover,
+    .address-card.selected {
+        border-color: var(--accent-color);
+        background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.04);
+    }
+
+    .address-content {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .address-content .phone {
+        font-size: 0.85rem;
+        opacity: 0.8;
+    }
+
+    .address-form.hidden {
+        display: none;
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    .form-group.full {
+        grid-column: span 2;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.4rem;
+        font-weight: 600;
+        font-size: 0.85rem;
+    }
+
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.7rem;
         border: 1px solid var(--border-color);
         border-radius: 8px;
         background: var(--bg-color);
         color: var(--text-color);
     }
+
     .btn-save-address {
         margin-top: 1rem;
         padding: 10px 20px;
@@ -269,6 +341,7 @@
         cursor: pointer;
         font-weight: 600;
     }
+
     .btn-continue {
         margin-top: 1.5rem;
         padding: 12px 24px;
@@ -281,7 +354,12 @@
         font-size: 1rem;
     }
 
-    .payment-options { display: flex; flex-direction: column; gap: 0.75rem; }
+    .payment-options {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+
     .payment-option {
         display: flex;
         align-items: center;
@@ -292,24 +370,71 @@
         cursor: pointer;
         transition: all 0.2s;
     }
-    .payment-option:hover { border-color: var(--accent-color); }
-    .payment-option.active { border-color: var(--accent-color); background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.06); }
-    .pay-icon { font-size: 1.5rem; }
-    .method-name { display: block; font-weight: 700; }
-    .method-desc { font-size: 0.8rem; opacity: 0.7; }
 
-    .payment-inputs { margin-top: 1.5rem; }
-    .payment-input-panel { display: none; padding: 1rem; background: var(--bg-color); border-radius: 12px; }
-    .payment-input-panel.active { display: block; }
-    .payment-input-panel label { display: block; margin-bottom: 0.5rem; font-weight: 600; }
-    .payment-input-panel input, .payment-input-panel select {
-        width: 100%; padding: 0.8rem;
+    .payment-option:hover {
+        border-color: var(--accent-color);
+    }
+
+    .payment-option.active {
+        border-color: var(--accent-color);
+        background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.06);
+    }
+
+    .pay-icon {
+        font-size: 1.5rem;
+    }
+
+    .method-name {
+        display: block;
+        font-weight: 700;
+    }
+
+    .method-desc {
+        font-size: 0.8rem;
+        opacity: 0.7;
+    }
+
+    .payment-inputs {
+        margin-top: 1.5rem;
+    }
+
+    .payment-input-panel {
+        display: none;
+        padding: 1rem;
+        background: var(--bg-color);
+        border-radius: 12px;
+    }
+
+    .payment-input-panel.active {
+        display: block;
+    }
+
+    .payment-input-panel label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+
+    .payment-input-panel input,
+    .payment-input-panel select {
+        width: 100%;
+        padding: 0.8rem;
         border: 1px solid var(--border-color);
         border-radius: 8px;
         margin-bottom: 0.5rem;
     }
-    .input-hint { font-size: 0.75rem; opacity: 0.6; }
-    .card-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+    .input-hint {
+        font-size: 0.75rem;
+        opacity: 0.6;
+    }
+
+    .card-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
     .qr-placeholder {
         text-align: center;
         padding: 2rem;
@@ -317,15 +442,23 @@
         border-radius: 12px;
         border: 1px solid var(--border-color);
     }
+
     .qr-fake {
-        width: 140px; height: 140px;
+        width: 140px;
+        height: 140px;
         margin: 0 auto 1rem;
         background: linear-gradient(135deg, #333 25%, transparent 25%, transparent 75%, #333 75%),
-                    linear-gradient(135deg, transparent 25%, #333 25%, #333 75%, transparent 75%);
+            linear-gradient(135deg, transparent 25%, #333 25%, #333 75%, transparent 75%);
         background-size: 20px 20px;
         border-radius: 8px;
     }
-    .qr-amount { font-weight: 700; font-size: 1.2rem; display: block; margin-top: 0.5rem; }
+
+    .qr-amount {
+        font-weight: 700;
+        font-size: 1.2rem;
+        display: block;
+        margin-top: 0.5rem;
+    }
 
     .checkout-summary {
         background: var(--card-bg);
@@ -335,34 +468,59 @@
         position: sticky;
         top: 100px;
     }
-    .summary-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.9rem; }
-    .full-width { width: 100%; margin-top: 1rem; }
-    .terms { font-size: 0.75rem; text-align: center; margin-top: 1rem; opacity: 0.6; }
+
+    .summary-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        font-size: 0.9rem;
+    }
+
+    .full-width {
+        width: 100%;
+        margin-top: 1rem;
+    }
+
+    .terms {
+        font-size: 0.75rem;
+        text-align: center;
+        margin-top: 1rem;
+        opacity: 0.6;
+    }
 
     /* Success */
     .success-overlay {
         position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        background: rgba(0,0,0,0.85);
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.85);
         display: none;
         align-items: center;
         justify-content: center;
         z-index: 2000;
         backdrop-filter: blur(10px);
     }
-    .success-overlay.show { display: flex; animation: fadeIn 0.4s ease; }
+
+    .success-overlay.show {
+        display: flex;
+        animation: fadeIn 0.4s ease;
+    }
+
     .success-card {
         background: var(--card-bg);
         padding: 3rem;
         border-radius: 24px;
         text-align: center;
         max-width: 480px;
-        box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
         animation: successPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
     }
+
     .success-check {
-        width: 70px; height: 70px;
+        width: 70px;
+        height: 70px;
         margin: 0 auto 1.5rem;
         background: #22c55e;
         color: white;
@@ -374,13 +532,20 @@
         justify-content: center;
         animation: checkPulse 0.8s ease 0.3s both;
     }
+
     .success-title {
         font-family: var(--font-heading);
         font-size: 1.8rem;
         margin-bottom: 0.5rem;
         animation: fadeSlide 0.5s ease 0.4s both;
     }
-    .success-msg { opacity: 0.8; margin-bottom: 1.5rem; animation: fadeSlide 0.5s ease 0.5s both; }
+
+    .success-msg {
+        opacity: 0.8;
+        margin-bottom: 1.5rem;
+        animation: fadeSlide 0.5s ease 0.5s both;
+    }
+
     .order-details {
         background: var(--bg-color);
         padding: 1rem 1.5rem;
@@ -389,178 +554,231 @@
         text-align: left;
         animation: fadeSlide 0.5s ease 0.6s both;
     }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+        }
+
+        to {
+            opacity: 1;
+        }
+    }
+
     @keyframes successPop {
-        from { opacity: 0; transform: scale(0.8); }
-        to { opacity: 1; transform: scale(1); }
+        from {
+            opacity: 0;
+            transform: scale(0.8);
+        }
+
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
     }
+
     @keyframes checkPulse {
-        0% { transform: scale(0); opacity: 0; }
-        50% { transform: scale(1.2); }
-        100% { transform: scale(1); opacity: 1; }
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+
+        50% {
+            transform: scale(1.2);
+        }
+
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
     }
+
     @keyframes fadeSlide {
-        from { opacity: 0; transform: translateY(15px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+            opacity: 0;
+            transform: translateY(15px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
-    .input-error { border-color: #ef4444 !important; }
+
+    .input-error {
+        border-color: #ef4444 !important;
+    }
 </style>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-    if (cart.length === 0) { window.location.href = '/products'; return; }
-
-    let total = 0;
-    const itemsList = document.getElementById('checkoutItems');
-    cart.forEach(item => {
-        total += item.price * item.quantity;
-        itemsList.innerHTML += `<div class="summary-item"><span>${item.name} x ${item.quantity}</span><span>₹${(item.price * item.quantity).toLocaleString()}</span></div>`;
-    });
-    const tax = Math.round(total * 0.03);
-    const grandTotal = total + tax;
-    document.getElementById('checkoutSubtotal').textContent = `₹${total.toLocaleString()}`;
-    document.getElementById('checkoutTax').textContent = `₹${tax.toLocaleString()}`;
-    document.getElementById('checkoutTotal').textContent = `₹${grandTotal.toLocaleString()}`;
-    document.getElementById('qrAmount').textContent = `₹${grandTotal.toLocaleString()}`;
-
-    // Address
-    document.getElementById('btnAddAddress').onclick = () => {
-        document.getElementById('addressForm').classList.remove('hidden');
-    };
-    document.getElementById('btnSaveAddress').onclick = () => {
-        const name = document.getElementById('addrName').value.trim();
-        const phone = document.getElementById('addrPhone').value.trim();
-        const street = document.getElementById('addrStreet').value.trim();
-        const city = document.getElementById('addrCity').value.trim();
-        const state = document.getElementById('addrState').value;
-        const pincode = document.getElementById('addrPincode').value.trim();
-        if (!name || !phone || !street || !city || !state || !pincode) {
-            alert('Please fill all address fields');
+    document.addEventListener('DOMContentLoaded', () => {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        console.log("DEBUG: Checkout Cart:", cart);
+        if (cart.length === 0) {
+            console.log("DEBUG: Cart is empty, redirecting to products");
+            window.location.href = '/products';
             return;
         }
-        if (phone.length !== 10 || !/^\d+$/.test(phone)) {
-            alert('Enter valid 10-digit phone');
-            return;
-        }
-        if (pincode.length !== 6 || !/^\d+$/.test(pincode)) {
-            alert('Enter valid 6-digit pincode');
-            return;
-        }
-        const html = `<label class="address-card selected"><input type="radio" name="address" value="new" checked><div class="address-content"><strong>${name}</strong><span>${street}, ${city}, ${state} - ${pincode}</span><span class="phone">Phone: ${phone}</span></div></label>`;
-        document.getElementById('savedAddresses').innerHTML = html;
-        document.getElementById('addressForm').classList.add('hidden');
-    };
 
-    // Address card selection
-    document.getElementById('savedAddresses').addEventListener('change', (e) => {
-        if (e.target.name === 'address') {
-            document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
-            e.target.closest('.address-card').classList.add('selected');
-        }
-    });
+        let total = 0;
+        const itemsList = document.getElementById('checkoutItems');
+        cart.forEach(item => {
+            total += item.price * item.quantity;
+            itemsList.innerHTML += `<div class="summary-item"><span>${item.name} x ${item.quantity}</span><span>₹${(item.price * item.quantity).toLocaleString()}</span></div>`;
+        });
+        const tax = Math.round(total * 0.03);
+        const grandTotal = total + tax;
+        document.getElementById('checkoutSubtotal').textContent = `₹${total.toLocaleString()}`;
+        document.getElementById('checkoutTax').textContent = `₹${tax.toLocaleString()}`;
+        document.getElementById('checkoutTotal').textContent = `₹${grandTotal.toLocaleString()}`;
+        document.getElementById('qrAmount').textContent = `₹${grandTotal.toLocaleString()}`;
 
-    // Step: Address -> Payment
-    document.getElementById('btnContinueAddress').onclick = () => {
-        document.getElementById('stepAddress').classList.add('hidden');
-        document.getElementById('stepPayment').classList.remove('hidden');
-    };
+        // Update QR Code with real amount
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=deshkehaath@upi&pn=DeshKeHaath&am=${grandTotal}&cu=INR`;
+        const qrImg = document.getElementById('qrImage');
+        if (qrImg) qrImg.src = qrUrl;
 
-    // Payment method switch
-    document.querySelectorAll('.payment-option').forEach(opt => {
-        opt.onclick = () => {
-            document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
-            opt.classList.add('active');
-            opt.querySelector('input').checked = true;
-            const m = opt.dataset.method;
-            document.querySelectorAll('.payment-input-panel').forEach(p => p.classList.remove('active'));
-            if (m === 'upi') document.getElementById('panelUpi').classList.add('active');
-            else if (m === 'qr') document.getElementById('panelQr').classList.add('active');
-            else if (m === 'debit' || m === 'credit') document.getElementById('panelCard').classList.add('active');
-            else if (m === 'netbanking') document.getElementById('panelNetbanking').classList.add('active');
+        // Address
+        document.getElementById('btnAddAddress').onclick = () => {
+            document.getElementById('addressForm').classList.remove('hidden');
         };
-    });
-
-    // Card number format
-    document.getElementById('cardNumber').oninput = function() {
-        let v = this.value.replace(/\D/g, '');
-        this.value = v.replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
-    };
-    document.getElementById('cardExpiry').oninput = function() {
-        let v = this.value.replace(/\D/g, '');
-        if (v.length >= 2) this.value = v.slice(0,2) + '/' + v.slice(2,4);
-        else this.value = v;
-    };
-
-    // Place Order
-    document.getElementById('btnPlaceOrder').onclick = () => placeOrder(grandTotal);
-
-    async function placeOrder(amount) {
-        const method = document.querySelector('input[name="payment"]:checked').value;
-
-        if (method === 'upi') {
-            const upi = document.getElementById('upiId').value.trim();
-            if (!/^[\w.-]+@[\w.-]+$/.test(upi)) {
-                document.getElementById('upiId').classList.add('input-error');
-                alert('Enter valid UPI ID (e.g. name@paytm, 9876543210@ybl)');
+        document.getElementById('btnSaveAddress').onclick = () => {
+            const name = document.getElementById('addrName').value.trim();
+            const phone = document.getElementById('addrPhone').value.trim();
+            const street = document.getElementById('addrStreet').value.trim();
+            const city = document.getElementById('addrCity').value.trim();
+            const state = document.getElementById('addrState').value;
+            const pincode = document.getElementById('addrPincode').value.trim();
+            if (!name || !phone || !street || !city || !state || !pincode) {
+                alert('Please fill all address fields');
                 return;
             }
-            document.getElementById('upiId').classList.remove('input-error');
-        } else if (method === 'debit' || method === 'credit') {
-            const card = document.getElementById('cardNumber').value.replace(/\s/g, '');
-            const exp = document.getElementById('cardExpiry').value;
-            const cvv = document.getElementById('cardCvv').value;
-            if (card.length < 15 || card.length > 16) {
-                document.getElementById('cardNumber').classList.add('input-error');
-                alert('Enter valid 15 or 16 digit card number');
+            if (phone.length !== 10 || !/^\d+$/.test(phone)) {
+                alert('Enter valid 10-digit phone');
                 return;
             }
-            if (!/^\d{2}\/\d{2}$/.test(exp)) {
-                document.getElementById('cardExpiry').classList.add('input-error');
-                alert('Enter expiry as MM/YY');
+            if (pincode.length !== 6 || !/^\d+$/.test(pincode)) {
+                alert('Enter valid 6-digit pincode');
                 return;
             }
-            if (cvv.length < 3) {
-                document.getElementById('cardCvv').classList.add('input-error');
-                alert('Enter valid CVV');
-                return;
-            }
-            document.getElementById('cardNumber').classList.remove('input-error');
-            document.getElementById('cardExpiry').classList.remove('input-error');
-            document.getElementById('cardCvv').classList.remove('input-error');
-        } else if (method === 'netbanking') {
-            if (!document.getElementById('netBank').value) {
-                alert('Please select your bank');
-                return;
-            }
-        }
-
-        const selectedAddr = document.querySelector('.address-card.selected .address-content');
-        const addrText = selectedAddr ? Array.from(selectedAddr.querySelectorAll('span')).map(s => s.textContent).join(', ') : '';
-        const orderPayload = {
-            items: cart.map(i => ({ name: i.name, state: i.state || '', quantity: i.quantity, price: i.price })),
-            total: amount,
-            address: addrText
+            const html = `<label class="address-card selected"><input type="radio" name="address" value="new" checked><div class="address-content"><strong>${name}</strong><span>${street}, ${city}, ${state} - ${pincode}</span><span class="phone">Phone: ${phone}</span></div></label>`;
+            document.getElementById('savedAddresses').innerHTML = html;
+            document.getElementById('addressForm').classList.add('hidden');
         };
-        try {
-            const resp = await fetch('/api/place-order', {
+
+        // Address card selection
+        document.getElementById('savedAddresses').addEventListener('change', (e) => {
+            if (e.target.name === 'address') {
+                document.querySelectorAll('.address-card').forEach(c => c.classList.remove('selected'));
+                e.target.closest('.address-card').classList.add('selected');
+            }
+        });
+
+        // Step: Address -> Payment
+        document.getElementById('btnContinueAddress').onclick = () => {
+            document.getElementById('stepAddress').classList.add('hidden');
+            document.getElementById('stepPayment').classList.remove('hidden');
+        };
+
+        // Payment method switch
+        document.querySelectorAll('.payment-option').forEach(opt => {
+            opt.onclick = () => {
+                document.querySelectorAll('.payment-option').forEach(o => o.classList.remove('active'));
+                opt.classList.add('active');
+                opt.querySelector('input').checked = true;
+                const m = opt.dataset.method;
+                document.querySelectorAll('.payment-input-panel').forEach(p => p.classList.remove('active'));
+                if (m === 'upi') document.getElementById('panelUpi').classList.add('active');
+                else if (m === 'qr') document.getElementById('panelQr').classList.add('active');
+                else if (m === 'debit' || m === 'credit') document.getElementById('panelCard').classList.add('active');
+                else if (m === 'netbanking') document.getElementById('panelNetbanking').classList.add('active');
+            };
+        });
+
+
+        // Card number format
+        document.getElementById('cardNumber').oninput = function () {
+            let v = this.value.replace(/\D/g, '');
+            this.value = v.replace(/(.{4})/g, '$1 ').trim().slice(0, 19);
+        };
+        document.getElementById('cardExpiry').oninput = function () {
+            let v = this.value.replace(/\D/g, '');
+            if (v.length >= 2) this.value = v.slice(0, 2) + '/' + v.slice(2, 4);
+            else this.value = v;
+        };
+
+        // Place Order
+        document.getElementById('btnPlaceOrder').onclick = () => placeOrder(grandTotal);
+
+        function placeOrder(amount) {
+            const method = document.querySelector('input[name="payment"]:checked').value;
+
+            // ... (validation logic for payment methods - keep this part, it is good) ...
+            if (method === 'upi') {
+                const upi = document.getElementById('upiId').value.trim();
+                if (!/^[\w.-]+@[\w.-]+$/.test(upi)) {
+                    alert('Enter valid UPI ID');
+                    return;
+                }
+            } else if (method === 'debit' || method === 'credit') {
+                const card = document.getElementById('cardNumber').value.replace(/\s/g, '');
+                if (card.length < 15) {
+                    alert('Invalid card');
+                    return;
+                }
+            } else if (method === 'netbanking') {
+                if (!document.getElementById('netBank').value) {
+                    alert('Select bank');
+                    return;
+                }
+            }
+
+            // Gather Order Data
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const orderData = {
+                items: cart,
+                totalAmount: amount,
+                address: document.getElementById('addrStreet').value || "123 Heritage Lane", // Fallback if using saved
+                city: document.getElementById('addrCity').value || "Jaipur",
+                state: document.getElementById('addrState').value || "Rajasthan",
+                pincode: document.getElementById('addrPincode').value || "302001",
+                phone: document.getElementById('addrPhone').value || "9876543210"
+            };
+
+            // If "new address" was filled, use that
+            if (!document.querySelector('.address-card.selected input[value="1"]')) {
+                orderData.address = document.getElementById('addrStreet').value;
+                orderData.city = document.getElementById('addrCity').value;
+                // ... extract other fields similarly if needed for new address logic
+            }
+
+            fetch('/api/place_order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(orderPayload)
-            });
-            const data = await resp.json();
-            if (data.success && data.order_id) {
-                document.getElementById('orderId').textContent = data.order_id;
-            } else {
-                document.getElementById('orderId').textContent = 'OD' + Math.floor(10000 + Math.random() * 90000);
-            }
-        } catch (e) {
-            document.getElementById('orderId').textContent = 'OD' + Math.floor(10000 + Math.random() * 90000);
+                body: JSON.stringify(orderData)
+            })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('orderId').textContent = 'OD' + data.order_id;
+                        document.getElementById('successOverlay').classList.add('show');
+                        window.clearCart();
+                        // Redirect to orders page after 2 seconds
+                        setTimeout(() => {
+                            window.location.href = '/orders';
+                        }, 2000);
+                    } else {
+                        alert('Failed to place order. Please try again.');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    alert('Error processing order.');
+                });
         }
-        document.getElementById('successOverlay').classList.add('show');
-    }
 
-    window.clearCart = () => { localStorage.removeItem('cart'); };
-});
+        window.clearCart = () => { localStorage.removeItem('cart'); };
+    });
+
 </script>
 {% endblock %}

@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section class="profile-section">
+    <div class="container">
+        <h1>My Profile</h1>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="profile-container">
+            <form method="POST" enctype="multipart/form-data" class="profile-form">
+                <div class="profile-header">
+                    <div class="profile-img-wrapper">
+                        {% if user.profile_image and user.profile_image != 'default.jpg' %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + user.profile_image) }}"
+                            alt="Profile" class="profile-pic">
+                        {% else %}
+                        <div class="profile-placeholder">{{ user.name[0] | upper }}</div>
+                        {% endif %}
+                        <label for="profile_image" class="btn-upload">📷</label>
+                        <input type="file" name="profile_image" id="profile_image" accept="image/*" hidden>
+                    </div>
+                    <h2>{{ user.name }}</h2>
+                    <p>{{ user.email }}</p>
+                </div>
+
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" name="name" value="{{ user.name }}" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" name="phone" value="{{ user.phone or '' }}" placeholder="Enter phone number">
+                    </div>
+                    <div class="form-group full">
+                        <label>Address</label>
+                        <textarea name="address" rows="3"
+                            placeholder="Enter your address">{{ user.address or '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>City</label>
+                        <input type="text" name="city" value="{{ user.city or '' }}" placeholder="City">
+                    </div>
+                    <div class="form-group">
+                        <label>State</label>
+                        <input type="text" name="state" value="{{ user.state or '' }}" placeholder="State">
+                    </div>
+                    <div class="form-group">
+                        <label>Pincode</label>
+                        <input type="text" name="pincode" value="{{ user.pincode or '' }}" placeholder="Pincode">
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-primary mt-4">Save Changes</button>
+            </form>
+        </div>
+    </div>
+</section>
+
+<style>
+    .profile-section {
+        padding: 120px 2rem 5rem;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .profile-container {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+    }
+
+    .profile-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .profile-img-wrapper {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        margin: 0 auto 1rem;
+    }
+
+    .profile-pic,
+    .profile-placeholder {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 3px solid var(--accent-color);
+    }
+
+    .profile-placeholder {
+        background: var(--accent-color);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 3rem;
+        font-weight: bold;
+    }
+
+    .btn-upload {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        background: var(--bg-color);
+        border: 1px solid var(--border-color);
+        border-radius: 50%;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+    }
+
+    .form-group.full {
+        grid-column: span 2;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        opacity: 0.9;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        width: 100%;
+        padding: 0.8rem;
+        border: 1px solid var(--border-color);
+        border-radius: 8px;
+        background: var(--bg-color);
+        color: var(--text-color);
+    }
+
+    .alert {
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        text-align: center;
+    }
+
+    .alert-success {
+        background: rgba(34, 197, 94, 0.1);
+        color: #22c55e;
+        border: 1px solid #22c55e;
+    }
+
+    .mt-4 {
+        margin-top: 1.5rem;
+    }
+
+    @media (max-width: 600px) {
+        .form-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}

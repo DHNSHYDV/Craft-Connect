@@ -17,6 +17,10 @@ app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///sit
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import db, User, Order, OrderItem
+
+# Import Data
+from data.products_heritage import HERITAGE_DATA
+
 db.init_app(app)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -26,6 +30,9 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'entry'  # /entry = splash (video + auth)
 login_manager.login_message = 'Please sign in to continue.'
 
+# Configure Upload Folder
+app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'profiles')
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -37,6 +44,152 @@ def load_user(user_id):
 
 with app.app_context():
     db.create_all()
+
+# --- Core Routes ---
+
+@app.route('/')
+def index():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return redirect(url_for('entry'))
+
+@app.route('/entry')
+def entry():
+    if current_user.is_authenticated:
+        return redirect(url_for('home'))
+    return render_template('splash.html')
+
+@app.route('/home')
+@login_required
+def home():
+    return render_template('index.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    print(f"DEBUG: Accessing /login with method {request.method}")
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        user = User.query.filter_by(email=email).first()
+        if user and user.check_password(password):
+            login_user(user)
+            return redirect(url_for('home'))
+        else:
+            flash('Login Unsuccessful. Please check email and password', 'danger')
+    return render_template('splash.html') # Login is on splash page now
+
+@app.route('/signup', methods=['GET', 'POST'])
+def signup():
+    print(f"DEBUG: Accessing /signup with method {request.method}")
+    if request.method == 'POST':
+        email = request.form.get('email')
+        name = request.form.get('name')
+        password = request.form.get('password')
+        
+        user = User.query.filter_by(email=email).first()
+        if user:
+            flash('Email already exists', 'warning')
+            return redirect(url_for('entry'))
+        
+        new_user = User(email=email, name=name)
+        new_user.set_password(password)
+        db.session.add(new_user)
+        db.session.commit()
+        # login_user(new_user)  <-- Removed auto-login
+        flash('Account created successfully! Please log in.', 'success')
+        return redirect(url_for('entry'))
+    return render_template('splash.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('entry'))
+
+# --- Product Routes ---
+
+
+
+@app.route('/about')
+@login_required
+def about():
+    return render_template('about.html')
+
+# --- Profile & Orders Routes ---
+
+@app.route('/profile', methods=['GET', 'POST'])
+@login_required
+def profile():
+    if request.method == 'POST':
+        # Update details
+        current_user.name = request.form.get('name')
+        current_user.phone = request.form.get('phone')
+        current_user.address = request.form.get('address')
+        current_user.city = request.form.get('city')
+        current_user.state = request.form.get('state')
+        current_user.pincode = request.form.get('pincode')
+        
+        # Handle Profile Image Upload
+        if 'profile_image' in request.files:
+            file = request.files['profile_image']
+            if file and file.filename != '':
+                from werkzeug.utils import secure_filename
+                filename = secure_filename(f"user_{current_user.id}_{file.filename}")
+                file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+                current_user.profile_image = filename
+        
+        db.session.commit()
+        flash('Profile updated successfully!', 'success')
+        return redirect(url_for('profile'))
+        
+    return render_template('profile.html', user=current_user)
+
+@app.route('/api/place_order', methods=['POST'])
+@login_required
+def place_order():
+    print(f"DEBUG: /api/place_order called by user {current_user.id}")
+    data = request.json
+    print(f"DEBUG: Order Data: {data}")
+    
+    # Save shipping info from this specific order to the user profile for future ease
+    # (Optional: deciding if we overwrite user profile address with order address)
+    current_user.phone = data.get('phone')
+    current_user.address = data.get('address')
+    current_user.city = data.get('city')
+    current_user.state = data.get('state')
+    current_user.pincode = data.get('pincode')
+    
+    new_order = Order(
+        user_id=current_user.id,
+        total_amount=data.get('totalAmount'),
+        items_json=json.dumps(data.get('items')),
+        shipping_address=f"{data.get('address')}, {data.get('city')}, {data.get('state')} - {data.get('pincode')}"
+    )
+    
+    db.session.add(new_order)
+    db.session.commit()
+    
+    return jsonify({'success': True, 'order_id': new_order.id})
+
+@app.route('/orders')
+@login_required
+def orders():
+    # Fetch orders sorted by newest first
+    user_orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    
+    # Process orders for display (decode JSON items)
+    orders_data = []
+    for order in user_orders:
+        orders_data.append({
+            'id': order.id,
+            'date': order.created_at.strftime('%d %b %Y'),
+            'total': order.total_amount,
+            'status': order.status,
+            'order_items': json.loads(order.items_json),
+            'address': order.shipping_address
+        })
+        
+    return render_template('orders.html', orders=orders_data)
 
 
 
@@ -206,16 +359,15 @@ def build_chatbot_context():
     all_items = []
     for state, data in HERITAGE_DATA.items():
         for item in data["items"]:
-            price = item["price_range"][0] + (len(item["name"]) % 10) * (item["price_range"][1] - item["price_range"][0]) // 10
+            # Correcting index lookup for price range based on item name length
+            idx = 0 if len(item["name"]) % 2 == 0 else 1
+            price = item["price_range"][idx]
             rating = 4.0 + (len(item["name"]) % 10) / 10
             all_items.append({
                 "name": item["name"], "state": state, "category": item["category"],
                 "price": price, "rating": rating, "fun_fact": item.get("fun_fact", "")
             })
     all_items.sort(key=lambda x: x["rating"], reverse=True)
-    top_products = all_items[:15]
-
-    # Pottery/pots/clay products for queries like "what pots do you have?"
     pottery_products = [
         {"name": "Jhajjar Pottery", "state": "Haryana", "desc": "Clay water pots that keep water cool naturally", "price": "₹199-1499"},
         {"name": "Blue Pottery Vase", "state": "Rajasthan", "desc": "Jaipur blue pottery, made from quartz not clay", "price": "₹399-14999"},
@@ -427,6 +579,8 @@ def signup():
 def logout():
     logout_user()
     return redirect(url_for('entry'))
+=======
+>>>>>>> 979e1b9 (Fix Auth and Checkout flow, add QR payment, and clean up redundant files)
 
 
 @app.route('/reset')
@@ -652,6 +806,7 @@ def cart():
 @app.route('/checkout')
 @login_required
 def checkout():
+    print(f"DEBUG: Accessing /checkout for user {current_user.id if current_user.is_authenticated else 'unauthenticated'}")
     return render_template('checkout.html')
 
 @app.route('/design-craft')
@@ -664,10 +819,5 @@ def design_craft():
 def data():
     return render_template('data.html')
 
-@app.route('/about')
-@login_required
-def about():
-    return render_template('about.html')
-
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
