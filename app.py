@@ -402,37 +402,66 @@ FLUX_MODEL = "black-forest-labs/FLUX.1-dev"
 
 
 def generate_image_replicate(prompt_text):
-    """Generate image via Replicate FLUX 1.1 Pro. Returns (data_url, error_message)."""
+    """Generate image via Replicate FLUX 1.1 Pro using HTTP API (avoids Python client Pydantic/Prediction issues on Python 3.14+). Returns (data_url, error_message)."""
     if not REPLICATE_API_TOKEN:
         return None, "REPLICATE_API_TOKEN is not set in .env. Get a token at replicate.com/account/api-tokens"
+    url = "https://api.replicate.com/v1/predictions"
+    headers = {
+        "Authorization": f"Bearer {REPLICATE_API_TOKEN.strip()}",
+        "Content-Type": "application/json",
+        "Prefer": "wait=60",
+    }
+    payload = {
+        "version": "black-forest-labs/flux-1.1-pro",
+        "input": {
+            "prompt": prompt_text[:1000],
+            "prompt_upsampling": True,
+        },
+    }
     try:
-        import replicate
-        output = replicate.run(
-            "black-forest-labs/flux-1.1-pro",
-            input={
-                "prompt": prompt_text[:1000],
-                "prompt_upsampling": True,
-            },
-        )
+        r = requests.post(url, json=payload, headers=headers, timeout=70)
+        r.raise_for_status()
+        data = r.json()
+        status = data.get("status")
+        if status == "failed":
+            err_msg = data.get("error") or "Replicate prediction failed."
+            return None, str(err_msg)[:500]
+        if status != "succeeded":
+            return None, f"Replicate returned status: {status}. Try again."
+        output = data.get("output")
         if output is None:
-            return None, "No image returned from Replicate."
-        # FileOutput: .url and .read()
-        raw = output.read() if hasattr(output, "read") else None
-        if not raw or len(raw) < 100:
-            url = getattr(output, "url", None) if output else None
-            if url and isinstance(url, str):
-                r = requests.get(url, timeout=60)
-                r.raise_for_status()
-                raw = r.content
-            if not raw or len(raw) < 100:
-                return None, "Image too small or invalid Replicate output."
+            return None, "No image in Replicate response."
+        # output can be a URL string or a list of URLs (or FileOutput-like dict)
+        img_url = None
+        if isinstance(output, str) and output.startswith("http"):
+            img_url = output
+        elif isinstance(output, (list, tuple)) and len(output) > 0:
+            img_url = output[0] if isinstance(output[0], str) else getattr(output[0], "url", None) or (output[0].get("url") if isinstance(output[0], dict) else None)
+        elif isinstance(output, dict) and output.get("url"):
+            img_url = output["url"]
+        if not img_url:
+            return None, "Could not get image URL from Replicate output."
+        r2 = requests.get(img_url, timeout=60)
+        r2.raise_for_status()
+        raw = r2.content
+        if len(raw) < 100:
+            return None, "Image too small."
         b64 = base64.b64encode(raw).decode("utf-8")
         return f"data:image/png;base64,{b64}", None
+    except requests.RequestException as e:
+        err = str(e)
+        if hasattr(e, "response") and e.response is not None:
+            try:
+                err = e.response.text or err
+            except Exception:
+                pass
+        print(f"Replicate FLUX error: {err}")
+        if "401" in err or "403" in err:
+            return None, "Replicate token invalid. Check REPLICATE_API_TOKEN."
+        return None, err[:500]
     except Exception as e:
         err = str(e)
         print(f"Replicate FLUX error: {err}")
-        if "401" in err or "403" in err or "Unauthorized" in err:
-            return None, "Replicate token invalid. Check REPLICATE_API_TOKEN."
         return None, err[:500]
 
 
