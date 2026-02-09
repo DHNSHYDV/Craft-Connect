@@ -1470,11 +1470,18 @@ from groq import Groq
 # Use the key from env
 GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
-groq_client = Groq(api_key=GROQ_API_KEY)
+try:
+    if GROQ_API_KEY:
+        groq_client = Groq(api_key=GROQ_API_KEY)
+    else:
+        groq_client = None
+except Exception as e:
+    print(f"Groq Init Warning: {e}")
+    groq_client = None
 
 def call_groq_chat(user_message, context):
     """Call Groq API (Llama 3) for chat response."""
-    if not GROQ_API_KEY:
+    if not groq_client:
         return _fallback_response(user_message)
         
     orders_ctx = get_user_orders_context()
