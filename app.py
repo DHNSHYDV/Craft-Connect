@@ -458,8 +458,26 @@ def generate_image_hf(prompt_text):
 
 
 
+def generate_image_pollinations(prompt_text):
+    """Generate image via Pollinations.ai (Free, Unlimited). Returns (data_url, error_message)."""
+    try:
+        # Pollinations uses a simple get URL for generation
+        import urllib.parse
+        encoded_prompt = urllib.parse.quote(prompt_text[:1000])
+        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true"
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
+        image_bytes = response.content
+        if len(image_bytes) < 100:
+             return None, "Pollinations image too small"
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        return f"data:image/jpeg;base64,{b64}", None
+    except Exception as e:
+        return None, f"Pollinations error: {str(e)}"
+
+
 def generate_image_design(prompt_text):
-    """Generate image. Priority: Local Diffsynth -> Hugging Face (Free)."""
+    """Generate image. Priority: Local Diffsynth -> Pollinations (Unlimited) -> Hugging Face (Free)."""
     
     # 1. PRIORITY: LOCAL DIFFSYNTH (User Preference)
     # Be robust: if it fails (not installed, OOM), we catch it and fallback.
@@ -468,9 +486,17 @@ def generate_image_design(prompt_text):
     if url: 
         print("✓ Diffsynth succeeded")
         return url, None
-    print(f"Diffsynth failed/skipped ({err}), falling back to HF...")
+    print(f"Diffsynth failed/skipped ({err}), falling back to Pollinations...")
 
-    # 2. FALLBACK: HUGGING FACE (FREE)
+    # 2. FALLBACK 1: POLLINATIONS (UNLIMITED, FREE)
+    print("Attempting Pollinations.ai (Unlimited)...")
+    url, err = generate_image_pollinations(prompt_text)
+    if url:
+        print("✓ Pollinations succeeded")
+        return url, None
+    print(f"Pollinations failed ({err}), falling back to HF...")
+
+    # 3. FALLBACK 2: HUGGING FACE (FREE)
     if HF_TOKEN:
         print(f"Generating design with Hugging Face (SDXL)...")
         url, err = generate_image_hf(prompt_text)

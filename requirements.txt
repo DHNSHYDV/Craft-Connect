@@ -12,7 +12,10 @@ groq
 google-generativeai
 huggingface_hub
 
-# Optional: Heavy ML libraries (Commented out for free tier deployment to save space/build time)
-# torch
-# transformers
-# accelerate
+# Diffsynth dependencies (Heavy!)
+torch
+torchvision
+diffsynth-engine
+peft
+transformers
+accelerate
