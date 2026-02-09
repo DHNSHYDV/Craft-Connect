@@ -9,7 +9,6 @@ import base64
 import urllib.parse
 import urllib.parse
 import random
-import jwt
 import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
@@ -43,6 +42,8 @@ db.init_app(app)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
+# Prompt refinement: use this key first so refine has its own quota; if unset, falls back to GEMINI_API_KEY
+PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
 
 # Configure Gemini AI for chatbot
 import google.generativeai as genai
@@ -287,10 +288,6 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
 # fal-ai text-to-image model (use one that supports HF token: e.g. zai-org/GLM-Image)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
 USE_DIFFSYNTH_ENGINE = os.getenv("USE_DIFFSYNTH_ENGINE", "").strip().lower() in ("1", "true", "yes")
-# Design image provider: "replicate" | "together" (default replicate)
-DESIGN_IMAGE_PROVIDER = (os.getenv("DESIGN_IMAGE_PROVIDER", "replicate").strip().lower() or "replicate")
-REPLICATE_API_TOKEN = os.getenv("REPLICATE_API_TOKEN", "").strip()
-TOGETHER_API_KEY = os.getenv("TOGETHER_API_KEY", "").strip()
 
 _diffsynth_pipe = None
 
@@ -420,359 +417,45 @@ def generate_image_hf(image_prompt):
     return None, err_msg or "Image generation failed. Free HF models may be loading (503). Try again in a minute."
 
 
-# FLUX design generation: Replicate, Together AI, or Hugging Face
-FLUX_MODEL = "black-forest-labs/FLUX.1-dev"
+# Design image: Hugging Face Inference (Stable Diffusion XL)
+HF_DESIGN_API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
 
-
-def generate_image_replicate(prompt_text):
-    """Generate image via Replicate FLUX 1.1 Pro using HTTP API (avoids Python client Pydantic/Prediction issues on Python 3.14+). Returns (data_url, error_message)."""
-    if not REPLICATE_API_TOKEN:
-        return None, "REPLICATE_API_TOKEN is not set in .env. Get a token at replicate.com/account/api-tokens"
-    url = "https://api.replicate.com/v1/predictions"
-    headers = {
-        "Authorization": f"Bearer {REPLICATE_API_TOKEN.strip()}",
-        "Content-Type": "application/json",
-        "Prefer": "wait=60",
-    }
-    payload = {
-        "version": "black-forest-labs/flux-dev",
-        "input": {
-            "prompt": prompt_text[:1000],
-            "go_fast": True,
-            "guidance": 3.5,
-            "aspect_ratio": "1:1",
-            "output_format": "png"
-        },
-    }
-    try:
-        # For public models, we use the 'predictions' endpoint but with the version ID or model name
-        # However, for 'flux-dev', we can use the model endpoint
-        # BUT Replicate's HTTP API for specific models usually is /v1/models/{owner}/{name}/predictions
-        # Flux-dev is public. Let's use the explicit model endpoint to be safe.
-        url = "https://api.replicate.com/v1/models/black-forest-labs/flux-dev/predictions"
-        
-        # We need to remove 'version' from payload if using the model endpoint
-        payload.pop("version")
-        
-        r = requests.post(url, json=payload, headers=headers, timeout=70)
-        # Handle 402 Payment Required specifically
-        if r.status_code == 402:
-            return None, "Replicate API Insufficient Credit (402). Billing limit reached."
-        r.raise_for_status()
-        data = r.json()
-        status = data.get("status")
-        if status == "failed":
-            err_msg = data.get("error") or "Replicate prediction failed."
-            return None, str(err_msg)[:500]
-        if status != "succeeded":
-            # If strictly 'starting' or 'processing', we might need to poll?
-            # But earlier code didn't poll. The 'Prefer: wait=60' header often handles it.
-            # If it returns 'starting', we MUST poll. The existing code didn't poll properly for Replicate?
-            # Wait, the existing code:
-            # if status != "succeeded": return None...
-            # This implies the user expected the wait=60 to work.
-            # If it takes >60s, it returns 'starting' or 'processing'.
-            # We should probably respect that logic or implement polling if 60s isn't enough.
-            # For now, let's keep the logic but handle the 'starting' case by polling if possible, or just fail.
-            # Actually, standard Replicate responses include a 'urls.get' for polling.
-            pass
-
-        # If it's not succeeded yet, we need to poll
-        if status in ["starting", "processing"]:
-            get_url = data.get("urls", {}).get("get")
-            if not get_url:
-                 return None, f"Replicate returned status: {status} (wait timed out) and no polling URL."
-            
-            # Poll for up to 60 more seconds
-            import time
-            for _ in range(30):
-                time.sleep(2)
-                r_poll = requests.get(get_url, headers=headers, timeout=30)
-                if r_poll.status_code != 200: continue
-                d_poll = r_poll.json()
-                status = d_poll.get("status")
-                if status == "succeeded":
-                    data = d_poll
-                    break
-                if status == "failed":
-                    return None, f"Replicate polling failed: {d_poll.get('error')}"
-
-        if status != "succeeded":
-             return None, f"Replicate returned status: {status}. Try again."
-
-        output = data.get("output")
-        if output is None:
-            return None, "No image in Replicate response."
-        # output can be a URL string or a list of URLs (or FileOutput-like dict)
-        img_url = None
-        if isinstance(output, str) and output.startswith("http"):
-            img_url = output
-        elif isinstance(output, (list, tuple)) and len(output) > 0:
-            img_url = output[0] if isinstance(output[0], str) else getattr(output[0], "url", None) or (output[0].get("url") if isinstance(output[0], dict) else None)
-        elif isinstance(output, dict) and output.get("url"):
-            img_url = output["url"]
-        if not img_url:
-            return None, "Could not get image URL from Replicate output."
-        r2 = requests.get(img_url, timeout=60)
-        r2.raise_for_status()
-        raw = r2.content
-        if len(raw) < 100:
-            return None, "Image too small."
-        b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:image/png;base64,{b64}", None
-    except requests.RequestException as e:
-        err = str(e)
-        if hasattr(e, "response") and e.response is not None:
-            try:
-                err = e.response.text or err
-            except Exception:
-                pass
-        print(f"Replicate FLUX error: {err}")
-        if "401" in err or "403" in err:
-            return None, "Replicate token invalid. Check REPLICATE_API_TOKEN."
-        return None, err[:500]
-    except Exception as e:
-        err = str(e)
-        print(f"Replicate FLUX error: {err}")
-        return None, err[:500]
-
-
-def generate_image_together(prompt_text):
-    """Generate image via Together AI FLUX. Returns (data_url, error_message)."""
-    if not TOGETHER_API_KEY:
-        return None, "TOGETHER_API_KEY is not set in .env. Get a key at together.ai"
-    url = "https://api.together.xyz/v1/images/generations"
-    headers = {"Authorization": f"Bearer {TOGETHER_API_KEY}", "Content-Type": "application/json"}
-    payload = {
-        "model": "black-forest-labs/FLUX.1-schnell",
-        "prompt": prompt_text[:1000],
-        "steps": 4,
-        "n": 1,
-    }
-    try:
-        r = requests.post(url, json=payload, headers=headers, timeout=120)
-        r.raise_for_status()
-        data = r.json()
-        items = (data or {}).get("data") or []
-        if not items:
-            return None, "No image in Together response."
-        item = items[0]
-        b64 = item.get("b64_json")
-        if b64:
-            return f"data:image/png;base64,{b64}", None
-        img_url = item.get("url")
-        if img_url:
-            r2 = requests.get(img_url, timeout=60)
-            r2.raise_for_status()
-            raw = r2.content
-            if len(raw) < 100:
-                return None, "Image too small."
-            b64 = base64.b64encode(raw).decode("utf-8")
-            return f"data:image/png;base64,{b64}", None
-        return None, "Together response had no b64_json or url."
-    except requests.RequestException as e:
-        err = str(e)
-        if hasattr(e, "response") and e.response is not None:
-            try:
-                err = e.response.text or err
-            except Exception:
-                pass
-        print(f"Together FLUX error: {err}")
-        if "401" in err or "403" in err:
-            return None, "Together API key invalid. Check TOGETHER_API_KEY."
-        return None, err[:500]
-    except Exception as e:
-        err = str(e)
-        print(f"Together FLUX error: {err}")
-        return None, err[:500]
-
-
-def generate_image_flux(prompt_text):
-    """Generate image via Hugging Face FLUX.1-dev using InferenceClient. Returns (data_url, error_message)."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None, "HF_TOKEN is not set in .env. Get a token at hf.co/settings/tokens"
-    try:
-        import io
-        from huggingface_hub import InferenceClient
-        client = InferenceClient(token=HF_TOKEN.strip())
-        image = client.text_to_image(
-            prompt_text[:1000],
-            model=FLUX_MODEL,
-            guidance_scale=3.5,
-            num_inference_steps=50,
-        )
-        if image is None:
-            return None, "No image returned from FLUX."
-        buf = io.BytesIO()
-        image.save(buf, format="PNG")
-        raw = buf.getvalue()
-        if len(raw) < 100:
-            return None, "Image too small."
-        b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:image/png;base64,{b64}", None
-    except Exception as e:
-        err = str(e)
-        print(f"FLUX InferenceClient error: {err}")
-        if "401" in err or "403" in err or "Unauthorized" in err:
-            return None, "HF token invalid. Use a token with Inference at hf.co/settings/tokens"
-        if "503" in err or "loading" in err.lower():
-            return None, "FLUX model is loading (503). Try again in a minute."
-        return None, err[:500]
-
-
-KLING_ACCESS_KEY = os.getenv("KLING_ACCESS_KEY")
-KLING_SECRET_KEY = os.getenv("KLING_SECRET_KEY")
-
-# Debug: Print loaded keys status
-print(f"DEBUG: KLING_ACCESS_KEY loaded: {bool(KLING_ACCESS_KEY)}")
-print(f"DEBUG: KLING_SECRET_KEY loaded: {bool(KLING_SECRET_KEY)}")
-
-def generate_image_kling(prompt_text):
-    """Generate image via Kling AI API (Singapore endpoint) using JWT auth."""
-    if not KLING_ACCESS_KEY or not KLING_SECRET_KEY:
-        return None, "KLING_ACCESS_KEY or KLING_SECRET_KEY not set in .env"
-
-    def encode_jwt_token(ak, sk):
-        headers = {
-            "alg": "HS256",
-            "typ": "JWT"
-        }
-        payload = {
-            "iss": ak,
-            "exp": int(time.time()) + 1800, # 30 mins validity
-            "nbf": int(time.time()) - 5
-        }
-        return jwt.encode(payload, sk, headers=headers)
-
-    token = encode_jwt_token(KLING_ACCESS_KEY, KLING_SECRET_KEY)
-    
-    url = "https://api-singapore.klingai.com/v1/images/generations"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": "kling-v1", # or "kling-v1-5" / check docs for exact model name if needed, usually defaults
-        "prompt": prompt_text[:2000],
-        "n": 1,
-        "aspect_ratio": "1:1"
-    }
-
-    try:
-        # 1. Initialize Task
-        print(f"DEBUG: Calling Kling AI at {url}")
-        r = requests.post(url, json=payload, headers=headers, timeout=30)
-        print(f"DEBUG: Kling Init Response Code: {r.status_code}")
-        r.raise_for_status()
-        data = r.json()
-        print(f"DEBUG: Kling Init Response Data: {data}")
-        
-        # Check standard success response structure
-        # Kling usually returns { "code": 0, "message": "success", "data": { "task_id": "..." } }
-        if data.get("code") != 0:
-            return None, f"Kling API Error: {data.get('message')}"
-            
-        task_id = data.get("data", {}).get("task_id")
-        if not task_id:
-             return None, "Kling API did not return a task_id"
-
-        print(f"DEBUG: Kling Task ID: {task_id}. Polling...")
-
-        # 2. Poll for Result
-        # Max wait 60 seconds
-        for i in range(30):
-            time.sleep(2)
-            check_url = f"https://api-singapore.klingai.com/v1/images/generations/{task_id}"
-            r2 = requests.get(check_url, headers=headers, timeout=30)
-            if r2.status_code != 200:
-                print(f"DEBUG: Poll check failed: {r2.status_code}")
-                continue
-            
-            res_data = r2.json()
-            # check status
-            # usually { "data": { "task_status": "succeed", "task_result": { "images": [...] } } }
-            task_data = res_data.get("data", {})
-            status = task_data.get("task_status")
-            print(f"DEBUG: Poll {i} Status: {status}")
-            
-            if status == "succeed":
-                print(f"DEBUG: Kling Success! Data: {task_data}")
-                images = task_data.get("task_result", {}).get("images", [])
-                if images and len(images) > 0:
-                    img_obj = images[0]
-                    return img_obj.get("url"), None
-            elif status == "failed":
-                return None, f"Kling Task Failed: {task_data.get('task_status_msg')}"
-        
-        return None, "Kling Generation Timed Out"
-
-    except Exception as e:
-        print(f"DEBUG: Kling Exception: {e}")
-        return None, f"Kling Exception: {str(e)}"
 
 def generate_image_design(prompt_text):
-    print(f"DEBUG: generate_image_design called with prompt: {prompt_text[:50]}...")
-    """Generate design image with robust fallback using AVAILABLE keys:
-       Strategy: Try all available providers in order:
-       Kling -> Replicate -> Together -> HF -> Placeholder
-    """
-
-    # 1. Try Kling AI (Prioritized as per user request)
-    if KLING_ACCESS_KEY and KLING_SECRET_KEY:
-        print("Attempting Kling AI...")
-        try:
-            url, err = generate_image_kling(prompt_text)
-            if url: 
-                print(f"✓ Kling AI succeeded: {url}")
-                return url, None
-            print(f"✗ Kling AI failed: {err}")
-        except Exception as e:
-            print(f"✗ Kling AI exception: {str(e)}")
-
-    # 2. Try Replicate (if token exists)
-    if REPLICATE_API_TOKEN:
-        print("Attempting Replicate...")
-        try:
-            url, err = generate_image_replicate(prompt_text)
-            if url:
-                print(f"✓ Replicate succeeded: {url}")
-                return url, None
-            print(f"✗ Replicate failed: {err}")
-        except Exception as e:
-            print(f"✗ Replicate exception: {str(e)}")
-    
-    # 3. Try Together AI (if key exists)
-    if TOGETHER_API_KEY:
-        print("Attempting Together AI...")
-        try:
-            url, err = generate_image_together(prompt_text)
-            if url:
-                print(f"✓ Together AI succeeded: {url}")
-                return url, None
-            print(f"✗ Together AI failed: {err}")
-        except Exception as e:
-            print(f"✗ Together AI exception: {str(e)}")
-
-    # 4. Try Hugging Face (FLUX)
-    if HF_TOKEN:
-        print("Attempting Hugging Face...")
-        try:
-            url, err = generate_image_flux(prompt_text)
-            if url:
-                print(f"✓ Hugging Face succeeded: {url}")
-                return url, None
-            print(f"✗ Hugging Face failed: {err}")
-        except Exception as e:
-            print(f"✗ Hugging Face exception: {str(e)}")
-    
-    # 5. Final Fallback: Placeholder Image
-    print("⚠ All image generation providers failed. Using placeholder.")
-    return "/static/images/placeholder_generation.png", None
+    """Generate design image via Hugging Face Inference (Stable Diffusion XL). Returns (data_url, error_message)."""
+    if not HF_TOKEN or not HF_TOKEN.strip():
+        return None, "HF_TOKEN is not set in .env. Get a token at hf.co/settings/tokens"
+    headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}"}
+    payload = {"inputs": prompt_text[:1000]}
+    try:
+        response = requests.post(HF_DESIGN_API_URL, headers=headers, json=payload, timeout=90)
+        if response.status_code == 401 or response.status_code == 403:
+            return None, "HF token invalid or no permission. Use a token with Inference at hf.co/settings/tokens."
+        if response.status_code == 503:
+            return None, "Model is loading (503). Try again in a minute."
+        response.raise_for_status()
+        image_bytes = response.content
+        if not image_bytes or len(image_bytes) < 100:
+            return None, "No image returned from Hugging Face."
+        b64 = base64.b64encode(image_bytes).decode("utf-8")
+        return f"data:image/png;base64,{b64}", None
+    except requests.RequestException as e:
+        err = str(e)
+        if hasattr(e, "response") and e.response is not None:
+            try:
+                err = e.response.text or err
+            except Exception:
+                pass
+        print(f"HF design image error: {err}")
+        return None, err[:500]
+    except Exception as e:
+        print(f"HF design image error: {e}")
+        return None, str(e)[:500]
 
 
 @app.route('/api/generate-design-flux', methods=['POST'])
 def generate_design_flux():
-    """Generate design image with FLUX (Replicate, Together AI, or HF). Returns image_url or error."""
+    """Generate design image via Hugging Face (Stable Diffusion XL). Returns image_url or error."""
     data = request.json or {}
     description = data.get('description', '').strip()
     style = data.get('style', 'Traditional')
@@ -1375,27 +1058,37 @@ def call_gemini_chat(user_message, context):
     return _fallback_response(user_message)
 
 
+# Prompt refine via HF: use router chat completions. Try these in order (first supported by your account wins).
+HF_REFINE_MODELS = [
+    m.strip() for m in os.getenv("HF_REFINE_MODEL", "Qwen/Qwen2.5-7B-Instruct-1M,mistralai/Mistral-7B-Instruct-v0.2,meta-llama/Meta-Llama-3.1-8B-Instruct").split(",") if m.strip()
+]
+if not HF_REFINE_MODELS:
+    HF_REFINE_MODELS = ["Qwen/Qwen2.5-7B-Instruct-1M"]
+HF_ROUTER_CHAT_URL = "https://router.huggingface.co/v1/chat/completions"
+
+
 def _refine_design_prompt_gemini(raw_prompt):
-    """Use Gemini to refine a design description into a strong image-generation prompt. Returns (refined_text, error)."""
-    if not GEMINI_API_KEY or not GEMINI_API_KEY.strip():
-        return None, "GEMINI_API_KEY is not set in .env."
+    """Use Gemini to refine a design description. Uses PROMPT_REFINE_API_KEY (or GEMINI_API_KEY). Returns (refined_text, error)."""
+    key = PROMPT_REFINE_API_KEY
+    if not key:
+        return None, "Set PROMPT_REFINE_API_KEY or GEMINI_API_KEY in .env (or use HF_TOKEN for Hugging Face refine)."
     raw = (raw_prompt or "").strip()
     if not raw:
         return None, "No prompt to refine."
-    instruction = """You are a prompt engineer for text-to-image (FLUX). The user will give a short or rough description of an Indian handicraft/artifact they want to visualize.
+    instruction = """You are a prompt engineer for text-to-image. The user will give a short or rough description of an Indian handicraft/artifact they want to visualize.
 
 Your task: rewrite it as a single, clear image-generation prompt. Rules:
 - One paragraph only, no bullet points, no markdown, no code.
-- Include: subject, style (e.g. Madhubani, traditional, studio photo), materials if mentioned, lighting/quality (e.g. high resolution, sharp focus, clean background) if it helps.
+- Include: subject, style (e.g. Madhubani, traditional, studio photo), materials if mentioned, lighting/quality (e.g. high resolution, sharp focus) if it helps.
 - Keep it under 400 characters. Output ONLY the refined prompt, nothing else."""
 
     for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY.strip()}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
         payload = {
             "contents": [{"parts": [{"text": instruction + "\n\nUser's description:\n" + raw[:800]}]}],
             "generationConfig": {"maxOutputTokens": 256, "temperature": 0.2}
         }
-        for attempt in range(2):  # normal try + one retry on 429
+        for attempt in range(2):
             try:
                 r = requests.post(url, json=payload, timeout=15)
                 if r.status_code == 200:
@@ -1405,25 +1098,97 @@ Your task: rewrite it as a single, clear image-generation prompt. Rules:
                         return text.strip()[:500], None
                 if r.status_code == 429:
                     if attempt == 0:
-                        time.sleep(4)  # wait then retry once
+                        time.sleep(4)
                         continue
                     return None, "Gemini is busy (rate limit). Wait 30–60 seconds and click ✨ again, or use your text as-is and hit Generate."
             except Exception:
                 break
-    return None, "Could not refine prompt. Check GEMINI_API_KEY in .env."
+    return None, "Could not refine prompt. Check PROMPT_REFINE_API_KEY or GEMINI_API_KEY in .env (or add HF_TOKEN for HF fallback)."
+
+
+def _refine_design_prompt_hf(raw_prompt):
+    """Use Hugging Face router chat completions (v1) for prompt refine. Tries multiple models if one is not supported."""
+    if not HF_TOKEN or not HF_TOKEN.strip():
+        return None, "HF_TOKEN not set (needed for fallback refine)."
+    raw = (raw_prompt or "").strip()
+    if not raw:
+        return None, "No prompt to refine."
+    instruction = "Rewrite as a single image-generation prompt for an Indian handicraft. One short paragraph, under 400 characters. Output ONLY the refined prompt, nothing else."
+    user_content = f"User's description: {raw[:600]}"
+    headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
+    last_error = "No model succeeded."
+    for model in HF_REFINE_MODELS:
+        payload = {
+            "model": model,
+            "messages": [
+                {"role": "system", "content": instruction},
+                {"role": "user", "content": user_content},
+            ],
+            "max_tokens": 256,
+            "temperature": 0.2,
+        }
+        try:
+            r = requests.post(HF_ROUTER_CHAT_URL, headers=headers, json=payload, timeout=60)
+            if r.status_code == 503:
+                last_error = "Refine model is loading (503). Try again in a minute."
+                continue
+            if r.status_code in (401, 403):
+                return None, "HF token invalid. Use a token with 'Make calls to Inference Providers' at hf.co/settings/tokens."
+            try:
+                data = r.json()
+            except Exception:
+                data = None
+            if data is None:
+                r.raise_for_status()
+                continue
+            if isinstance(data, dict) and data.get("error"):
+                err_obj = data.get("error") or data.get("message") or "Request failed."
+                err_str = err_obj if isinstance(err_obj, str) else str(err_obj)
+                code = (data.get("code") or "").lower()
+                if "model_not_supported" in code or "not supported" in err_str.lower():
+                    last_error = err_str[:200]
+                    continue
+                return None, err_str[:200]
+            choices = (data or {}).get("choices") or []
+            if choices:
+                msg = choices[0].get("message") if isinstance(choices[0], dict) else None
+                text = (msg.get("content") or "") if isinstance(msg, dict) else ""
+                if isinstance(text, str) and text.strip():
+                    return text.strip()[:500], None
+            last_error = "No text in response."
+        except requests.RequestException:
+            continue
+    return None, last_error[:200]
 
 
 @app.route('/api/refine-design-prompt', methods=['POST'])
 def refine_design_prompt():
-    """Refine the user's design description using Gemini. Body: { \"prompt\": \"...\" }. Returns { \"prompt\": \"refined...\" } or error."""
+    """Refine design description: try Gemini (if key set), then HF. Works with only HF_TOKEN. Never 502."""
     data = request.json or {}
     raw = (data.get("prompt") or "").strip()
     if not raw:
         return jsonify({"error": "No prompt provided."}), 400
-    refined, err = _refine_design_prompt_gemini(raw)
-    if err:
-        return jsonify({"error": err}), 502
-    return jsonify({"prompt": refined})
+    # 1) Try Gemini if key is set
+    if PROMPT_REFINE_API_KEY:
+        refined, err = _refine_design_prompt_gemini(raw)
+        if refined:
+            return jsonify({"prompt": refined, "refined": True})
+    else:
+        err = "No Gemini key set."
+    # 2) Try HF (works with only HF_TOKEN, no Gemini needed)
+    if HF_TOKEN and HF_TOKEN.strip():
+        refined_hf, err_hf = _refine_design_prompt_hf(raw)
+        if refined_hf:
+            return jsonify({"prompt": refined_hf, "refined": True})
+        err = err_hf or err
+    else:
+        err = err or "Set HF_TOKEN in .env for prompt refinement (or PROMPT_REFINE_API_KEY / GEMINI_API_KEY for Gemini)."
+    # Ensure message is always a user-friendly string (never a slice or internal repr)
+    msg = err if isinstance(err, str) else str(err)
+    if "slice(None" in msg or msg.strip().startswith("slice("):
+        msg = "Refine unavailable. Using your text as-is. You can still click Generate."
+    msg = (msg or "Using your text as-is. You can still click Generate.")[:500]
+    return jsonify({"prompt": raw, "refined": False, "message": msg})
 
 
 @app.route('/api/chat', methods=['GET', 'POST'])

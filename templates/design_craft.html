@@ -142,13 +142,16 @@
                     body: JSON.stringify({ prompt: text })
                 });
                 const data = await response.json().catch(() => ({}));
-                if (!response.ok || data.error) {
+                if (!response.ok) {
                     throw new Error(data.error || "Refine failed");
                 }
                 if (data.prompt) {
                     promptArea.value = data.prompt;
                     const wordCountEl = document.querySelector('.word-count');
                     if (wordCountEl) wordCountEl.textContent = (data.prompt.length) + ' / 500';
+                }
+                if (data.refined === false && data.message) {
+                    alert(data.message);
                 }
             } catch (err) {
                 alert("Could not refine prompt: " + (err.message || "Try again."));
