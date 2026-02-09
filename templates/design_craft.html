@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block extra_head %}
+<!-- External CSS for Design Page -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/design_craft.css') }}">
+{% endblock %}
+
 {% block content %}
 <section class="ai-hero">
     <div class="container">
@@ -47,7 +52,7 @@
                 </div>
 
                 <button class="btn-generate btn-primary" id="generateBtn">
-                    <span class="btn-text">Generate design</span>
+                    <span class="btn-text">Creating masterpiece... (approx 30s)</span>
                     <div class="btn-loader" style="display: none;"></div>
                 </button>
             </div>
@@ -74,389 +79,21 @@
     </div>
 </section>
 
-{% block extra_head %}
-<style>
-    .ai-hero {
-        padding: 140px 2rem 4rem;
-        text-align: center;
-    }
-
-    .badge {
-        display: inline-block;
-        padding: 6px 16px;
-        background: var(--accent-color);
-        color: white;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-    }
-
-    body.dark-mode .badge {
-        color: #000000;
-        font-weight: 700;
-    }
-
-    .designer-tool {
-        padding: 0 2rem 8rem;
-    }
-
-    .designer-grid {
-        display: grid;
-        grid-template-columns: 1fr 1.2fr;
-        gap: 2.5rem;
-        max-width: 1200px;
-        margin: 0 auto;
-        align-items: start;
-    }
-
-    .card {
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 24px;
-        padding: 2.5rem;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.05);
-    }
-
-    .panel-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1.5rem;
-    }
-
-    .word-count {
-        font-size: 0.8rem;
-        opacity: 0.5;
-    }
-
-    .input-wrapper {
-        position: relative;
-        margin-bottom: 2rem;
-    }
-
-    textarea {
-        width: 100%;
-        height: 180px;
-        background: rgba(var(--accent-color-rgb), 0.02);
-        border: 1.5px solid var(--border-color);
-        border-radius: 16px;
-        padding: 1.5rem;
-        font-family: 'Outfit', sans-serif !important;
-        font-size: 1rem;
-        color: var(--text-color) !important;
-        background: transparent;
-        resize: none;
-        transition: all 0.3s ease;
-    }
-
-    textarea:focus {
-        border-color: var(--accent-color);
-        outline: none;
-        background: transparent;
-    }
-
-    body.dark-mode #designPrompt {
-        background: rgba(255, 255, 255, 0.08) !important;
-        color: #f1f1f1 !important;
-        border-color: var(--accent-color) !important;
-    }
-
-    body.dark-mode #designPrompt::placeholder {
-        color: rgba(255, 255, 255, 0.5) !important;
-    }
-
-    .input-actions {
-        position: absolute;
-        bottom: 15px;
-        right: 15px;
-        display: flex;
-        gap: 8px;
-    }
-
-    .btn-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 10px;
-        border: 1px solid var(--border-color);
-        background: var(--card-bg);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-    }
-
-    .btn-icon:hover {
-        border-color: var(--accent-color);
-        color: var(--accent-color);
-    }
-
-    .btn-magic-prompt {
-        font-size: 1.2rem;
-    }
-
-    .btn-magic-prompt:hover {
-        background: rgba(var(--accent-color-rgb), 0.08);
-    }
-
-    .btn-magic-prompt.loading {
-        pointer-events: none;
-        opacity: 0.7;
-    }
-
-    .style-options,
-    .material-options {
-        margin-bottom: 2rem;
-    }
-
-    label {
-        display: block;
-        font-size: 0.85rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        opacity: 0.6;
-        margin-bottom: 1rem;
-    }
-
-    .style-chips {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-
-    .chip {
-        padding: 8px 18px;
-        border-radius: 30px;
-        border: 1px solid var(--border-color);
-        background: var(--card-bg);
-        font-size: 0.9rem;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-
-    .chip.active,
-    .chip:hover {
-        background: var(--accent-color);
-        color: white;
-        border-color: var(--accent-color);
-    }
-
-    .btn-generate {
-        width: 100%;
-        padding: 1.2rem;
-        font-size: 1.1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-    }
-
-    .btn-loader {
-        width: 20px;
-        height: 20px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top: 2px solid #fff;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        0% {
-            transform: rotate(0deg);
-        }
-
-        100% {
-            transform: rotate(360deg);
-        }
-    }
-
-    .output-panel {
-        height: 100%;
-    }
-
-    .output-placeholder {
-        height: 100%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        text-align: center;
-        border: 2px dashed var(--border-color);
-        background: transparent;
-    }
-
-    .ai-orb {
-        width: 100px;
-        height: 100px;
-        background: var(--accent-color);
-        border-radius: 50%;
-        margin: 0 auto 2rem;
-        filter: blur(40px);
-        opacity: 0.2;
-        animation: orbGlow 4s infinite alternate;
-    }
-
-    @keyframes orbGlow {
-        from {
-            transform: scale(1);
-            opacity: 0.2;
-        }
-
-        to {
-            transform: scale(1.5);
-            opacity: 0.4;
-        }
-    }
-
-    .output-result {
-        animation: slideInRight 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-        padding: 0;
-        overflow: visible;
-    }
-
-    .result-image {
-        position: relative;
-        min-height: 200px;
-        background: #eee;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .result-image img {
-        display: block;
-        max-width: 100%;
-        width: 100%;
-        height: auto;
-        object-fit: contain;
-        vertical-align: middle;
-    }
-
-    .ai-label {
-        position: absolute;
-        top: 20px;
-        right: 20px;
-        background: rgba(0, 0, 0, 0.6);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 4px;
-        font-size: 0.7rem;
-        font-weight: 700;
-        backdrop-filter: blur(5px);
-    }
-
-    .result-info {
-        padding: 2.5rem;
-    }
-
-    .result-info h3 {
-        margin-bottom: 0.5rem;
-    }
-
-    .result-info p {
-        opacity: 0.7;
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-    }
-
-    .feasibility-metrics {
-        margin-bottom: 2.5rem;
-    }
-
-    .metric {
-        margin-bottom: 1rem;
-        display: flex;
-        flex-direction: column;
-        gap: 5px;
-    }
-
-    .metric .label {
-        margin: 0;
-    }
-
-    .progress-bar {
-        height: 6px;
-        background: rgba(0, 0, 0, 0.05);
-        border-radius: 3px;
-        overflow: hidden;
-    }
-
-    .progress-bar .fill {
-        height: 100%;
-        background: #4caf50;
-    }
-
-    .result-actions {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .result-actions button {
-        flex: 1;
-    }
-
-    @keyframes slideInRight {
-        from {
-            opacity: 0;
-            transform: translateX(50px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateX(0);
-        }
-    }
-
-    @media (max-width: 992px) {
-        .designer-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-
-    @media (max-width: 768px) {
-        .ai-hero {
-            padding: 100px 1rem 3rem;
-        }
-
-        .designer-tool {
-            padding: 0 1rem 4rem;
-        }
-
-        .card {
-            padding: 1.5rem;
-        }
-
-        .btn-generate,
-        .btn-magic-prompt {
-            min-height: 44px;
-        }
-
-        .result-info {
-            padding: 1.5rem;
-        }
-    }
-
-    @media (max-width: 480px) {
-        .ai-hero h1 {
-            font-size: 1.75rem;
-        }
-
-        .style-chips,
-        .material-options .style-chips {
-            gap: 8px;
-        }
-
-        .chip {
-            padding: 10px 14px;
-            font-size: 0.85rem;
-        }
-    }
-</style>
-{% endblock %}
+<!-- Load Gemini AI Integration -->
+<script src="{{ url_for('static', filename='js/gemini-ai-integration.js') }}"></script>
 
 <script>
+    // Initialize Gemini API Key from server
+    const GEMINI_API_KEY = "{{ gemini_api_key }}";
+    let geminiAI = null;
+
+    if (GEMINI_API_KEY && GEMINI_API_KEY !== 'None') {
+        geminiAI = new GeminiAIIntegration(GEMINI_API_KEY);
+        console.log('✅ Gemini AI Integration initialized');
+    } else {
+        console.warn('⚠️ Gemini API key not available, using fallback generation only');
+    }
+
     const promptArea = document.getElementById('designPrompt');
     const generateBtn = document.getElementById('generateBtn');
     const outputPlaceholder = document.getElementById('outputPlaceholder');
@@ -528,11 +165,15 @@
             alert("Please describe your design first!");
             return;
         }
+
         generateBtn.disabled = true;
-        generateBtn.querySelector('.btn-text').textContent = "Designing your Craft...";
+        generateBtn.querySelector('.btn-text').textContent = "Creating masterpiece... (approx 30s)";
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         try {
+            // SERVER-SIDE GENERATION (High Quality)
+            console.log('🎨 Requesting server-side generation...');
+
             const response = await fetch('/api/generate-design-flux', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -542,29 +183,36 @@
                     material: selectedMaterial
                 })
             });
+
             const data = await response.json().catch(() => ({}));
+
             if (!response.ok || data.error) {
                 throw new Error(data.error || "Request failed");
             }
+
             if (!data.image_url) {
-                throw new Error("No image returned. Check API key and that your token has valid permissions.");
+                throw new Error("No image returned from server");
             }
+
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
             resultTitle.textContent = data.title || "";
             resultDesc.textContent = data.description || "";
             generatedImage.src = data.image_url;
             outputResult.scrollIntoView({ behavior: 'smooth' });
+
         } catch (err) {
             console.error("Generation failed", err);
-            // Fallback for visual continuity if API fails
-            if (!generatedImage.src) {
+
+            // FINAL FALLBACK: Show offline concept
+            if (!generatedImage.src || generatedImage.src === '') {
                 generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
                 resultTitle.textContent = "Design Visualization (Offline Mode)";
                 resultDesc.textContent = "We couldn't connect to the AI at the moment, but here is a similar concept from our gallery.";
                 outputPlaceholder.style.display = 'none';
                 outputResult.style.display = 'block';
             }
+
             alert("AI generation notice: " + (err.message || "Connection issue. Showing offline concept instead."));
         } finally {
             generateBtn.disabled = false;
@@ -572,5 +220,6 @@
             generateBtn.querySelector('.btn-loader').style.display = 'none';
         }
     };
+
 </script>
 {% endblock %}

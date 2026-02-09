@@ -1,5 +1,6 @@
 import os
 import re
+import sys
 import time
 import tempfile
 import requests
@@ -14,6 +15,10 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, f
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
 from sqlalchemy import text
+
+# Enable unbuffered output for immediate logging
+sys.stdout.flush()
+sys.stderr.flush()
 
 # Load environment variables
 load_dotenv()
@@ -38,6 +43,14 @@ db.init_app(app)
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
+
+# Configure Gemini AI for chatbot
+import google.generativeai as genai
+if GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
+    chatbot_model = genai.GenerativeModel('gemini-pro')
+else:
+    chatbot_model = None
 
 login_manager = LoginManager(app)
 login_manager.login_view = 'entry'  # /entry = splash (video + auth)
@@ -700,40 +713,60 @@ def generate_image_kling(prompt_text):
 def generate_image_design(prompt_text):
     print(f"DEBUG: generate_image_design called with prompt: {prompt_text[:50]}...")
     """Generate design image with robust fallback using AVAILABLE keys:
-       Strategy: Check existence of keys to decide order, but default prioritization:
+       Strategy: Try all available providers in order:
        Kling -> Replicate -> Together -> HF -> Placeholder
     """
 
     # 1. Try Kling AI (Prioritized as per user request)
     if KLING_ACCESS_KEY and KLING_SECRET_KEY:
         print("Attempting Kling AI...")
-        url, err = generate_image_kling(prompt_text)
-        if url: return url, None
-        print(f"Kling AI failed: {err}")
+        try:
+            url, err = generate_image_kling(prompt_text)
+            if url: 
+                print(f"✓ Kling AI succeeded: {url}")
+                return url, None
+            print(f"✗ Kling AI failed: {err}")
+        except Exception as e:
+            print(f"✗ Kling AI exception: {str(e)}")
 
-    # 2. Try Replicate (if configured)
-    if DESIGN_IMAGE_PROVIDER == "replicate":
+    # 2. Try Replicate (if token exists)
+    if REPLICATE_API_TOKEN:
         print("Attempting Replicate...")
-        url, err = generate_image_replicate(prompt_text)
-        if url: return url, None
-        print(f"Replicate failed: {err}")
+        try:
+            url, err = generate_image_replicate(prompt_text)
+            if url:
+                print(f"✓ Replicate succeeded: {url}")
+                return url, None
+            print(f"✗ Replicate failed: {err}")
+        except Exception as e:
+            print(f"✗ Replicate exception: {str(e)}")
     
-    # 3. Try Together AI (if configured)
+    # 3. Try Together AI (if key exists)
     if TOGETHER_API_KEY:
         print("Attempting Together AI...")
-        url, err = generate_image_together(prompt_text)
-        if url: return url, None
-        print(f"Together AI failed: {err}")
+        try:
+            url, err = generate_image_together(prompt_text)
+            if url:
+                print(f"✓ Together AI succeeded: {url}")
+                return url, None
+            print(f"✗ Together AI failed: {err}")
+        except Exception as e:
+            print(f"✗ Together AI exception: {str(e)}")
 
     # 4. Try Hugging Face (FLUX)
     if HF_TOKEN:
         print("Attempting Hugging Face...")
-        url, err = generate_image_flux(prompt_text)
-        if url: return url, None
-        print(f"Hugging Face failed: {err}.")
+        try:
+            url, err = generate_image_flux(prompt_text)
+            if url:
+                print(f"✓ Hugging Face succeeded: {url}")
+                return url, None
+            print(f"✗ Hugging Face failed: {err}")
+        except Exception as e:
+            print(f"✗ Hugging Face exception: {str(e)}")
     
     # 5. Final Fallback: Placeholder Image
-    print("All image generation providers failed. Using placeholder.")
+    print("⚠ All image generation providers failed. Using placeholder.")
     return "/static/images/placeholder_generation.png", None
 
 
@@ -2054,12 +2087,68 @@ def checkout():
 @app.route('/design-craft')
 @login_required
 def design_craft():
-    return render_template('design_craft.html')
+    return render_template('design_craft.html', gemini_api_key=GEMINI_API_KEY)
 
 @app.route('/data')
 @login_required
 def data():
     return render_template('data.html')
+
+@app.route('/api/chat', methods=['POST'])
+@login_required
+def ai_chat():
+    """AI-powered chatbot endpoint using Gemini"""
+    try:
+        data = request.get_json()
+        user_message = data.get('message', '').strip()
+        
+        if not user_message:
+            return jsonify({'error': 'Message is required'}), 400
+        
+        if not chatbot_model:
+            return jsonify({'error': 'AI chatbot is not configured'}), 500
+        
+        # System context for CraftBuddy
+        system_context = """You are CraftBuddy, an AI assistant for "Desh Ke Haath" (देश के हाथ) - a platform celebrating Indian handicrafts and artisans.
+
+Your role is to help users learn about:
+- Indian handicrafts from all 36 states and union territories
+- Cultural significance and history of traditional crafts
+- Artisan stories, techniques, and traditions
+- Product recommendations from our collection
+- Traditional art forms and their regional origins
+- Craft-making processes and materials used
+
+Be friendly, knowledgeable, and passionate about preserving Indian heritage. Keep responses concise (2-3 paragraphs max) and engaging.
+
+When users ask about specific crafts, provide:
+1. Brief history and origin
+2. Cultural significance
+3. Key characteristics
+4. Where to find them on our platform (if applicable)
+
+If users want to see products, suggest they visit the Products page or use search.
+If they ask about artisans, direct them to the Artists page.
+If they want to design custom crafts, mention the AI Craft feature."""
+
+        # Create conversation with context
+        full_prompt = f"{system_context}\n\nUser: {user_message}\n\nCraftBuddy:"
+        
+        # Generate response
+        response = chatbot_model.generate_content(full_prompt)
+        ai_response = response.text
+        
+        return jsonify({
+            'reply': ai_response,
+            'success': True
+        })
+        
+    except Exception as e:
+        print(f"AI Chat Error: {str(e)}")
+        return jsonify({
+            'error': 'Failed to generate response',
+            'message': 'I apologize, but I encountered an error. Please try again.'
+        }), 500
 
 if __name__ == '__main__':
     app.run(debug=False, port=5001, host='0.0.0.0', threaded=True)
