@@ -459,7 +459,15 @@ def generate_image_hf(prompt_text):
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Uses Hugging Face (Free) exclusively as requested."""
+    """Generate image. Uses Hugging Face (Free) exclusively as requested. Optional local fallback."""
+    # OPTIONAL: LOCAL DIFFSYNTH (Contributed Code)
+    # WARNING: Requires 16GB+ RAM. Enable via USE_DIFFSYNTH_ENGINE=1 in .env
+    if os.getenv("USE_DIFFSYNTH_ENGINE", "").strip().lower() in ("1", "true", "yes"):
+        print("Attempting Local Diffsynth Generation...")
+        url, err = generate_image_diffsynth(prompt_text)
+        if url: return url, None
+        print(f"Diffsynth failed ({err}), falling back to HF...")
+
     # EXCLUSIVE: HUGGING FACE (FREE)
     if HF_TOKEN:
         print(f"Generating design with Hugging Face (SDXL)...")
