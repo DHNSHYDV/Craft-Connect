@@ -417,40 +417,7 @@ def generate_image_hf(image_prompt):
     return None, err_msg or "Image generation failed. Free HF models may be loading (503). Try again in a minute."
 
 
-# Design image: Hugging Face Inference (Stable Diffusion XL)
-HF_DESIGN_API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
 
-
-def generate_image_hf(prompt_text):
-    """Generate design image via Hugging Face Inference (Stable Diffusion XL). Returns (data_url, error_message)."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None, "HF_TOKEN is not set in .env. Get a token at hf.co/settings/tokens"
-    headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}"}
-    payload = {"inputs": prompt_text[:1000]}
-    try:
-        response = requests.post(HF_DESIGN_API_URL, headers=headers, json=payload, timeout=120)
-        if response.status_code == 401 or response.status_code == 403:
-            return None, "HF token invalid or no permission. Use a token with Inference at hf.co/settings/tokens."
-        if response.status_code == 503:
-            return None, "Model is loading (503). Try again in a minute."
-        response.raise_for_status()
-        image_bytes = response.content
-        if not image_bytes or len(image_bytes) < 100:
-            return None, "No image returned from Hugging Face."
-        b64 = base64.b64encode(image_bytes).decode("utf-8")
-        return f"data:image/png;base64,{b64}", None
-    except requests.RequestException as e:
-        err = str(e)
-        if hasattr(e, "response") and e.response is not None:
-            try:
-                err = e.response.text or err
-            except Exception:
-                pass
-        print(f"HF design image error: {err}")
-        return None, err[:500]
-    except Exception as e:
-        print(f"HF design image error: {e}")
-        return None, str(e)[:500]
 
 
 
@@ -477,7 +444,7 @@ def generate_image_pollinations(prompt_text):
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Priority: Local Diffsynth -> Pollinations (Unlimited) -> Hugging Face (Free)."""
+    """Generate image. Priority: Local Diffsynth -> Pollinations (Unlimited)."""
     
     # 1. PRIORITY: LOCAL DIFFSYNTH (User Preference)
     # Be robust: if it fails (not installed, OOM), we catch it and fallback.
@@ -488,22 +455,15 @@ def generate_image_design(prompt_text):
         return url, None
     print(f"Diffsynth failed/skipped ({err}), falling back to Pollinations...")
 
-    # 2. FALLBACK 1: POLLINATIONS (UNLIMITED, FREE)
+    # 2. FALLBACK: POLLINATIONS (UNLIMITED, FREE)
     print("Attempting Pollinations.ai (Unlimited)...")
     url, err = generate_image_pollinations(prompt_text)
     if url:
         print("✓ Pollinations succeeded")
         return url, None
-    print(f"Pollinations failed ({err}), falling back to HF...")
+    print(f"Pollinations failed ({err}). No other fallbacks available.")
 
-    # 3. FALLBACK 2: HUGGING FACE (FREE)
-    if HF_TOKEN:
-        print(f"Generating design with Hugging Face (SDXL)...")
-        url, err = generate_image_hf(prompt_text)
-        if url: return url, None
-        return None, f"Hugging Face failed: {err}"
-
-    return None, "HF_TOKEN not set. Cannot generate image."
+    return None, "Image generation failed (Diffsynth crash + Pollinations error)."
 
 
 
