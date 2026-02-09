@@ -454,10 +454,15 @@ def generate_image_hf(prompt_text):
 
 
 def generate_image_design(prompt_text):
-    """Generate image via Replicate FLUX 1.1 Pro using HTTP API. Returns (data_url, error_message)."""
+    """Generate image. Defaults to Hugging Face (Free) as requested. Fallback to Replicate if needed."""
+    # PRIORITY: HUGGING FACE (FREE)
+    if HF_TOKEN:
+        url, err = generate_image_hf(prompt_text)
+        if url: return url, None
+        print(f"HF failed ({err}), trying Replicate...")
+
     if not REPLICATE_API_TOKEN:
-        # Fallback to HF if Replicate not set
-        return generate_image_hf(prompt_text)
+        return None, "All image generation failed (HF failed/missing, Replicate missing)."
         
     url = "https://api.replicate.com/v1/predictions"
     headers = {
