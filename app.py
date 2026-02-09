@@ -1060,7 +1060,7 @@ def call_gemini_chat(user_message, context):
 
 # Prompt refine via HF: use router chat completions. Try these in order (first supported by your account wins).
 HF_REFINE_MODELS = [
-    m.strip() for m in os.getenv("HF_REFINE_MODEL", "Qwen/Qwen2.5-7B-Instruct-1M,mistralai/Mistral-7B-Instruct-v0.2,meta-llama/Meta-Llama-3.1-8B-Instruct").split(",") if m.strip()
+    m.strip() for m in os.getenv("HF_REFINE_MODEL", "Qwen/Qwen2.5-7B-Instruct-1M,mistralai/Mistral-7B-Instruct-v0.2,meta-llama/Llama-3.1-8B-Instruct").split(",") if m.strip()
 ]
 if not HF_REFINE_MODELS:
     HF_REFINE_MODELS = ["Qwen/Qwen2.5-7B-Instruct-1M"]
@@ -1145,7 +1145,7 @@ def _refine_design_prompt_hf(raw_prompt):
                 err_obj = data.get("error") or data.get("message") or "Request failed."
                 err_str = err_obj if isinstance(err_obj, str) else str(err_obj)
                 code = (data.get("code") or "").lower()
-                if "model_not_supported" in code or "not supported" in err_str.lower():
+                if "model_not_supported" in code or "model_not_found" in code or "not supported" in err_str.lower() or "does not exist" in err_str.lower():
                     last_error = err_str[:200]
                     continue
                 return None, err_str[:200]
