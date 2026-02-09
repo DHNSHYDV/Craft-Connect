@@ -21,7 +21,8 @@
                     <textarea id="designPrompt"
                         placeholder="E.g., A Madhubani style lamp with floral patterns and a brass metallic base for my living room..."></textarea>
                     <div class="input-actions">
-                        <button type="button" class="btn-icon btn-magic-prompt" id="magicPromptBtn" title="Refine prompt with AI">✨</button>
+                        <button type="button" class="btn-icon btn-magic-prompt" id="magicPromptBtn"
+                            title="Refine prompt with AI">✨</button>
                     </div>
                 </div>
 
@@ -73,6 +74,7 @@
     </div>
 </section>
 
+{% block extra_head %}
 <style>
     .ai-hero {
         padding: 140px 2rem 4rem;
@@ -88,6 +90,11 @@
         font-size: 0.85rem;
         font-weight: 600;
         margin-bottom: 1.5rem;
+    }
+
+    body.dark-mode .badge {
+        color: #000000;
+        font-weight: 700;
     }
 
     .designer-tool {
@@ -135,8 +142,10 @@
         border: 1.5px solid var(--border-color);
         border-radius: 16px;
         padding: 1.5rem;
-        font-family: inherit;
+        font-family: 'Outfit', sans-serif !important;
         font-size: 1rem;
+        color: var(--text-color) !important;
+        background: transparent;
         resize: none;
         transition: all 0.3s ease;
     }
@@ -145,6 +154,16 @@
         border-color: var(--accent-color);
         outline: none;
         background: transparent;
+    }
+
+    body.dark-mode #designPrompt {
+        background: rgba(255, 255, 255, 0.08) !important;
+        color: #f1f1f1 !important;
+        border-color: var(--accent-color) !important;
+    }
+
+    body.dark-mode #designPrompt::placeholder {
+        color: rgba(255, 255, 255, 0.5) !important;
     }
 
     .input-actions {
@@ -176,9 +195,11 @@
     .btn-magic-prompt {
         font-size: 1.2rem;
     }
+
     .btn-magic-prompt:hover {
         background: rgba(var(--accent-color-rgb), 0.08);
     }
+
     .btn-magic-prompt.loading {
         pointer-events: none;
         opacity: 0.7;
@@ -398,16 +419,20 @@
         .ai-hero {
             padding: 100px 1rem 3rem;
         }
+
         .designer-tool {
             padding: 0 1rem 4rem;
         }
+
         .card {
             padding: 1.5rem;
         }
+
         .btn-generate,
         .btn-magic-prompt {
             min-height: 44px;
         }
+
         .result-info {
             padding: 1.5rem;
         }
@@ -417,16 +442,19 @@
         .ai-hero h1 {
             font-size: 1.75rem;
         }
+
         .style-chips,
         .material-options .style-chips {
             gap: 8px;
         }
+
         .chip {
             padding: 10px 14px;
             font-size: 0.85rem;
         }
     }
 </style>
+{% endblock %}
 
 <script>
     const promptArea = document.getElementById('designPrompt');

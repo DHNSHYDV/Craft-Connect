@@ -40,6 +40,19 @@
                         <span class="artist-style-tag">{{ artist.style }}</span>
                     </p>
                     <p class="artist-desc">{{ artist.description }}</p>
+                    {% if artist.meta %}
+                    <div class="artist-details-grid"
+                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; font-size: 0.85rem; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;">
+                        <div>
+                            <strong>⏳ Labor:</strong><br>
+                            {{ artist.meta.labor }}
+                        </div>
+                        <div>
+                            <strong>💰 Price:</strong><br>
+                            {{ artist.meta.price }}
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="artist-actions">
                         <button class="btn-contact" onclick="openChat('{{ artist.name }}')">Contact Specialist</button>
                     </div>

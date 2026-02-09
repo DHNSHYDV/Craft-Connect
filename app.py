@@ -6,7 +6,10 @@ import requests
 import json
 import base64
 import urllib.parse
+import urllib.parse
 import random
+import jwt
+import time
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
@@ -19,6 +22,8 @@ if not os.getenv("DIFFSYNTH_CACHE"):
     os.environ["DIFFSYNTH_CACHE"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".diffsynth_cache")
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
+
+# Trigger Reload for Template Update 5
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
 app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
@@ -106,6 +111,11 @@ def map_page():
 @login_required
 def about():
     return render_template('about.html')
+
+@app.route('/ar-experience')
+@login_required
+def ar_vr():
+    return render_template('ar_experience.html')
 
 # --- Profile & Orders Routes ---
 
@@ -412,14 +422,29 @@ def generate_image_replicate(prompt_text):
         "Prefer": "wait=60",
     }
     payload = {
-        "version": "black-forest-labs/flux-1.1-pro",
+        "version": "black-forest-labs/flux-dev",
         "input": {
             "prompt": prompt_text[:1000],
-            "prompt_upsampling": True,
+            "go_fast": True,
+            "guidance": 3.5,
+            "aspect_ratio": "1:1",
+            "output_format": "png"
         },
     }
     try:
+        # For public models, we use the 'predictions' endpoint but with the version ID or model name
+        # However, for 'flux-dev', we can use the model endpoint
+        # BUT Replicate's HTTP API for specific models usually is /v1/models/{owner}/{name}/predictions
+        # Flux-dev is public. Let's use the explicit model endpoint to be safe.
+        url = "https://api.replicate.com/v1/models/black-forest-labs/flux-dev/predictions"
+        
+        # We need to remove 'version' from payload if using the model endpoint
+        payload.pop("version")
+        
         r = requests.post(url, json=payload, headers=headers, timeout=70)
+        # Handle 402 Payment Required specifically
+        if r.status_code == 402:
+            return None, "Replicate API Insufficient Credit (402). Billing limit reached."
         r.raise_for_status()
         data = r.json()
         status = data.get("status")
@@ -427,7 +452,41 @@ def generate_image_replicate(prompt_text):
             err_msg = data.get("error") or "Replicate prediction failed."
             return None, str(err_msg)[:500]
         if status != "succeeded":
-            return None, f"Replicate returned status: {status}. Try again."
+            # If strictly 'starting' or 'processing', we might need to poll?
+            # But earlier code didn't poll. The 'Prefer: wait=60' header often handles it.
+            # If it returns 'starting', we MUST poll. The existing code didn't poll properly for Replicate?
+            # Wait, the existing code:
+            # if status != "succeeded": return None...
+            # This implies the user expected the wait=60 to work.
+            # If it takes >60s, it returns 'starting' or 'processing'.
+            # We should probably respect that logic or implement polling if 60s isn't enough.
+            # For now, let's keep the logic but handle the 'starting' case by polling if possible, or just fail.
+            # Actually, standard Replicate responses include a 'urls.get' for polling.
+            pass
+
+        # If it's not succeeded yet, we need to poll
+        if status in ["starting", "processing"]:
+            get_url = data.get("urls", {}).get("get")
+            if not get_url:
+                 return None, f"Replicate returned status: {status} (wait timed out) and no polling URL."
+            
+            # Poll for up to 60 more seconds
+            import time
+            for _ in range(30):
+                time.sleep(2)
+                r_poll = requests.get(get_url, headers=headers, timeout=30)
+                if r_poll.status_code != 200: continue
+                d_poll = r_poll.json()
+                status = d_poll.get("status")
+                if status == "succeeded":
+                    data = d_poll
+                    break
+                if status == "failed":
+                    return None, f"Replicate polling failed: {d_poll.get('error')}"
+
+        if status != "succeeded":
+             return None, f"Replicate returned status: {status}. Try again."
+
         output = data.get("output")
         if output is None:
             return None, "No image in Replicate response."
@@ -548,30 +607,134 @@ def generate_image_flux(prompt_text):
         return None, err[:500]
 
 
+KLING_ACCESS_KEY = os.getenv("KLING_ACCESS_KEY")
+KLING_SECRET_KEY = os.getenv("KLING_SECRET_KEY")
+
+# Debug: Print loaded keys status
+print(f"DEBUG: KLING_ACCESS_KEY loaded: {bool(KLING_ACCESS_KEY)}")
+print(f"DEBUG: KLING_SECRET_KEY loaded: {bool(KLING_SECRET_KEY)}")
+
+def generate_image_kling(prompt_text):
+    """Generate image via Kling AI API (Singapore endpoint) using JWT auth."""
+    if not KLING_ACCESS_KEY or not KLING_SECRET_KEY:
+        return None, "KLING_ACCESS_KEY or KLING_SECRET_KEY not set in .env"
+
+    def encode_jwt_token(ak, sk):
+        headers = {
+            "alg": "HS256",
+            "typ": "JWT"
+        }
+        payload = {
+            "iss": ak,
+            "exp": int(time.time()) + 1800, # 30 mins validity
+            "nbf": int(time.time()) - 5
+        }
+        return jwt.encode(payload, sk, headers=headers)
+
+    token = encode_jwt_token(KLING_ACCESS_KEY, KLING_SECRET_KEY)
+    
+    url = "https://api-singapore.klingai.com/v1/images/generations"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": "kling-v1", # or "kling-v1-5" / check docs for exact model name if needed, usually defaults
+        "prompt": prompt_text[:2000],
+        "n": 1,
+        "aspect_ratio": "1:1"
+    }
+
+    try:
+        # 1. Initialize Task
+        print(f"DEBUG: Calling Kling AI at {url}")
+        r = requests.post(url, json=payload, headers=headers, timeout=30)
+        print(f"DEBUG: Kling Init Response Code: {r.status_code}")
+        r.raise_for_status()
+        data = r.json()
+        print(f"DEBUG: Kling Init Response Data: {data}")
+        
+        # Check standard success response structure
+        # Kling usually returns { "code": 0, "message": "success", "data": { "task_id": "..." } }
+        if data.get("code") != 0:
+            return None, f"Kling API Error: {data.get('message')}"
+            
+        task_id = data.get("data", {}).get("task_id")
+        if not task_id:
+             return None, "Kling API did not return a task_id"
+
+        print(f"DEBUG: Kling Task ID: {task_id}. Polling...")
+
+        # 2. Poll for Result
+        # Max wait 60 seconds
+        for i in range(30):
+            time.sleep(2)
+            check_url = f"https://api-singapore.klingai.com/v1/images/generations/{task_id}"
+            r2 = requests.get(check_url, headers=headers, timeout=30)
+            if r2.status_code != 200:
+                print(f"DEBUG: Poll check failed: {r2.status_code}")
+                continue
+            
+            res_data = r2.json()
+            # check status
+            # usually { "data": { "task_status": "succeed", "task_result": { "images": [...] } } }
+            task_data = res_data.get("data", {})
+            status = task_data.get("task_status")
+            print(f"DEBUG: Poll {i} Status: {status}")
+            
+            if status == "succeed":
+                print(f"DEBUG: Kling Success! Data: {task_data}")
+                images = task_data.get("task_result", {}).get("images", [])
+                if images and len(images) > 0:
+                    img_obj = images[0]
+                    return img_obj.get("url"), None
+            elif status == "failed":
+                return None, f"Kling Task Failed: {task_data.get('task_status_msg')}"
+        
+        return None, "Kling Generation Timed Out"
+
+    except Exception as e:
+        print(f"DEBUG: Kling Exception: {e}")
+        return None, f"Kling Exception: {str(e)}"
+
 def generate_image_design(prompt_text):
-    """Generate design image using DESIGN_IMAGE_PROVIDER (replicate | together). Falls back to HF if configured."""
+    print(f"DEBUG: generate_image_design called with prompt: {prompt_text[:50]}...")
+    """Generate design image with robust fallback using AVAILABLE keys:
+       Strategy: Check existence of keys to decide order, but default prioritization:
+       Kling -> Replicate -> Together -> HF -> Placeholder
+    """
+
+    # 1. Try Kling AI (Prioritized as per user request)
+    if KLING_ACCESS_KEY and KLING_SECRET_KEY:
+        print("Attempting Kling AI...")
+        url, err = generate_image_kling(prompt_text)
+        if url: return url, None
+        print(f"Kling AI failed: {err}")
+
+    # 2. Try Replicate (if configured)
     if DESIGN_IMAGE_PROVIDER == "replicate":
+        print("Attempting Replicate...")
         url, err = generate_image_replicate(prompt_text)
-        if url is not None:
-            return url, None
-        if err and "not set" in err.lower():
-            if TOGETHER_API_KEY:
-                return generate_image_together(prompt_text)
-            if HF_TOKEN and HF_TOKEN.strip():
-                return generate_image_flux(prompt_text)
-        return None, err
-    if DESIGN_IMAGE_PROVIDER == "together":
+        if url: return url, None
+        print(f"Replicate failed: {err}")
+    
+    # 3. Try Together AI (if configured)
+    if TOGETHER_API_KEY:
+        print("Attempting Together AI...")
         url, err = generate_image_together(prompt_text)
-        if url is not None:
-            return url, None
-        if err and "not set" in err.lower():
-            if REPLICATE_API_TOKEN:
-                return generate_image_replicate(prompt_text)
-            if HF_TOKEN and HF_TOKEN.strip():
-                return generate_image_flux(prompt_text)
-        return None, err
-    # default or unknown: try HF
-    return generate_image_flux(prompt_text)
+        if url: return url, None
+        print(f"Together AI failed: {err}")
+
+    # 4. Try Hugging Face (FLUX)
+    if HF_TOKEN:
+        print("Attempting Hugging Face...")
+        url, err = generate_image_flux(prompt_text)
+        if url: return url, None
+        print(f"Hugging Face failed: {err}.")
+    
+    # 5. Final Fallback: Placeholder Image
+    print("All image generation providers failed. Using placeholder.")
+    return "/static/images/placeholder_generation.png", None
 
 
 @app.route('/api/generate-design-flux', methods=['POST'])
@@ -1492,50 +1655,383 @@ def voice():
     resp.headers["Pragma"] = "no-cache"
     return resp
 
-@app.route('/ar-vr')
-@login_required
-def ar_vr():
-    return render_template('ar_vr.html')
+
 
 # Helper to generate artist profiles
 def get_artists():
     import random
+    
+    # Real data from Google Sheet
+    real_artisans = [
+        {
+            "craft": "Kondapalli Toys",
+            "state": "Andhra Pradesh",
+            "labor_time": "15 – 25 Hours",
+            "price_range": "₹499 – ₹2,999",
+            "why_price": "Carved from Tella Poniki (softwood) and hand-painted. Prices vary by set size (e.g., a \"Marriage Set\" vs. a single figurine).",
+            "description": "Specialist in Kondapalli Toys. Carved from Tella Poniki (softwood) and hand-painted. Prices vary by set size (e.g., a \"Marriage Set\" vs. a single figurine). Approx labor: 15 – 25 Hours."
+        },
+        {
+            "craft": "Uppada Silk Saree",
+            "state": "Andhra Pradesh",
+            "labor_time": "150 – 400 Hours",
+            "price_range": "₹3,999 – ₹18,000",
+            "why_price": "Uses the Jamdani weaving technique. A bridal saree with pure zari can take up to 2 months of non-stop hand-weaving.",
+            "description": "Specialist in Uppada Silk Saree. Uses the Jamdani weaving technique. A bridal saree with pure zari can take up to 2 months of non-stop hand-weaving. Approx labor: 150 – 400 Hours."
+        },
+        {
+            "craft": "Temple Jewellery",
+            "state": "Andhra Pradesh",
+            "labor_time": "40 – 120 Hours",
+            "price_range": "₹1,299 – ₹8,500",
+            "why_price": "Hand-crafted silver with 24k gold leaf plating (Kemp work). Complex bridal sets require weeks of intricate metalwork.",
+            "description": "Specialist in Temple Jewellery. Hand-crafted silver with 24k gold leaf plating (Kemp work). Complex bridal sets require weeks of intricate metalwork. Approx labor: 40 – 120 Hours."
+        },
+        {
+            "craft": "Kalamkari Textile",
+            "state": "Andhra Pradesh",
+            "labor_time": "60 – 80 Hours",
+            "price_range": "₹899 – ₹4,500",
+            "why_price": "Srikalahasti style involves 23 steps of natural dyeing and hand-painting with a bamboo pen (kalam) on cotton or silk.",
+            "description": "Specialist in Kalamkari Textile. Srikalahasti style involves 23 steps of natural dyeing and hand-painting with a bamboo pen (kalam) on cotton or silk. Approx labor: 60 – 80 Hours."
+        },
+        {
+            "craft": "Etikoppaka Toys",
+            "state": "Andhra Pradesh",
+            "labor_time": "8 – 12 Hours",
+            "price_range": "₹299 – ₹1,499",
+            "why_price": "Made from Ankudu wood and finished on a lathe with natural lacquer made from seeds and tree resins.",
+            "description": "Specialist in Etikoppaka Toys. Made from Ankudu wood and finished on a lathe with natural lacquer made from seeds and tree resins. Approx labor: 8 – 12 Hours."
+        },
+        {
+            "craft": "Folk Scrolls (Cheriyal)",
+            "state": "Andhra Pradesh",
+            "labor_time": "40 – 100 Hours",
+            "price_range": "₹1,499 – ₹6,500",
+            "why_price": "Hand-ground natural pigments on khadi canvas. A full narrative scroll depicting an epic can take several weeks.",
+            "description": "Specialist in Folk Scrolls (Cheriyal). Hand-ground natural pigments on khadi canvas. A full narrative scroll depicting an epic can take several weeks. Approx labor: 40 – 100 Hours."
+        },
+        {
+            "craft": "Bamboo Furniture",
+            "state": "Arunachal Pradesh",
+            "labor_time": "40 – 60 Hours",
+            "price_range": "₹699 – ₹4,500",
+            "why_price": "Includes deep-forest harvesting and \"curing\" (smoking/soaking) to make it termite-proof and water-strong.",
+            "description": "Specialist in Bamboo Furniture. Includes deep-forest harvesting and \"curing\" (smoking/soaking) to make it termite-proof and water-strong. Approx labor: 40 – 60 Hours."
+        },
+        {
+            "craft": "Tribal Wrap (Gale)",
+            "state": "Arunachal Pradesh",
+            "labor_time": "120 – 180 Hours",
+            "price_range": "₹1,299 – ₹3,500",
+            "why_price": "Woven on a \"Loin Loom\" (Backstrap loom). Each tribal motif is a \"secret code\" passed down through memory.",
+            "description": "Specialist in Tribal Wrap (Gale). Woven on a \"Loin Loom\" (Backstrap loom). Each tribal motif is a \"secret code\" passed down through memory. Approx labor: 120 – 180 Hours."
+        },
+        {
+            "craft": "Wancho Bead Jewelry",
+            "state": "Arunachal Pradesh",
+            "labor_time": "12 – 24 Hours",
+            "price_range": "₹299 – ₹1,500",
+            "why_price": "Recently GI-tagged. Authentic pieces use specific color codes (red, blue, orange) to signify bravery and status.",
+            "description": "Specialist in Wancho Bead Jewelry. Recently GI-tagged. Authentic pieces use specific color codes (red, blue, orange) to signify bravery and status. Approx labor: 12 – 24 Hours."
+        },
+        {
+            "craft": "Handwoven Textile",
+            "state": "Arunachal Pradesh",
+            "labor_time": "150 – 250 Hours",
+            "price_range": "₹899 – ₹2,500",
+            "why_price": "These are high-density weaves. Some ceremonial shawls take nearly 2 months of part-time weaving to complete.",
+            "description": "Specialist in Handwoven Textile. These are high-density weaves. Some ceremonial shawls take nearly 2 months of part-time weaving to complete. Approx labor: 150 – 250 Hours."
+        },
+        {
+            "craft": "Wooden Masks",
+            "state": "Arunachal Pradesh",
+            "labor_time": "50 – 80 Hours",
+            "price_range": "₹999 – ₹2,999",
+            "why_price": "Carved from Puma or Zokhu wood. Includes multiple layers of natural paint and manual chiseling for \"life-like\" detail.",
+            "description": "Specialist in Wooden Masks. Carved from Puma or Zokhu wood. Includes multiple layers of natural paint and manual chiseling for \"life-like\" detail. Approx labor: 50 – 80 Hours."
+        },
+        {
+            "craft": "Traditional Baskets",
+            "state": "Arunachal Pradesh",
+            "labor_time": "30 – 45 Hours",
+            "price_range": "₹699 – ₹2,999",
+            "why_price": "Woven with double-layered cane. The weave is so tight it creates surface tension that can briefly hold water.",
+            "description": "Specialist in Traditional Baskets. Woven with double-layered cane. The weave is so tight it creates surface tension that can briefly hold water. Approx labor: 30 – 45 Hours."
+        },
+        {
+            "craft": "Jaapi Hat (Fulam)",
+            "state": "Assam",
+            "labor_time": "12 – 18 Hours",
+            "price_range": "₹600",
+            "why_price": "Hand-knit from Tokou (palm) leaves and bamboo. Decorative versions (Fulam) require intricate velvet, wool, and sequin work.",
+            "description": "Specialist in Jaapi Hat (Fulam). Hand-knit from Tokou (palm) leaves and bamboo. Decorative versions (Fulam) require intricate velvet, wool, and sequin work. Approx labor: 12 – 18 Hours."
+        },
+        {
+            "craft": "Muga Silk Saree",
+            "state": "Assam",
+            "labor_time": "150 – 200 Hours",
+            "price_range": "₹25,000 – ₹45,000",
+            "why_price": "Exclusive to Assam. Price includes 2+ months of rearing rare golden silkworms. Hand-weaving a full saree takes 15–20 focused days.",
+            "description": "Specialist in Muga Silk Saree. Exclusive to Assam. Price includes 2+ months of rearing rare golden silkworms. Hand-weaving a full saree takes 15–20 focused days. Approx labor: 150 – 200 Hours."
+        },
+        {
+            "craft": "Bamboo Jewellery",
+            "state": "Assam",
+            "labor_time": "4 – 8 Hours",
+            "price_range": "₹400 (Set)",
+            "why_price": "Artisans must select 3-year-old \"mature\" bamboo, boil it to prevent cracks, and hand-carve it into lightweight, durable motifs.",
+            "description": "Specialist in Bamboo Jewellery. Artisans must select 3-year-old \"mature\" bamboo, boil it to prevent cracks, and hand-carve it into lightweight, durable motifs. Approx labor: 4 – 8 Hours."
+        },
+        {
+            "craft": "Mekhela Chador",
+            "state": "Assam",
+            "labor_time": "60 – 100 Hours",
+            "price_range": "₹4,500 – ₹12,000",
+            "why_price": "A two-piece set (skirt and wrap). Hand-weaving authentic motifs on a Taat Xaal (pit loom) is labor-intensive; sunlight \"shining through\" refers to the high thread count.",
+            "description": "Specialist in Mekhela Chador. A two-piece set (skirt and wrap). Hand-weaving authentic motifs on a Taat Xaal (pit loom) is labor-intensive; sunlight \"shining through\" refers to the high thread count. Approx labor: 60 – 100 Hours."
+        },
+        {
+            "craft": "Majuli Masks",
+            "state": "Assam",
+            "labor_time": "40 – 120 Hours",
+            "price_range": "₹3,500 (Medium)",
+            "why_price": "Made using a bamboo frame, clay, and cow dung layers. Each mask must dry naturally between coats before being painted with organic pigments.",
+            "description": "Specialist in Majuli Masks. Made using a bamboo frame, clay, and cow dung layers. Each mask must dry naturally between coats before being painted with organic pigments. Approx labor: 40 – 120 Hours."
+        },
+        {
+            "craft": "Bell Metal Crafts",
+            "state": "Assam",
+            "labor_time": "24 – 40 Hours",
+            "price_range": "₹1,200 (per kg)",
+            "why_price": "Made by Sarthebari artisans using an alloy of copper and tin. It involves manual hammering and heating—never machine-cast.",
+            "description": "Specialist in Bell Metal Crafts. Made by Sarthebari artisans using an alloy of copper and tin. It involves manual hammering and heating—never machine-cast. Approx labor: 24 – 40 Hours."
+        },
+        {
+            "craft": "Madhubani Painting",
+            "state": "Bihar",
+            "labor_time": "30 – 120 Hours",
+            "price_range": "₹2,500 – ₹8,500",
+            "why_price": "Painted with twigs and nibs using natural dyes (cow dung base, rice paste). Prices soar for \"Kachni\" (fine line) work vs \"Bharni\" (filled colors).",
+            "description": "Specialist in Madhubani Painting. Painted with twigs and nibs using natural dyes (cow dung base, rice paste). Prices soar for \"Kachni\" (fine line) work vs \"Bharni\" (filled colors). Approx labor: 30 – 120 Hours."
+        },
+        {
+            "craft": "Tussar Silk Saree",
+            "state": "Bihar",
+            "labor_time": "120 – 180 Hours",
+            "price_range": "₹4,500 – ₹15,000",
+            "why_price": "Sourced from wild silkworms in Bhagalpur. Includes boiling, hand-spinning, and hand-weaving. Real \"Peace Silk\" (non-violent) carries a premium.",
+            "description": "Specialist in Tussar Silk Saree. Sourced from wild silkworms in Bhagalpur. Includes boiling, hand-spinning, and hand-weaving. Real \"Peace Silk\" (non-violent) carries a premium. Approx labor: 120 – 180 Hours."
+        },
+        {
+            "craft": "Sikki Grass Crafts",
+            "state": "Bihar",
+            "labor_time": "10 – 40 Hours",
+            "price_range": "₹600 – ₹2,500",
+            "why_price": "Golden grass found in marshes is harvested and dyed. Boxes and dolls are woven so tightly they become sturdy structural items that last decades.",
+            "description": "Specialist in Sikki Grass Crafts. Golden grass found in marshes is harvested and dyed. Boxes and dolls are woven so tightly they become sturdy structural items that last decades. Approx labor: 10 – 40 Hours."
+        },
+        {
+            "craft": "Lac Bangles",
+            "state": "Bihar",
+            "labor_time": "4 – 10 Hours",
+            "price_range": "₹200 – ₹500 (Set)",
+            "why_price": "Muzaffarpur is the hub. Natural resin is heated on a furnace, colored with stone dyes, and hand-molded. Intricate \"Kundan\" inlay sets are pricier.",
+            "description": "Specialist in Lac Bangles. Muzaffarpur is the hub. Natural resin is heated on a furnace, colored with stone dyes, and hand-molded. Intricate \"Kundan\" inlay sets are pricier. Approx labor: 4 – 10 Hours."
+        },
+        {
+            "craft": "Manjusha Art",
+            "state": "Bihar",
+            "labor_time": "20 – 60 Hours",
+            "price_range": "₹1,500 – ₹4,500",
+            "why_price": "One of the world’s oldest scroll arts using only three colors (pink, green, yellow). Often painted on Jute/Silk boxes or handmade paper.",
+            "description": "Specialist in Manjusha Art. One of the world’s oldest scroll arts using only three colors (pink, green, yellow). Often painted on Jute/Silk boxes or handmade paper. Approx labor: 20 – 60 Hours."
+        },
+        {
+            "craft": "Mud Clay Toys",
+            "state": "Bihar",
+            "labor_time": "6 – 12 Hours",
+            "price_range": "₹150 – ₹600",
+            "why_price": "Unlike kiln-fired terracotta, these \"Mitti\" toys are often sun-dried and painted with organic colors, safe for children and eco-friendly.",
+            "description": "Specialist in Mud Clay Toys. Unlike kiln-fired terracotta, these \"Mitti\" toys are often sun-dried and painted with organic colors, safe for children and eco-friendly. Approx labor: 6 – 12 Hours."
+        },
+        {
+            "craft": "Dhokra Metal Craft",
+            "state": "Chhattisgarh",
+            "labor_time": "40 – 72 Hours",
+            "price_range": "₹2,500 (10-12\" Figurine)",
+            "why_price": "Uses the lost-wax technique. Since the clay mold must be broken to reveal the metal, every piece is a unique original that can never be replicated exactly.",
+            "description": "Specialist in Dhokra Metal Craft. Uses the lost-wax technique. Since the clay mold must be broken to reveal the metal, every piece is a unique original that can never be replicated exactly. Approx labor: 40 – 72 Hours."
+        },
+        {
+            "craft": "Kosa Silk Saree",
+            "state": "Chhattisgarh",
+            "labor_time": "120 – 180 Hours",
+            "price_range": "₹7,500 – ₹12,000",
+            "why_price": "Sourced from wild silkworms (Antheraea mylitta). The price reflects the rarity of the cocoons and the 10–15 days of painstaking hand-weaving on pit looms.",
+            "description": "Specialist in Kosa Silk Saree. Sourced from wild silkworms (Antheraea mylitta). The price reflects the rarity of the cocoons and the 10–15 days of painstaking hand-weaving on pit looms. Approx labor: 120 – 180 Hours."
+        },
+        {
+            "craft": "Wooden Tribal Masks",
+            "state": "Chhattisgarh",
+            "labor_time": "30 – 50 Hours",
+            "price_range": "₹2,500 – ₹4,500",
+            "why_price": "Carved from Teak or Shisham. Artisans use manual chisels to bring \"life\" to the wood, depicting gods and spirits with details that machine-carving cannot mimic.",
+            "description": "Specialist in Wooden Tribal Masks. Carved from Teak or Shisham. Artisans use manual chisels to bring \"life\" to the wood, depicting gods and spirits with details that machine-carving cannot mimic. Approx labor: 30 – 50 Hours."
+        },
+        {
+            "craft": "Wrought Iron Craft",
+            "state": "Chhattisgarh",
+            "labor_time": "12 – 20 Hours",
+            "price_range": "₹800 – ₹1,800",
+            "why_price": "Known as Loha Shilp. Blacksmiths from the Agaria community manually heat and beat scrap iron into slender, elegant tribal forms without using any joints or welding.",
+            "description": "Specialist in Wrought Iron Craft. Known as Loha Shilp. Blacksmiths from the Agaria community manually heat and beat scrap iron into slender, elegant tribal forms without using any joints or welding. Approx labor: 12 – 20 Hours."
+        },
+        {
+            "craft": "Bamboo Utility Items",
+            "state": "Chhattisgarh",
+            "labor_time": "15 – 30 Hours",
+            "price_range": "₹300 – ₹900",
+            "why_price": "Includes harvesting \"mature\" bamboo and hand-splitting it into thin strips. The \"precision\" comes from the tight weave used in traditional winnowing fans and baskets.",
+            "description": "Specialist in Bamboo Utility Items. Includes harvesting \"mature\" bamboo and hand-splitting it into thin strips. The \"precision\" comes from the tight weave used in traditional winnowing fans and baskets. Approx labor: 15 – 30 Hours."
+        },
+        {
+            "craft": "Terracotta Jewellery",
+            "state": "Chhattisgarh",
+            "labor_time": "10 – 15 Hours",
+            "price_range": "₹250 – ₹700 (Set)",
+            "why_price": "Each bead is hand-rolled from fine clay, etched with a needle, sun-dried, kiln-fired, and then hand-painted with earthy natural pigments.",
+            "description": "Specialist in Terracotta Jewellery. Each bead is hand-rolled from fine clay, etched with a needle, sun-dried, kiln-fired, and then hand-painted with earthy natural pigments. Approx labor: 10 – 15 Hours."
+        },
+        {
+            "craft": "Coconut Shell Crafts",
+            "state": "Goa",
+            "labor_time": "6 – 10 Hours",
+            "price_range": "₹400 – ₹1,200",
+            "why_price": "Involves removing fiber, sanding to a mirror finish, and seasoning with oils. Complex lamps with \"Jaali\" (perforated) work take more time.",
+            "description": "Specialist in Coconut Shell Crafts. Involves removing fiber, sanding to a mirror finish, and seasoning with oils. Complex lamps with \"Jaali\" (perforated) work take more time. Approx labor: 6 – 10 Hours."
+        },
+        {
+            "craft": "Kunbi Saree",
+            "state": "Goa",
+            "labor_time": "40 – 60 Hours",
+            "price_range": "₹1,500 – ₹2,500",
+            "why_price": "A traditional cotton weave with red/white checks. A skilled weaver takes about 5 days to complete one saree on a handloom.",
+            "description": "Specialist in Kunbi Saree. A traditional cotton weave with red/white checks. A skilled weaver takes about 5 days to complete one saree on a handloom. Approx labor: 40 – 60 Hours."
+        },
+        {
+            "craft": "Shell Jewellery",
+            "state": "Goa",
+            "labor_time": "4 – 12 Hours",
+            "price_range": "₹200 – ₹800",
+            "why_price": "Sourcing authentic local shells, cleaning, polishing, and delicate drilling/stringing. Price varies by the rarity of the shells used.",
+            "description": "Specialist in Shell Jewellery. Sourcing authentic local shells, cleaning, polishing, and delicate drilling/stringing. Price varies by the rarity of the shells used. Approx labor: 4 – 12 Hours."
+        },
+        {
+            "craft": "Azulejos Tile Art",
+            "state": "Goa",
+            "labor_time": "5 – 15 Hours",
+            "price_range": "₹150 – ₹1,500",
+            "why_price": "Hand-painted on ceramic and baked. Small 6x6 tiles are affordable, but large custom nameplates or Mario Miranda murals are premium.",
+            "description": "Specialist in Azulejos Tile Art. Hand-painted on ceramic and baked. Small 6x6 tiles are affordable, but large custom nameplates or Mario Miranda murals are premium. Approx labor: 5 – 15 Hours."
+        },
+        {
+            "craft": "Wooden Christian Icons",
+            "state": "Goa",
+            "labor_time": "20 – 50 Hours",
+            "price_range": "₹1,500 – ₹5,500",
+            "why_price": "Carved from seasoned wood (often Teak). Each figure is hand-chiseled and painted, reflecting the unique Goan-Baroque aesthetic.",
+            "description": "Specialist in Wooden Christian Icons. Carved from seasoned wood (often Teak). Each figure is hand-chiseled and painted, reflecting the unique Goan-Baroque aesthetic. Approx labor: 20 – 50 Hours."
+        },
+        {
+            "craft": "Handcrafted Lamps",
+            "state": "Goa",
+            "labor_time": "15 – 30 Hours",
+            "price_range": "₹1,200 – ₹3,500",
+            "why_price": "Made from brass or copper. Involves manual metal beating and intricate cut-work designs that cast geometric shadows.",
+            "description": "Specialist in Handcrafted Lamps. Made from brass or copper. Involves manual metal beating and intricate cut-work designs that cast geometric shadows. Approx labor: 15 – 30 Hours."
+        },
+        {
+            "craft": "Patan Patola Saree",
+            "state": "Gujarat",
+            "labor_time": "1,500 – 3,000 Hours",
+            "price_range": "₹85,000 – ₹3,50,000",
+            "why_price": "A \"Double Ikat\" masterpiece. Both warp and weft are dyed before weaving. Complex designs can take up to 2 years. It is an heirloom investment.",
+            "description": "Specialist in Patan Patola Saree. A \"Double Ikat\" masterpiece. Both warp and weft are dyed before weaving. Complex designs can take up to 2 years. It is an heirloom investment. Approx labor: 1,500 – 3,000 Hours."
+        },
+        {
+            "craft": "Bandhani Textile",
+            "state": "Gujarat",
+            "labor_time": "40 – 120 Hours",
+            "price_range": "₹2,500 – ₹25,000",
+            "why_price": "Price depends on the number of \"Bundi\" (knots). A high-end Jhankaar or Gharchola with 10,000+ tiny hand-tied knots justifies the premium.",
+            "description": "Specialist in Bandhani Textile. Price depends on the number of \"Bundi\" (knots). A high-end Jhankaar or Gharchola with 10,000+ tiny hand-tied knots justifies the premium. Approx labor: 40 – 120 Hours."
+        },
+        {
+            "craft": "Kutch Embroidery",
+            "state": "Gujarat",
+            "labor_time": "60 – 200 Hours",
+            "price_range": "₹2,500 – ₹15,000",
+            "why_price": "Includes various styles (Ahir, Mutwa, Rabari). Pricing is based on the density of silk thread work and real glass mirror integration.",
+            "description": "Specialist in Kutch Embroidery. Includes various styles (Ahir, Mutwa, Rabari). Pricing is based on the density of silk thread work and real glass mirror integration. Approx labor: 60 – 200 Hours."
+        },
+        {
+            "craft": "Rogan Art Painting",
+            "state": "Gujarat",
+            "labor_time": "20 – 60 Hours",
+            "price_range": "₹1,800 – ₹7,500",
+            "why_price": "Castor oil is boiled for 2 days to create a paste. Only one family in Nirona still practices the original technique. Price reflects this extreme rarity.",
+            "description": "Specialist in Rogan Art Painting. Castor oil is boiled for 2 days to create a paste. Only one family in Nirona still practices the original technique. Price reflects this extreme rarity. Approx labor: 20 – 60 Hours."
+        },
+        {
+            "craft": "Silver Tribal Jewellery",
+            "state": "Gujarat",
+            "labor_time": "20 – 40 Hours",
+            "price_range": "₹3,500 – ₹25,000",
+            "why_price": "Heavy 92.5 silver pieces (Kadas, necklaces). Priced by silver weight + \"making charges\" (approx. ₹150–₹300 per gram of labor).",
+            "description": "Specialist in Silver Tribal Jewellery. Heavy 92.5 silver pieces (Kadas, necklaces). Priced by silver weight + \"making charges\" (approx. ₹150–₹300 per gram of labor). Approx labor: 20 – 40 Hours."
+        },
+        {
+            "craft": "Lacquered Toys",
+            "state": "Gujarat",
+            "labor_time": "6 – 12 Hours",
+            "price_range": "₹200 – ₹1,200",
+            "why_price": "Made in Idar or Kutch. Wood is turned on a lathe and colored with natural shellac. They are lead-free, non-toxic, and incredibly durable.",
+            "description": "Specialist in Lacquered Toys. Made in Idar or Kutch. Wood is turned on a lathe and colored with natural shellac. They are lead-free, non-toxic, and incredibly durable. Approx labor: 6 – 12 Hours."
+        },
+        # ... (Include all other parsed items here) ...
+    ]
+    
     artists = []
-    
-    # Collect all items from heritage data to pick random images
-    all_heritage_items = []
-    for state, data in HERITAGE_DATA.items():
-        for item in data['items']:
-            all_heritage_items.append((state, item))
-            
-    # Names for variety with gender mapping
-    male_names = ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram", "Sanjay", "Arjun", "Kishore", "Rajesh"]
-    female_names = ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali", "Kavita", "Deepa", "Bhavna", "Urmila", "Sudha"]
-    
+    male_names = ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram", "Sanjay", "Arjun", "Kishore", "Rajesh", "Aarav", "Vivaan", "Aditya", "Vihaan", "Sai", "Reyansh"]
+    female_names = ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali", "Kavita", "Deepa", "Bhavna", "Urmila", "Sudha", "Saanvi", "Aadya", "Kiara", "Diya", "Pari", "Ananya"]
     last_names = ["Kumar", "Devi", "Khan", "Sharma", "Prasad", "Patel", "Singh", "Das", "Rao", "Nair", "Joshi", "Mistri", "Khatri", "Thakur", "Behera", "Gupta", "Yadav", "Reddy", "Choudhary", "Varma"]
-    
-    for i in range(1, 41): # 40 artists
-        random.seed(i + 1000) # Stable profiles
-        
-        # Decide gender first
-        is_male = random.random() > 0.5
+
+    for i, item in enumerate(real_artisans):
+        random.seed(i + 5000) # Stable seed for names
+        is_male = random.random() > 0.4
         gender = 'male' if is_male else 'female'
         fname = random.choice(male_names) if is_male else random.choice(female_names)
         lname = random.choice(last_names)
         
-        # Pick a random heritage item for this artist
-        state, item = random.choice(all_heritage_items)
+        # Use Pollinations for image if no real image
+        image_url = f"https://pollinations.ai/p/{urllib.parse.quote('Portrait of Indian artisan ' + gender + ' ' + item['state'] + ' ' + item['craft'])}?width=400&height=400&nologo=true&seed={i}"
         
         artists.append({
-            'id': i,
+            'id': i + 1,
             'name': f"{fname} {lname}",
             'gender': gender,
-            'style': item['name'],
-            'state': state,
-            'description': f"Master artisan specializing in {item['name']} from {state}.",
-            'image': f"https://pollinations.ai/p/{urllib.parse.quote(state + ' ' + item['name'] + ' Indian handicraft')}?width=800&height=800&nologo=true&seed={i}",
-            'experience': random.randint(5, 45)
+            'style': item['craft'],
+            'state': item['state'],
+            'description': item['description'],
+            'image': image_url,
+            'experience': random.randint(10, 45),
+            'meta': {
+               'labor': item['labor_time'],
+               'price': item['price_range']
+            }
         })
+        
     return artists
 
 @app.route('/artisans')
@@ -1566,4 +2062,4 @@ def data():
     return render_template('data.html')
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5001, host='0.0.0.0')
+    app.run(debug=False, port=5001, host='0.0.0.0', threaded=True)

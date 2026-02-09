@@ -1,0 +1,108 @@
+DEBUG: KLING_ACCESS_KEY loaded: True
+DEBUG: KLING_SECRET_KEY loaded: True
+ * Serving Flask app 'app'
+ * Debug mode: off
+[31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5001
+ * Running on http://192.168.0.100:5001
+[33mPress CTRL+C to quit[0m
+127.0.0.1 - - [09/Feb/2026 09:26:26] "POST /api/generate-design-flux HTTP/1.1" 200 -
+/Users/apple/Desktop/craft-site/app.py:53: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+  return User.query.get(int(user_id))
+127.0.0.1 - - [09/Feb/2026 09:26:52] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:26:53] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:26:53] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:26:53] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:26:53] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:43:01] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:43:01] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:43:01] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:43:02] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:43:02] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:24] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:24] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:24] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:24] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:24] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:26] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:26] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:26] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:26] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:26] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "GET /home HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "[35m[1mGET /static/videos/hero_video.mp4 HTTP/1.1[0m" 206 -
+127.0.0.1 - - [09/Feb/2026 09:46:27] "[35m[1mGET /static/videos/hero_video.mp4 HTTP/1.1[0m" 206 -
+127.0.0.1 - - [09/Feb/2026 09:46:32] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:32] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:32] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:32] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:32] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /products HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/images/products/assam_bamboo_jewellery.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/images/products/ladakh_apricot_kernel_oil.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/images/products/arunachal_pradesh_bamboo_handicrafts.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/goa_azulejos_tile_art.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/odisha_applique_work_(pipli).png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/west_bengal_baluchari_silk_saree.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/jharkhand_bamboo_crafts.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/mizoram_bamboo_hats.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/nagaland_bamboo_drinking_cups.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/mizoram_bamboo_thul_baskets.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/chhattisgarh_bamboo_utility_items.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:33] "GET /static/images/products/tripura_bamboo_and_cane_art.png HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "GET /products HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/ladakh_apricot_kernel_oil.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/goa_azulejos_tile_art.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/odisha_applique_work_(pipli).png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/jharkhand_bamboo_crafts.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/west_bengal_baluchari_silk_saree.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/arunachal_pradesh_bamboo_handicrafts.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/nagaland_bamboo_drinking_cups.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/assam_bamboo_jewellery.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/mizoram_bamboo_hats.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/mizoram_bamboo_thul_baskets.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/chhattisgarh_bamboo_utility_items.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/products/tripura_bamboo_and_cane_art.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:34] "GET /artisans HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "GET /about HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:35] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:40] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:46:40] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:40] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:40] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:46:40] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:50:10] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:50:10] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:50:10] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:50:10] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:50:10] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:27] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:51:27] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:27] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:27] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:27] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:38] "GET /map HTTP/1.1" 200 -
+127.0.0.1 - - [09/Feb/2026 09:51:38] "[36mGET /static/css/style.css HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:38] "[36mGET /static/images/custom_logo.png HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:38] "[36mGET /static/js/main.js HTTP/1.1[0m" 304 -
+127.0.0.1 - - [09/Feb/2026 09:51:38] "[36mGET /static/css/products_overhaul.css HTTP/1.1[0m" 304 -

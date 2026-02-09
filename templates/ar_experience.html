@@ -1,0 +1,401 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="ar-section">
+    <div class="ar-layout">
+        <!-- Sidebar Selector -->
+        <div class="model-selector">
+            <h3>Select Model</h3>
+            <div class="model-option active" onclick="selectModel('ravana')">
+                <div class="option-icon">🎭</div>
+                <span>Assam Mask</span>
+            </div>
+            <div class="model-option" onclick="selectModel('vase')">
+                <div class="option-icon">⚱️</div>
+                <span>Vase</span>
+            </div>
+            <div class="model-option" onclick="selectModel('kondapalli')">
+                <div class="option-icon">🧸</div>
+                <span>Kondapalli Toys</span>
+            </div>
+            <div class="model-option" onclick="selectModel('temple_jewelry')">
+                <div class="option-icon">📿</div>
+                <span>Temple Jewelry</span>
+            </div>
+        </div>
+
+        <div class="ar-container">
+            <h1 class="ar-title">Experience in AR</h1>
+            <p class="ar-subtitle">
+                Bring the artifact into your world. Use your camera to place the 3D model in your space.
+            </p>
+
+            <!-- 3D Model Viewer -->
+            <div class="model-wrapper">
+                <model-viewer id="ar-viewer" src="{{ url_for('static', filename='models/ravana.glb') }}"
+                    ios-src="{{ url_for('static', filename='models/ravana.usdz') }}"
+                    poster="{{ url_for('static', filename='images/ar-poster.webp') }}" alt="A 3D model of a Ravana mask"
+                    shadow-intensity="1" camera-controls auto-rotate ar ar-modes="webxr scene-viewer quick-look"
+                    environment-image="neutral" exposure="1" loading="eager">
+
+                    <div class="progress-bar hide" slot="progress-bar">
+                        <div class="update-bar"></div>
+                    </div>
+
+                    <button slot="ar-button" id="ar-button">
+                        View in your space
+                    </button>
+
+                    <div id="ar-prompt">
+                        <img src="https://modelviewer.dev/shared-assets/icons/hand.png">
+                    </div>
+                </model-viewer>
+            </div>
+
+            <div class="ar-instructions">
+                <h3>How to use:</h3>
+                <ul>
+                    <li><strong>Rotate:</strong> Drag with one finger.</li>
+                    <li><strong>Zoom:</strong> Pinch in/out.</li>
+                    <li><strong>AR Mode:</strong> Click "View in your space" (Mobile only).</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- AR specific styles -->
+<style>
+    .ar-section {
+        padding: 100px 2rem 4rem;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        background: radial-gradient(circle at top, #1a1a1a, #000);
+    }
+
+    .ar-layout {
+        display: flex;
+        width: 100%;
+        max-width: 1200px;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+
+    .model-selector {
+        width: 250px;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        flex-shrink: 0;
+    }
+
+    .model-selector h3 {
+        color: var(--accent-color, #ff6b6b);
+        margin-bottom: 1.5rem;
+        font-size: 1.2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        padding-bottom: 0.5rem;
+    }
+
+    .model-option {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        margin-bottom: 0.8rem;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.02);
+        border: 1px solid transparent;
+        color: #ccc;
+    }
+
+    .model-option:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: translateY(-2px);
+    }
+
+    .model-option.active {
+        background: rgba(255, 255, 255, 0.15);
+        border-color: var(--accent-color, #ff6b6b);
+        color: #fff;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+
+    .option-icon {
+        font-size: 1.5rem;
+    }
+
+    .ar-container {
+        flex-grow: 1;
+        text-align: center;
+    }
+
+    .ar-title {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+        background: linear-gradient(45deg, #fff, #aaa);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .ar-subtitle {
+        color: #ccc;
+        margin-bottom: 2rem;
+        font-size: 1.1rem;
+    }
+
+    .model-wrapper {
+        width: 100%;
+        height: 60vh;
+        min-height: 500px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        overflow: hidden;
+        position: relative;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    model-viewer {
+        width: 100%;
+        height: 100%;
+        background-color: transparent;
+        --poster-color: transparent;
+    }
+
+    #ar-button {
+        background-image: url(https://modelviewer.dev/shared-assets/icons/ic_view_in_ar_new_googblue_48dp.png);
+        background-repeat: no-repeat;
+        background-size: 20px 20px;
+        background-position: 12px 50%;
+        background-color: #fff;
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        left: auto;
+        transform: none;
+        white-space: nowrap;
+        padding: 0px 16px 0px 40px;
+        font-family: Roboto Regular, Helvetica Neue, sans-serif;
+        font-size: 14px;
+        color: #4285f4;
+        height: 36px;
+        line-height: 36px;
+        border-radius: 18px;
+        border: 1px solid #DADCE0;
+    }
+
+    #ar-button:active {
+        background-color: #E8EAED;
+    }
+
+    #ar-button:focus {
+        outline: none;
+    }
+
+    #ar-button:focus-visible {
+        outline: 1px solid #4285f4;
+    }
+
+    @keyframes circle {
+        from {
+            transform: translateX(-50%) rotate(0deg) translateX(50px) rotate(0deg);
+        }
+
+        to {
+            transform: translateX(-50%) rotate(360deg) translateX(50px) rotate(-360deg);
+        }
+    }
+
+    @keyframes elongate {
+        from {
+            transform: translateX(100px);
+        }
+
+        to {
+            transform: translateX(-100px);
+        }
+    }
+
+    model-viewer>#ar-prompt {
+        position: absolute;
+        left: 50%;
+        bottom: 175px;
+        animation: elongate 2s infinite ease-in-out alternate;
+        display: none;
+    }
+
+    model-viewer[ar-status="session-started"]>#ar-prompt {
+        display: block;
+    }
+
+    model-viewer>#ar-prompt>img {
+        animation: circle 4s linear infinite;
+    }
+
+    .ar-instructions {
+        margin-top: 2rem;
+        text-align: left;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 1.5rem;
+        border-radius: 15px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .ar-instructions h3 {
+        color: var(--accent-color);
+        margin-bottom: 1rem;
+    }
+
+    .ar-instructions ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .ar-instructions li {
+        margin-bottom: 0.5rem;
+        color: #ddd;
+        padding-left: 1.5rem;
+        position: relative;
+    }
+
+    .ar-instructions li::before {
+        content: "•";
+        color: var(--accent-color);
+        position: absolute;
+        left: 0;
+        font-weight: bold;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+        .ar-layout {
+            flex-direction: column;
+        }
+
+        .model-selector {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            overflow-x: auto;
+            padding: 1rem;
+            gap: 1rem;
+        }
+
+        .model-selector h3 {
+            margin-bottom: 0;
+            margin-right: 1rem;
+            border-bottom: none;
+            padding-bottom: 0;
+            white-space: nowrap;
+        }
+
+        .model-option {
+            margin-bottom: 0;
+            min-width: 140px;
+        }
+    }
+
+    /* Light mode support */
+    body:not(.dark-mode) .ar-section {
+        background: #f5f5f5;
+    }
+
+    body:not(.dark-mode) .model-selector {
+        background: #fff;
+        border-color: #ddd;
+        color: #333;
+    }
+
+    body:not(.dark-mode) .model-option {
+        background: #f9f9f9;
+        color: #555;
+        border: 1px solid #eee;
+    }
+
+    body:not(.dark-mode) .model-option:hover {
+        background: #f0f0f0;
+    }
+
+    body:not(.dark-mode) .model-option.active {
+        background: #e6f7ff;
+        border-color: #1890ff;
+        color: #1890ff;
+    }
+
+    body:not(.dark-mode) .ar-title {
+        background: none;
+        -webkit-text-fill-color: #333;
+        color: #333;
+    }
+
+    body:not(.dark-mode) .ar-subtitle {
+        color: #666;
+    }
+
+    body:not(.dark-mode) .model-wrapper {
+        background: #fff;
+        border-color: #ddd;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+    }
+
+    body:not(.dark-mode) .ar-instructions {
+        background: #fff;
+        border-color: #ddd;
+    }
+
+    body:not(.dark-mode) .ar-instructions li {
+        color: #555;
+    }
+</style>
+
+<script>
+    const models = {
+        'ravana': {
+            src: "{{ url_for('static', filename='models/ravana.glb') }}",
+            iosSrc: "{{ url_for('static', filename='models/ravana.usdz') }}",
+            alt: "A 3D model of a Ravana mask"
+        },
+        'vase': {
+            src: "{{ url_for('static', filename='models/vase.glb') }}",
+            iosSrc: "", // Add usdz if available later
+            alt: "A 3D model of a Vase"
+        },
+        'kondapalli': {
+            src: "{{ url_for('static', filename='models/kondapalli.glb') }}",
+            iosSrc: "", // Add usdz if available later
+            alt: "A 3D model of Kondapalli Toys"
+        },
+        'temple_jewelry': {
+            src: "{{ url_for('static', filename='models/krishna.glb') }}",
+            iosSrc: "", // Add usdz if available later
+            alt: "A 3D model of Temple Jewelry (Krishna)"
+        }
+    };
+
+    function selectModel(modelKey) {
+        const viewer = document.getElementById('ar-viewer');
+        const data = models[modelKey];
+        if (!data) return;
+
+        viewer.src = data.src;
+        viewer.setAttribute('ios-src', data.iosSrc);
+        viewer.alt = data.alt;
+
+        // Update UI active state
+        document.querySelectorAll('.model-option').forEach(el => el.classList.remove('active'));
+        // Find the clicked element (this is a simple way, or pass 'this' from onclick)
+        const clickedOption = document.querySelector(`.model-option[onclick="selectModel('${modelKey}')"]`);
+        if (clickedOption) clickedOption.classList.add('active');
+    }
+</script>
+
+<!-- Import the component -->
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+{% endblock %}

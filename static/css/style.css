@@ -22,6 +22,7 @@ body.dark-mode {
     --bg-color: #000000;
     --border-color: #333333;
     --card-bg: #111111;
+    color-scheme: dark;
 }
 
 /* About Page Sections */
@@ -174,29 +175,114 @@ a {
     gap: 2rem;
 }
 
+/* Main Nav Glass Buttons */
 .main-nav a {
     font-size: 0.9rem;
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
+    font-weight: 500;
     position: relative;
+    padding: 0.75rem 1.5rem;
+    border-radius: 50px;
+
+    /* Liquid Glass Effect */
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.05) 50%,
+            rgba(255, 255, 255, 0.01) 100%);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+
+    /* 3D Borders & Highlights */
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.5);
+    /* Top rim light */
+    border-left: 1px solid rgba(255, 255, 255, 0.3);
+    /* Side light */
+
+    /* Depth Shadows */
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.2),
+        /* Soft diffuse shadow */
+        inset 0 0 10px rgba(255, 255, 255, 0.05),
+        /* Inner glow */
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    /* Strong top highlight */
+
+    transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+    text-decoration: none;
+    display: inline-block;
+    color: var(--text-color);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
 }
 
-.main-nav a::after {
+.main-nav a::before {
     content: '';
     position: absolute;
-    width: 0;
-    height: 1px;
-    bottom: -5px;
-    left: 0;
-    background-color: var(--text-color);
-    transition: width var(--transition-speed);
+    top: 0;
+    left: -100%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(to right,
+            rgba(255, 255, 255, 0) 0%,
+            rgba(255, 255, 255, 0.3) 50%,
+            rgba(255, 255, 255, 0) 100%);
+    transform: skewX(-25deg);
+    transition: left 0.6s ease;
+    pointer-events: none;
 }
 
-.main-nav a:hover::after {
-    width: 100%;
+.main-nav a:hover {
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.25) 0%,
+            rgba(255, 255, 255, 0.1) 100%);
+    box-shadow:
+        0 12px 40px 0 rgba(0, 0, 0, 0.25),
+        inset 0 0 20px rgba(255, 255, 255, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.6);
+    transform: translateY(-3px) scale(1.02);
+    border-color: rgba(255, 255, 255, 0.6);
+    color: var(--accent-color);
+}
+
+.main-nav a:hover::before {
+    left: 150%;
+}
+
+/* Remove old underline effect */
+.main-nav a::after {
+    display: none;
+}
+
+/* Dark Mode Adjustments for High-Def Glass */
+body.dark-mode .main-nav a {
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.1) 0%,
+            rgba(255, 255, 255, 0.02) 100%);
+    border-color: rgba(255, 255, 255, 0.05);
+    border-top-color: rgba(255, 255, 255, 0.3);
+    color: rgba(255, 255, 255, 0.9);
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    box-shadow:
+        0 8px 32px 0 rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .main-nav a:hover {
+    background: linear-gradient(135deg,
+            rgba(255, 255, 255, 0.15) 0%,
+            rgba(255, 255, 255, 0.05) 100%);
+    border-color: rgba(255, 255, 255, 0.4);
+    box-shadow:
+        0 15px 50px 0 rgba(0, 200, 150, 0.1),
+        /* Subtle teal glow */
+        inset 0 0 15px rgba(255, 255, 255, 0.1);
+    color: #fff;
 }
 
 /* Global Buttons */
+
 .btn-primary {
     display: inline-block;
     padding: 0.8rem 1.8rem;
@@ -326,19 +412,21 @@ body.dark-mode .nav-dropdown {
     border-radius: 8px;
     font-weight: 500;
     text-transform: none;
-    /* Keep dropdown items normal case */
     letter-spacing: 0.5px;
     white-space: nowrap;
-}
-
-.nav-dropdown a::after {
-    display: none;
-    /* Remove underline animation for dropdown items */
+    background: transparent;
+    /* Reset glass background for dropdown items */
+    box-shadow: none;
+    border: none;
+    margin: 0;
 }
 
 .nav-dropdown a:hover {
     background-color: rgba(0, 77, 64, 0.05);
     color: var(--accent-color);
+    transform: none;
+    /* Reset hover lift */
+    box-shadow: none;
 }
 
 body.dark-mode .nav-dropdown a:hover {
@@ -474,6 +562,120 @@ body.dark-mode .nav-dropdown a:hover {
     color: var(--accent-color);
 }
 
+/* About Notification Card Styling */
+.about-notification-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    margin-top: 2rem;
+}
+
+.about-notification {
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+    position: relative;
+    min-height: 8rem;
+    background: #29292c;
+    border-radius: 1rem;
+    overflow: hidden;
+    font-family: var(--font-body);
+    font-size: 16px;
+    --gradient: linear-gradient(to bottom, #2eadff, #3d83ff, #7e61ff);
+    --color: #32a6ff;
+}
+
+.about-notification:before {
+    position: absolute;
+    content: "";
+    inset: 0.0625rem;
+    border-radius: 0.9375rem;
+    background: #18181b;
+    z-index: 2;
+}
+
+.about-notification:after {
+    position: absolute;
+    content: "";
+    width: 0.25rem;
+    inset: 0.65rem auto 0.65rem 0.5rem;
+    border-radius: 0.125rem;
+    background: var(--gradient);
+    transition: transform 300ms ease;
+    z-index: 4;
+}
+
+.about-notification:hover:after {
+    transform: translateX(0.15rem);
+}
+
+.about-notititle {
+    color: var(--color);
+    padding: 0.65rem 0.25rem 0.4rem 1.25rem;
+    font-weight: 500;
+    font-size: 1.1rem;
+    transition: transform 300ms ease;
+    z-index: 5;
+}
+
+.about-notification:hover .about-notititle {
+    transform: translateX(0.15rem);
+}
+
+.about-notibody {
+    color: #99999d;
+    padding: 0 1.25rem 0.65rem 1.25rem;
+    transition: transform 300ms ease;
+    z-index: 5;
+    line-height: 1.6;
+}
+
+.about-notification:hover .about-notibody {
+    transform: translateX(0.25rem);
+}
+
+.about-notiglow,
+.about-notiborderglow {
+    position: absolute;
+    width: 20rem;
+    height: 20rem;
+    transform: translate(-50%, -50%);
+    background: radial-gradient(circle closest-side at center, white, transparent);
+    opacity: 0;
+    transition: opacity 300ms ease;
+}
+
+.about-notiglow {
+    z-index: 3;
+}
+
+.about-notiborderglow {
+    z-index: 1;
+}
+
+.about-notification:hover .about-notiglow {
+    opacity: 0.1;
+}
+
+.about-notification:hover .about-notiborderglow {
+    opacity: 0.1;
+}
+
+/* Light Mode Adjustments */
+body:not(.dark-mode) .about-notification {
+    background: #e8e8eb;
+    --gradient: linear-gradient(to bottom, #004d40, #00695c, #00796b);
+    --color: #004d40;
+}
+
+body:not(.dark-mode) .about-notification:before {
+    background: #f5f5f7;
+}
+
+body:not(.dark-mode) .about-notibody {
+    color: #666666;
+}
+
 /* Hero Section */
 .hero-section {
     height: 100vh;
@@ -498,6 +700,39 @@ body.dark-mode .nav-dropdown a:hover {
     color: var(--accent-color);
 }
 
+.about-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 2rem;
+    color: var(--accent-color);
+    letter-spacing: -0.02em;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+.about-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 80px;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--accent-color), transparent);
+    border-radius: 2px;
+}
+
+/* Light mode adjustments */
+body:not(.dark-mode) .about-title {
+    color: #004d40;
+}
+
+body:not(.dark-mode) .about-title::after {
+    background: linear-gradient(90deg, transparent, #004d40, transparent);
+}
+
 .hero-tagline {
     font-size: 1.2rem;
     letter-spacing: 3px;
@@ -505,6 +740,7 @@ body.dark-mode .nav-dropdown a:hover {
     margin-bottom: 2rem;
     opacity: 0.8;
 }
+
 
 /* Map Containers & Tooltips (Used on /map page) */
 .hero-map-container,
@@ -516,11 +752,34 @@ body.dark-mode .nav-dropdown a:hover {
     animation: fadeIn 1.2s ease-out;
 }
 
+/* Mobile Map Layout */
+@media (max-width: 768px) {
+    .map-page-container {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    #india-map-wrapper {
+        flex: 0 0 auto;
+        width: 100%;
+        padding: 0;
+    }
+
+    #india-map-wrapper svg {
+        max-height: 50vh;
+    }
+
+    .map-connector-overlay {
+        display: none;
+        /* Hide connector lines on mobile */
+    }
+}
+
 #india-map-wrapper svg {
     width: 100%;
     height: auto;
     max-height: 70vh;
-    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+    /* filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2)); */
 }
 
 #india-map-wrapper path {
@@ -548,20 +807,29 @@ body.dark-mode #india-map-wrapper path:hover {
 }
 
 .map-tooltip {
-    position: fixed;
-    pointer-events: none;
+    position: relative;
+    /* pointer-events: none; REMOVED to allow text selection if needed, though originally none. visible when active */
     background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(15px) saturate(180%);
     -webkit-backdrop-filter: blur(15px) saturate(180%);
     border: 1px solid rgba(255, 255, 255, 0.4);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.5rem;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
-    z-index: 2000;
+    z-index: 100;
     opacity: 0;
     transform: translateY(10px);
     transition: opacity 0.3s, transform 0.3s;
-    min-width: 200px;
+    width: 280px;
+    /* Fixed width for layout stability */
+    flex-shrink: 0;
+    /* Don't shrink */
+    margin-left: 2rem;
+    /* Space from map */
+    align-self: flex-start;
+    /* Align to top or center as preferred. Center is default in flex items if not specified but let's see */
+    margin-top: 5rem;
+    /* Push down slightly to align with map center typically */
 }
 
 body.dark-mode .map-tooltip {
@@ -1141,6 +1409,278 @@ body.dark-mode .review-card {
     background: #252525;
 }
 
+/* Features Section */
+.features-section {
+    padding: 5rem 10%;
+    background: var(--bg-color);
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+/* Glassmorphic Card Styling */
+.glass-card-container {
+    padding: 2px;
+    border-radius: 24px;
+    position: relative;
+    background: linear-gradient(-30deg,
+            oklch(0.4 0.2 280),
+            transparent,
+            oklch(0.4 0.2 280)),
+        linear-gradient(to bottom, oklch(0.185 0 0), oklch(0.185 0 0));
+    overflow: hidden;
+}
+
+.glass-inner-container {
+    position: relative;
+}
+
+.glass-border-outer {
+    border: 2px solid rgba(72, 87, 221, 0.5);
+    border-radius: 24px;
+    padding-right: 4px;
+    padding-bottom: 4px;
+}
+
+.glass-main-card {
+    width: 100%;
+    min-height: 300px;
+    border-radius: 24px;
+    border: 2px solid #6348dd;
+    margin-top: -4px;
+    margin-left: -4px;
+    filter: url(#turbulent-displace);
+    position: relative;
+}
+
+.glass-glow-layer-1 {
+    border: 2px solid rgba(221, 132, 72, 0.6);
+    border-radius: 24px;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    filter: blur(1px);
+    pointer-events: none;
+}
+
+.glass-glow-layer-2 {
+    border: 2px solid oklch(0.63 0.16 280);
+    border-radius: 24px;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    filter: blur(4px);
+    pointer-events: none;
+}
+
+.glass-overlay-1,
+.glass-overlay-2 {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 24px;
+    mix-blend-mode: overlay;
+    transform: scale(1.1);
+    filter: blur(16px);
+    background: linear-gradient(-30deg,
+            white,
+            transparent 30%,
+            transparent 70%,
+            white);
+    pointer-events: none;
+}
+
+.glass-overlay-1 {
+    opacity: 1;
+}
+
+.glass-overlay-2 {
+    opacity: 0.5;
+}
+
+.glass-background-glow {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    border-radius: 24px;
+    filter: blur(32px);
+    transform: scale(1.1);
+    opacity: 0.3;
+    z-index: -1;
+    background: linear-gradient(-30deg,
+            oklch(0.63 0.16 280),
+            transparent,
+            #6348dd);
+    pointer-events: none;
+}
+
+.glass-content-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.glass-content-top {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    padding-bottom: 1rem;
+    height: 100%;
+}
+
+.glass-content-bottom {
+    display: flex;
+    flex-direction: column;
+    padding: 2rem;
+    padding-top: 1rem;
+}
+
+.glass-badge {
+    background: radial-gradient(47.2% 50% at 50.39% 88.37%,
+            rgba(255, 255, 255, 0.12) 0%,
+            rgba(255, 255, 255, 0) 100%),
+        rgba(255, 255, 255, 0.04);
+    position: relative;
+    transition: background 0.3s ease;
+    border-radius: 14px;
+    width: fit-content;
+    height: fit-content;
+    padding: 8px 16px;
+    text-transform: uppercase;
+    font-weight: bold;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.glass-badge:hover {
+    background: radial-gradient(47.2% 50% at 50.39% 88.37%,
+            rgba(255, 255, 255, 0.12) 0%,
+            rgba(255, 255, 255, 0) 100%),
+        rgba(255, 255, 255, 0.08);
+}
+
+.glass-badge::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 1px;
+    background: linear-gradient(150deg,
+            rgba(255, 255, 255, 0.48) 16.73%,
+            rgba(255, 255, 255, 0.08) 30.2%,
+            rgba(255, 255, 255, 0.08) 68.2%,
+            rgba(255, 255, 255, 0.6) 81.89%);
+    border-radius: inherit;
+    mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    mask-composite: xor;
+    -webkit-mask-composite: xor;
+    pointer-events: none;
+}
+
+.glass-title {
+    font-size: 1.8rem;
+    font-weight: 500;
+    margin-top: auto;
+    color: #fff;
+    font-family: var(--font-heading);
+}
+
+.glass-description {
+    opacity: 0.7;
+    color: #fff;
+    line-height: 1.6;
+}
+
+.glass-divider {
+    margin-top: auto;
+    border: none;
+    height: 1px;
+    background-color: currentColor;
+    opacity: 0.2;
+    mask-image: linear-gradient(to right, transparent, black, transparent);
+    -webkit-mask-image: linear-gradient(to right,
+            transparent,
+            black,
+            transparent);
+}
+
+/* Light Mode Adjustments for Glass Cards */
+body:not(.dark-mode) .glass-card-container {
+    background: linear-gradient(-30deg,
+            oklch(0.7 0.15 200),
+            transparent,
+            oklch(0.7 0.15 200)),
+        linear-gradient(to bottom, oklch(0.95 0 0), oklch(0.95 0 0));
+}
+
+body:not(.dark-mode) .glass-border-outer {
+    border-color: rgba(0, 77, 64, 0.3);
+}
+
+body:not(.dark-mode) .glass-main-card {
+    border-color: #004d40;
+}
+
+body:not(.dark-mode) .glass-glow-layer-1 {
+    border-color: rgba(0, 105, 92, 0.4);
+}
+
+body:not(.dark-mode) .glass-glow-layer-2 {
+    border-color: rgba(0, 121, 107, 0.3);
+}
+
+body:not(.dark-mode) .glass-background-glow {
+    background: linear-gradient(-30deg,
+            oklch(0.5 0.15 180),
+            transparent,
+            #00695c);
+}
+
+body:not(.dark-mode) .glass-badge {
+    background: radial-gradient(47.2% 50% at 50.39% 88.37%,
+            rgba(0, 0, 0, 0.08) 0%,
+            rgba(0, 0, 0, 0) 100%),
+        rgba(0, 0, 0, 0.04);
+    color: rgba(0, 0, 0, 0.7);
+}
+
+body:not(.dark-mode) .glass-badge::before {
+    background: linear-gradient(150deg,
+            rgba(0, 0, 0, 0.2) 16.73%,
+            rgba(0, 0, 0, 0.05) 30.2%,
+            rgba(0, 0, 0, 0.05) 68.2%,
+            rgba(0, 0, 0, 0.25) 81.89%);
+}
+
+body:not(.dark-mode) .glass-title {
+    color: #1a1a1a;
+}
+
+body:not(.dark-mode) .glass-description {
+    color: #333;
+    opacity: 0.8;
+}
+
 .reviewer-header {
     display: flex;
     align-items: center;
@@ -1186,6 +1726,19 @@ body.dark-mode .review-text {
 
     .product-gallery {
         height: 350px;
+    }
+
+    .features-section {
+        padding: 3rem 5%;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .glass-main-card {
+        min-height: 250px;
     }
 }
 
@@ -1504,13 +2057,17 @@ body.dark-mode .review-text {
     }
 
     .map-tooltip {
-        min-width: 160px;
-        max-width: 85vw;
-        padding: 0.75rem;
+        min-width: 200px;
+        max-width: 90vw;
+        padding: 1rem;
+        margin: 1rem auto 0;
+        /* Center below map */
+        align-self: center;
+        width: 90%;
     }
 
     #india-map-wrapper svg {
-        max-height: 60vh;
+        max-height: 50vh;
     }
 
     .cart-section {
@@ -2353,5 +2910,343 @@ body.dark-mode .chat-input-area input {
     .products-grid {
         grid-template-columns: 1fr;
         /* Single column for very narrow phones */
+    }
+}
+
+/* About Page Glass Cards */
+.profile-cards-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
+    padding: 2rem;
+    overflow: hidden;
+    /* Fix scrollbar issues */
+}
+
+.profile-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    /* Responsive wrap */
+    gap: 20px;
+    /* Space when wrapped */
+}
+
+.profile-container .glass {
+    position: relative;
+    width: 180px;
+    height: 200px;
+    background: linear-gradient(rgba(255, 255, 255, 0.1), transparent);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 25px 25px rgba(0, 0, 0, 0.25);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: 0.5s;
+    border-radius: 10px;
+    margin: 0 -45px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    transform: rotate(calc(var(--r) * 1deg));
+    cursor: pointer;
+}
+
+/* Adjust stacking on hover */
+.profile-container:hover .glass {
+    transform: rotate(0deg);
+    margin: 0 20px;
+}
+
+.profile-container .glass::before {
+    content: attr(data-text);
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 40px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+    font-family: inherit;
+    letter-spacing: 1px;
+    font-size: 0.9rem;
+    border-bottom-left-radius: 10px;
+    border-bottom-right-radius: 10px;
+}
+
+.profile-container .glass svg {
+    width: 80px;
+    height: 80px;
+    fill: rgba(255, 255, 255, 0.8);
+    transition: transform 0.3s;
+}
+
+.profile-container .glass:hover svg {
+    transform: scale(1.1);
+}
+
+/* Light Mode Card Adjustments */
+body:not(.dark-mode) .profile-container .glass {
+    background: linear-gradient(rgba(0, 0, 0, 0.05), transparent);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    box-shadow: 0 15px 15px rgba(0, 0, 0, 0.1);
+}
+
+body:not(.dark-mode) .profile-container .glass::before {
+    background: rgba(0, 0, 0, 0.05);
+    color: #333;
+}
+
+body:not(.dark-mode) .profile-container .glass svg {
+    fill: #333;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .profile-container .glass {
+        margin: 10px !important;
+        transform: rotate(0deg) !important;
+    }
+}
+
+/* About Page Rotating Box Animation */
+.about-hero {
+    /* Default (Light Mode) */
+    --hero-bg: #f8f9fa;
+    --box-shadow-1: #5e60ce;
+    /* Deep Purple */
+    --box-shadow-2: rgba(72, 202, 228, 0.6);
+    /* Cyan */
+    --box-shadow-glow: rgba(94, 96, 206, 0.3);
+    --Texture-filter: hue-rotate(160deg) brightness(0.9);
+    --text-gradient-bg: linear-gradient(135deg, #2d3436, #0984e3 33%, #6c5ce7 66%, #2d3436);
+    --title-opacity: 0.8;
+
+    background: var(--hero-bg) !important;
+    position: relative;
+    overflow: hidden;
+    transition: background 0.3s ease;
+}
+
+/* Dark Mode Overrides */
+body.dark-mode .about-hero {
+    --hero-bg: #000000;
+    --box-shadow-1: #aea4e4;
+    /* Original Lavender */
+    --box-shadow-2: rgba(94, 192, 255, 0.5);
+    /* Original Light Blue */
+    --box-shadow-glow: rgba(94, 192, 255, 0.3);
+    --Texture-filter: hue-rotate(160deg);
+    --text-gradient-bg: linear-gradient(135deg, #bdb9c3, #c09bff 33%, #4ea4ee 66%, #bdb9c3);
+    --title-opacity: 0.6;
+}
+
+.background-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 500px;
+    height: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    pointer-events: none;
+    opacity: var(--title-opacity);
+    /* Use variable for opacity */
+    transition: opacity 0.3s ease;
+}
+
+.about-dynamic-title {
+    text-align: center;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: clamp(3rem, 8vw, 100px);
+    font-weight: 800;
+    margin: 0;
+    margin-bottom: 1rem;
+
+    --bg-size: 200%;
+    --color-1: #999;
+    --color-2: hsl(221.25deg 72.73% 82.75%);
+
+    background: linear-gradient(90deg,
+            var(--color-1),
+            var(--color-2),
+            var(--color-1)) 0 0 / var(--bg-size) 100%;
+
+    color: transparent;
+    background-image: var(--text-gradient-bg);
+    /* Use variable */
+    -webkit-background-clip: text;
+    background-clip: text;
+    text-shadow: 1px 1px rgba(76, 248, 184, 0.2), -1px -1px rgba(248, 88, 88, 0.2), 1px -1px rgba(163, 146, 255, 0.2),
+        -1px 1px rgba(229, 139, 255, 0.2);
+
+    position: relative;
+    z-index: 2;
+    transition: background-image 0.3s ease;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .about-dynamic-title {
+        animation: dynamic-bg 8s linear infinite;
+    }
+
+    @keyframes dynamic-bg {
+        to {
+            background-position: var(--bg-size) 0;
+        }
+    }
+}
+
+.rotating-box {
+    width: 500px;
+    height: 500px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotateY(65deg) rotateX(50deg);
+    transform-style: preserve-3d;
+}
+
+.rotation-list {
+    width: 500px;
+    height: 500px;
+    transform-style: preserve-3d;
+    animation: rotateX 20s linear infinite;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.list-item {
+    width: 500px;
+    height: 500px;
+    border-radius: 50%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    /* Use variables for box-shadow */
+    box-shadow: 0 0 10px var(--box-shadow-1);
+    animation: rotating 20s linear infinite, shadow-gradient 20s linear infinite;
+    background: transparent;
+    transition: box-shadow 0.3s ease;
+}
+
+@keyframes rotating {
+    0% {
+        box-shadow: 0 0 10px var(--box-shadow-1);
+    }
+
+    50% {
+        box-shadow: 0 0 10px var(--box-shadow-2);
+    }
+
+    100% {
+        box-shadow: 0 0 10px var(--box-shadow-1);
+    }
+}
+
+@keyframes shadow-gradient {
+    0% {
+        box-shadow: none;
+    }
+
+    10% {
+        box-shadow: 0 0 20px var(--box-shadow-1);
+    }
+
+    50% {
+        box-shadow: 0 0 20px var(--box-shadow-2);
+    }
+
+    90% {
+        box-shadow: 0 0 20px var(--box-shadow-1);
+    }
+
+    100% {
+        box-shadow: none;
+    }
+}
+
+.list-item span {
+    display: block;
+    width: 100%;
+    height: 100%;
+    background: url('../images/rotating_texture.png') no-repeat center center;
+    filter: var(--Texture-filter);
+    /* Use variable */
+    background-size: cover;
+    animation: rotate 4s linear infinite;
+    transition: filter 0.3s ease;
+}
+
+@keyframes rotate {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.item-2 {
+    transform: rotateX(60deg) rotateZ(60deg);
+}
+
+.item-3 {
+    transform: rotateX(-60deg) rotateZ(-60deg);
+}
+
+/* Map Page Specific Overrides to ensure Grid Visibility */
+/* Map Page Specific Overrides - Grid Background on Body */
+body.map-page-body {
+    /* Reset background to ensure no conflicts */
+    background: none !important;
+
+    /* Grid Variables */
+    --gap-size: 25px;
+    --line-thickness: 1px;
+
+    /* Light Mode Colors - Increased Contrast */
+    --grid-bg: #f8f9fa;
+    --grid-line: #ccc;
+    /* Darker grey for better visibility */
+
+    background-color: var(--grid-bg) !important;
+    background-image:
+        repeating-linear-gradient(var(--grid-line) 0 var(--line-thickness), transparent var(--line-thickness) var(--gap-size)),
+        repeating-linear-gradient(90deg, var(--grid-line) 0 var(--line-thickness), transparent var(--line-thickness) var(--gap-size)) !important;
+    background-size: 100% var(--gap-size), var(--gap-size) 100% !important;
+    animation: scroll 3s linear infinite;
+
+    /* Ensure height covers viewport */
+    min-height: 100vh;
+}
+
+/* Dark Mode Overrides for Map Page - Increased Contrast */
+body.dark-mode.map-page-body {
+    --grid-bg: #000000;
+    /* Pure black for better contrast */
+    --grid-line: #333;
+    /* Keep subtle but visible */
+}
+
+/* Ensure content is transparent so grid shows */
+body.map-page-body main,
+body.map-page-body .map-page-section {
+    background: transparent !important;
+}
+
+/* Grid Animation Keyframes */
+@keyframes scroll {
+    0% {
+        background-position: 0 0, 0 0;
+    }
+
+    100% {
+        background-position: 0 var(--gap-size), var(--gap-size) 0;
     }
 }

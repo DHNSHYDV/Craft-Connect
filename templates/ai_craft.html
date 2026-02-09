@@ -22,7 +22,7 @@
                     </svg>
                     <h3>Drag & Drop Image</h3>
                     <p>or click to browse from gallery</p>
-                    <input type="file" id="fileInput" hidden accept="image/*">
+                    <input type="file" id="fileInput" hidden accept="image/*" capture="environment">
                 </div>
                 <div class="preview-area" id="previewArea" style="display: none;">
                     <img id="imagePreview" src="" alt="Preview">
@@ -57,7 +57,8 @@
                     Analysis suggests this is an authentic Madhubani painting from Bihar. The geometric patterns and
                     natural color variations are consistent with traditional village techniques.
                 </p>
-                <p class="result-disclaimer" id="resultDisclaimer" style="display: none;">Analysis uses an OCR-style model; descriptions may be generic for non-document images.</p>
+                <p class="result-disclaimer" id="resultDisclaimer" style="display: none;">Analysis uses an OCR-style
+                    model; descriptions may be generic for non-document images.</p>
                 <div class="result-actions">
                     <a href="/products?search=madhubani" class="btn-primary">Shop Similar Crafts</a>
                     <button class="btn-secondary" onclick="resetVision()">Try Another</button>
@@ -219,6 +220,7 @@
         margin-bottom: 0.75rem;
         text-align: center;
     }
+
     .result-disclaimer {
         font-size: 0.8rem;
         opacity: 0.65;

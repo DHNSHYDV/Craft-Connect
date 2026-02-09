@@ -11,6 +11,7 @@ flask-login
 google-generativeai
 huggingface_hub
 replicate
+PyJWT
 
 # Optional: Heavy ML libraries (Commented out for free tier deployment to save space/build time)
 # torch

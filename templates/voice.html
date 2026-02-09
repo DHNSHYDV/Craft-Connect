@@ -70,6 +70,18 @@
             </div>
         </div>
     </div>
+
+    <!-- Voice Permission Modal -->
+    <div id="voice-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-icon">🎤🚫</div>
+            <h3 class="modal-title" id="modal-title">Microphone Access Needed</h3>
+            <p class="modal-message" id="modal-message">
+                Please allow microphone access to use voice search.
+            </p>
+            <button class="modal-btn" onclick="closeModal()">Okay, I understand</button>
+        </div>
+    </div>
 </section>
 
 <style>
@@ -396,35 +408,117 @@
             padding: 2rem 1rem;
             box-sizing: border-box;
         }
+
         .type-instead-box {
             width: 100%;
             max-width: 100%;
             padding: 1rem;
             box-sizing: border-box;
         }
+
         .type-instead {
             flex-direction: column;
             width: 100%;
         }
+
         .voice-text-input {
             width: 100%;
         }
+
         .voice-ask-btn {
             width: 100%;
             white-space: normal;
         }
+
         .voice-fallback-hint {
             font-size: 0.85rem;
         }
+
         .transcription-card {
             max-width: 100%;
             margin-left: 1rem;
             margin-right: 1rem;
             padding: 1.25rem;
         }
+
         .transcription-text {
             font-size: 1.35rem;
         }
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 1000;
+        justify-content: center;
+        align-items: center;
+        padding: 1rem;
+        backdrop-filter: blur(4px);
+    }
+
+    .modal-content {
+        background: var(--card-bg);
+        padding: 2rem;
+        border-radius: 16px;
+        max-width: 400px;
+        width: 100%;
+        text-align: center;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        border: 1px solid var(--border-color);
+        animation: slideUp 0.3s ease-out;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(20px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .modal-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .modal-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: var(--text-color);
+    }
+
+    .modal-message {
+        font-size: 0.95rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        line-height: 1.5;
+    }
+
+    .modal-btn {
+        background: var(--accent-color);
+        color: white;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        cursor: pointer;
+        width: 100%;
+        transition: opacity 0.2s;
+    }
+
+    .modal-btn:hover {
+        opacity: 0.9;
     }
 </style>
 
@@ -441,6 +535,21 @@
     let isRecording = false;
     let stream = null;
     var voiceTimeout; // Store timeout ID
+
+    const voiceModal = document.getElementById('voice-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalMessage = document.getElementById('modal-message');
+
+    function showModal(title, message) {
+        modalTitle.textContent = title;
+        modalMessage.textContent = message;
+        voiceModal.style.display = 'flex';
+    }
+
+    window.closeModal = function () {
+        voiceModal.style.display = 'none';
+        micBtn.classList.remove('listening');
+    }
 
     function searchProducts(query) {
         if (!query || !query.trim()) return;
@@ -543,12 +652,12 @@
                     voiceStatus.textContent = "No speech detected. Try again.";
                 } else if (event.error === 'audio-capture') {
                     voiceStatus.textContent = "No microphone found.";
+                    showModal("No Microphone Found", "We couldn't find a microphone on your device.");
                 } else if (event.error === 'not-allowed') {
-                    voiceStatus.textContent = "Microphone permission denied.";
+                    voiceStatus.textContent = "Microphone blocked.";
+                    showModal("Microphone Access Denied", "Permission was denied. Please allow microphone access in your browser settings.");
                 } else {
-                    // Fallback to Server Whisper if Web Speech fails unexpectedly
-                    console.log("Web Speech failed, trying server Whisper fallback...");
-                    startServerWhisper();
+                    voiceStatus.textContent = "Error: " + event.error;
                 }
             };
 
@@ -572,12 +681,26 @@
         voiceStatus.textContent = "Getting microphone (server mode)...";
         voiceStatus.style.color = '';
 
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            voiceStatus.textContent = "Microphone API not supported or insecure context (HTTPS required). Type below.";
+            voiceStatus.style.color = "var(--accent-color, #f4511e)";
+            return;
+        }
+
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(function (s) {
                 stream = s;
                 var options = { mimeType: 'audio/webm;codecs=opus' };
                 if (!MediaRecorder.isTypeSupported(options.mimeType)) options = {};
-                mediaRecorder = new MediaRecorder(stream);
+
+                try {
+                    mediaRecorder = new MediaRecorder(stream);
+                } catch (e) {
+                    console.error("MediaRecorder init failed:", e);
+                    voiceStatus.textContent = "Recorder failed. Try typing.";
+                    return;
+                }
+
                 mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) recordedChunks.push(e.data); };
                 mediaRecorder.onstop = function () {
                     if (voiceTimeout) clearTimeout(voiceTimeout); // Clear timeout on stop
@@ -626,7 +749,23 @@
                 }, 6000);
             })
             .catch(function (err) {
-                voiceStatus.textContent = "Microphone denied or unavailable. Use the text box below.";
+                console.error("Mic Error:", err);
+                let title = "Microphone Access Denied";
+                let msg = "Please allow microphone access in your browser settings to use this feature.";
+
+                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+                    msg = "Permission was denied. You need to allow microphone access in your browser settings.";
+                } else if (window.isSecureContext === false) {
+                    title = "Insecure Connection";
+                    msg = "Your browser blocked the microphone because the connection is not HTTPS.";
+                } else if (err.name === 'NotFoundError') {
+                    title = "No Microphone Found";
+                    msg = "We couldn't find a microphone on your device.";
+                }
+
+                showModal(title, msg);
+
+                voiceStatus.textContent = "Microphone access failed. Try typing below.";
                 voiceStatus.style.color = "var(--accent-color, #f4511e)";
             });
     }

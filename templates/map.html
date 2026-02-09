@@ -36,7 +36,71 @@
     </div>
 </section>
 
+
+<script>
+    document.body.classList.add('map-page-body');
+    // Force transparency on direct parents just in case
+    document.documentElement.style.background = 'transparent';
+</script>
+
 <style>
+    /*
+     * FORCE GRID VISIBILITY
+     * Injected directly to bypass cache issues
+     */
+
+    /* Ensure HTML/Body stack is transparent so our background shows */
+    html,
+    body.map-page-body {
+        height: 100%;
+        margin: 0;
+        overflow-x: hidden;
+    }
+
+    /* Apply Grid to Body */
+    body.map-page-body {
+        /* Grid Variables */
+        --gap-size: 25px;
+        --line-thickness: 1px;
+
+        /* Light Mode Colors - High Contrast */
+        --grid-bg: #f8f9fa;
+        --grid-line: #ccc;
+
+        background-color: var(--grid-bg) !important;
+        background-image:
+            repeating-linear-gradient(var(--grid-line) 0 var(--line-thickness), transparent var(--line-thickness) var(--gap-size)),
+            repeating-linear-gradient(90deg, var(--grid-line) 0 var(--line-thickness), transparent var(--line-thickness) var(--gap-size)) !important;
+        background-size: 100% var(--gap-size), var(--gap-size) 100% !important;
+        animation: scroll 3s linear infinite;
+    }
+
+    /* Dark Mode Colors - High Contrast */
+    body.dark-mode.map-page-body {
+        --grid-bg: #000000;
+        --grid-line: #333333;
+    }
+
+    /* Animation */
+    @keyframes scroll {
+        0% {
+            background-position: 0 0, 0 0;
+        }
+
+        100% {
+            background-position: 0 var(--gap-size), var(--gap-size) 0;
+        }
+    }
+
+    /* Aggressive Transparency Overrides */
+    body.map-page-body main,
+    body.map-page-body .map-page-section,
+    html {
+        background: transparent !important;
+        background-color: transparent !important;
+    }
+
+    /* Existing Map Styles - Critical for layout */
     .map-page-section {
         padding: 120px 20px 60px;
         min-height: 100vh;
@@ -44,26 +108,37 @@
         flex-direction: column;
         align-items: center;
         justify-content: flex-start;
-        background: var(--bg-color);
+        position: relative;
+        background: transparent !important;
         transition: background 0.3s ease;
+        z-index: 5;
+        /* Ensure content is above stars */
+    }
+
+    main {
+        background: transparent !important;
     }
 
     .map-header {
         text-align: center;
         margin-bottom: 4rem;
         max-width: 800px;
+        position: relative;
+        z-index: 10;
     }
 
     .section-title {
         font-size: 3rem;
         margin-bottom: 1rem;
         color: var(--accent-color);
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
     }
 
     .section-subtitle {
         font-size: 1.1rem;
-        opacity: 0.8;
+        opacity: 0.9;
         letter-spacing: 1px;
+        color: var(--text-color);
     }
 
     .map-page-container {
@@ -76,6 +151,7 @@
         align-items: center;
         gap: 1.5rem;
         filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.15));
+        z-index: 10;
     }
 
     .map-connector-overlay {
@@ -93,89 +169,31 @@
         transition: opacity 0.3s;
     }
 
+    body.dark-mode #india-map-wrapper {
+        background: transparent;
+    }
+
+    body:not(.dark-mode) #india-map-wrapper {
+        background: transparent;
+    }
+
     #india-map-wrapper {
         flex: 0 1 55%;
         display: flex;
         justify-content: center;
+        /* Background handled by theme selector above */
+        padding: 2rem;
+        border-radius: 20px;
     }
 
     #india-map-wrapper svg {
         width: 100%;
         height: auto;
         max-height: 70vh;
-    }
-
-    #map-tooltip {
-        position: relative;
-        left: auto !important;
-        top: auto !important;
-        flex: 0 0 280px;
-        min-height: 120px;
-        opacity: 0;
-    }
-
-    #map-tooltip.active {
-        opacity: 1;
-    }
-
-    #india-map-wrapper path {
-        cursor: default;
-        /* Remove pointer since click is removed */
-    }
-
-    .map-legend {
-        margin-top: 4rem;
-        display: flex;
-        justify-content: center;
-        width: 100%;
-        opacity: 0.8;
-    }
-
-    .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 0.8rem;
-        background: rgba(var(--accent-rgb), 0.05);
-        padding: 0.8rem 1.5rem;
-        border-radius: 50px;
-        border: 1px solid rgba(var(--accent-rgb), 0.1);
-    }
-
-    .legend-color {
-        width: 12px;
-        height: 12px;
-        background: var(--accent-color);
-        border-radius: 50%;
-        box-shadow: 0 0 10px var(--accent-color);
-    }
-
-    @media (max-width: 768px) {
-        .map-page-section {
-            padding-top: 100px;
-        }
-
-        .section-title {
-            font-size: 2rem;
-        }
-
-        .map-header {
-            margin-bottom: 2rem;
-        }
-
-        .map-page-container {
-            flex-direction: column;
-            gap: 1rem;
-        }
-
-        #india-map-wrapper {
-            flex: 0 1 auto;
-        }
-
-        #map-tooltip {
-            flex: 0 0 auto;
-            width: 100%;
-            max-width: 320px;
-        }
+        /* filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.1)); */
+        transition: transform 0.3s ease, filter 0.3s ease;
     }
 </style>
+
+
 {% endblock %}

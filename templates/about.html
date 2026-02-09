@@ -1,20 +1,400 @@
 {% extends 'base.html' %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contact_animated.css') }}">
+{% endblock %}
+
 {% block content %}
 <section class="hero-section about-hero">
+    <div class="background-container">
+        <div class="rotating-box">
+            <ul class="rotation-list">
+                <li class="list-item"><span></span></li>
+                <li class="list-item item-2"><span></span></li>
+                <li class="list-item item-3"><span></span></li>
+            </ul>
+        </div>
+    </div>
+
     <div class="hero-content">
-        <h1 class="hero-title">About Desh Ke Haath</h1>
+        <h1 class="hero-title about-dynamic-title">About Desh Ke Haath</h1>
         <p class="hero-tagline">Connecting India's Soul to the Digital World</p>
     </div>
 </section>
 
 <section class="about-content">
-    <h2 class="about-title">Our Mission</h2>
-    <p class="about-text">
-        Desh Ke Haath is a platform dedicated to empowering Indian artisans by bridging the gap between traditional
-        craftsmanship and modern technology.
-        "States Alag, Jazba Ek" (Different States, One Spirit) represents our commitment to unifying the diverse
-        artistic heritage of India.
-    </p>
+    <h2 class="about-title">About Desh Ke Haath</h2>
+    <div class="about-notification-grid">
+        <div class="about-notification">
+            <div class="about-notititle">The Heritage Gap</div>
+            <div class="about-notibody">
+                Desh Ke Haath was created with a simple thought — India has a rich heritage and beautiful handicrafts,
+                but many people never truly get to know them. When people travel, they experience places and cultures,
+                yet often return without something that carries the soul of that place, mainly because they are unaware
+                of local crafts and artisans.
+            </div>
+            <div class="about-notiglow"></div>
+            <div class="about-notiborderglow"></div>
+        </div>
+        <div class="about-notification">
+            <div class="about-notititle">The Artisan Challenge</div>
+            <div class="about-notibody">
+                On the other hand, many artisans work with great skill and tradition, but struggle to reach wider
+                audiences. Their crafts remain limited to small regions, and the stories, history, and effort behind
+                their work often go unseen. This gap between creators and people leads to traditional art forms slowly
+                losing visibility.
+            </div>
+            <div class="about-notiglow"></div>
+            <div class="about-notiborderglow"></div>
+        </div>
+        <div class="about-notification">
+            <div class="about-notititle">Our Solution</div>
+            <div class="about-notibody">
+                Desh Ke Haath brings Indian handicrafts from across the country onto one platform, along with their
+                cultural background and stories. Instead of acting as a middleman, the app focuses on giving artisans
+                and their crafts direct visibility, helping people understand and value the tradition behind every
+                product.
+            </div>
+            <div class="about-notiglow"></div>
+            <div class="about-notiborderglow"></div>
+        </div>
+        <div class="about-notification">
+            <div class="about-notititle">Technology as a Bridge</div>
+            <div class="about-notibody">
+                Through Desh Ke Haath, technology becomes a bridge — connecting people to India's heritage and helping
+                traditional crafts stay alive, appreciated, and remembered.
+            </div>
+            <div class="about-notiglow"></div>
+            <div class="about-notiborderglow"></div>
+        </div>
+    </div>
+</section>
+
+<section class="features-section">
+    <!-- SVG Filter for turbulent displacement -->
+    <svg style="position: absolute; width: 0; height: 0;">
+        <defs>
+            <filter id="turbulent-displace">
+                <feTurbulence type="fractalNoise" baseFrequency="0.01" numOctaves="3" result="noise" />
+                <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" />
+            </filter>
+        </defs>
+    </svg>
+
+    <h2 class="about-title">Features of Desh Ke Haath</h2>
+    <div class="features-grid">
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">Feature</div>
+                                <h3 class="glass-title">Craft Discovery</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Explore authentic Indian handicrafts from all states and
+                                    regions in one place.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">Feature</div>
+                                <h3 class="glass-title">Cultural Stories & History</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Learn the cultural background, traditions, and history
+                                    behind every craft.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">AI Feature</div>
+                                <h3 class="glass-title">AI Chatbot – CraftBuddy</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Ask questions and easily understand Indian crafts,
+                                    cultures, and traditions.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">AI Feature</div>
+                                <h3 class="glass-title">Customize Your Own Craft</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Describe your idea, and AI generates a custom craft design
+                                    based on your prompt.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">AI Feature</div>
+                                <h3 class="glass-title">Image-Based Craft Recognition</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Upload a photo to identify the craft and learn about its
+                                    origin.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">Feature</div>
+                                <h3 class="glass-title">Voice Search</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Search and explore crafts by speaking instead of typing.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">Analytics</div>
+                                <h3 class="glass-title">Data Insights</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Understand which crafts people explore and appreciate the
+                                    most.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">AR/VR</div>
+                                <h3 class="glass-title">AR/VR Preview</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Virtually visualize jewellery, décor, or crafts before
+                                    choosing them.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="glass-card-container">
+            <div class="glass-inner-container">
+                <div class="glass-border-outer">
+                    <div class="glass-main-card">
+                        <div class="glass-glow-layer-1"></div>
+                        <div class="glass-glow-layer-2"></div>
+                        <div class="glass-overlay-1"></div>
+                        <div class="glass-overlay-2"></div>
+                        <div class="glass-background-glow"></div>
+                        <div class="glass-content-container">
+                            <div class="glass-content-top">
+                                <div class="glass-badge">Core Value</div>
+                                <h3 class="glass-title">No-Middleman Approach</h3>
+                            </div>
+                            <hr class="glass-divider">
+                            <div class="glass-content-bottom">
+                                <p class="glass-description">Focuses on giving artisans and their crafts direct
+                                    visibility without intermediaries.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="about-content">
+    <h2 class="about-title">Founders / Team</h2>
+    <div class="profile-cards-container">
+        <div class="profile-container">
+            <!-- Card 1: Akhila -->
+            <div class="glass" style="--r:-15;" data-text="Akhila Pasupuleti">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                </svg>
+            </div>
+
+            <!-- Card 2: Shaik Siyana -->
+            <div class="glass" style="--r:5;" data-text="Shaik Siyana">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                    <!-- Minimal hair detail variation -->
+                    <path d="M12 4c-2 0-3.5 1-3.5 3s1.5 2 3.5 2 3.5-1 3.5-2-1.5-3-3.5-3z" fill="none"
+                        stroke="currentColor" stroke-width="0.5" opacity="0.5" />
+                </svg>
+            </div>
+
+            <!-- Card 3: Meenakshi Pasupuleti -->
+            <div class="glass" style="--r:25;" data-text="Meenakshi Pasupuleti">
+                <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path
+                        d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z" />
+                    <!-- Slight hair variation 2 -->
+                    <circle cx="12" cy="7" r="3.5" fill="none" stroke="currentColor" stroke-width="0.5" opacity="0.5" />
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="contact-section">
+    <h2 class="about-title">Contact Us</h2>
+    <div class="contact-container">
+        <div class="animated-card">
+            <div class="animated-card__image-container">
+                <svg class="animated-card__svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+                    <path class="animated-card__line"
+                        d="M 0 100 Q 50 200 100 250 Q 250 400 350 300 C 400 250 550 150 650 300 Q 750 450 800 400"
+                        fill="none" stroke-width="3" />
+                </svg>
+            </div>
+            <div class="animated-card__icon animated-card__image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+                    <polyline points="22,6 12,13 2,6"></polyline>
+                </svg>
+            </div>
+            <h3 class="animated-card__title">Email Us</h3>
+            <div class="animated-card__content">
+                <p><a href="mailto:deshkehaath@gmail.com">deshkehaath@gmail.com</a></p>
+                <p class="animated-card__description">Send us an email anytime. We'll get back to you as soon as
+                    possible.</p>
+            </div>
+        </div>
+
+        <div class="animated-card">
+            <div class="animated-card__image-container">
+                <svg class="animated-card__svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 500">
+                    <path class="animated-card__line"
+                        d="M 0 100 Q 50 200 100 250 Q 250 400 350 300 C 400 250 550 150 650 300 Q 750 450 800 400"
+                        fill="none" stroke-width="3" />
+                </svg>
+            </div>
+            <div class="animated-card__icon animated-card__image">
+                <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path
+                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                    </path>
+                </svg>
+            </div>
+            <h3 class="animated-card__title">Call Us</h3>
+            <div class="animated-card__content">
+                <p><a href="tel:9346890420">+91 9346890420</a></p>
+                <p class="animated-card__description">Available during business hours. We're here to help with any
+                    questions.</p>
+            </div>
+        </div>
+    </div>
 </section>
 {% endblock %}
