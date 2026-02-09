@@ -295,8 +295,8 @@ _diffsynth_pipe = None
 def generate_image_diffsynth(image_prompt):
     """Generate image locally with Diffsynth-Engine (Qwen-Image-2512). Returns (data_url, error_message). Optional: set USE_DIFFSYNTH_ENGINE=1 in .env."""
     global _diffsynth_pipe
-    if not USE_DIFFSYNTH_ENGINE:
-        return None, None
+    # if not USE_DIFFSYNTH_ENGINE:  <-- REMOVED GUARD
+    #    return None, None
     try:
         import math
         import sys
@@ -459,16 +459,18 @@ def generate_image_hf(prompt_text):
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Uses Hugging Face (Free) exclusively as requested. Optional local fallback."""
-    # OPTIONAL: LOCAL DIFFSYNTH (Contributed Code)
-    # WARNING: Requires 16GB+ RAM. Enable via USE_DIFFSYNTH_ENGINE=1 in .env
-    if os.getenv("USE_DIFFSYNTH_ENGINE", "").strip().lower() in ("1", "true", "yes"):
-        print("Attempting Local Diffsynth Generation...")
-        url, err = generate_image_diffsynth(prompt_text)
-        if url: return url, None
-        print(f"Diffsynth failed ({err}), falling back to HF...")
+    """Generate image. Priority: Local Diffsynth -> Hugging Face (Free)."""
+    
+    # 1. PRIORITY: LOCAL DIFFSYNTH (User Preference)
+    # Be robust: if it fails (not installed, OOM), we catch it and fallback.
+    print("Attempting Local Diffsynth Generation (Priority)...")
+    url, err = generate_image_diffsynth(prompt_text)
+    if url: 
+        print("✓ Diffsynth succeeded")
+        return url, None
+    print(f"Diffsynth failed/skipped ({err}), falling back to HF...")
 
-    # EXCLUSIVE: HUGGING FACE (FREE)
+    # 2. FALLBACK: HUGGING FACE (FREE)
     if HF_TOKEN:
         print(f"Generating design with Hugging Face (SDXL)...")
         url, err = generate_image_hf(prompt_text)
