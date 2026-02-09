@@ -42,14 +42,10 @@
                     <p class="artist-desc">{{ artist.description }}</p>
                     {% if artist.meta %}
                     <div class="artist-details-grid"
-                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1rem; font-size: 0.85rem; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;">
+                        style="margin-bottom: 1rem; font-size: 0.85rem; background: rgba(0,0,0,0.03); padding: 10px; border-radius: 8px;">
                         <div>
                             <strong>⏳ Labor:</strong><br>
                             {{ artist.meta.labor }}
-                        </div>
-                        <div>
-                            <strong>💰 Price:</strong><br>
-                            {{ artist.meta.price }}
                         </div>
                     </div>
                     {% endif %}

@@ -90,6 +90,17 @@
             <div class="product-master-info">
                 <div class="product-meta-top">
                     <span class="product-category-label">{{ product.category }}</span>
+                    {% if product.production_time %}
+                    <span class="product-time-to-make"
+                        style="font-size: 0.75rem; color: #666; display: flex; align-items: center; gap: 4px; border: 1px solid #eee; padding: 2px 6px; border-radius: 4px; background: rgba(0,0,0,0.02);">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        {{ product.production_time }}
+                    </span>
+                    {% endif %}
                     <div class="product-entry-rating">
                         <span class="star-icon">★</span>
                         <span class="rating-val">{{ product.rating }}</span>

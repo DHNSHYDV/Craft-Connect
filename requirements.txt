@@ -8,6 +8,7 @@ requests
 gdown
 flask-sqlalchemy
 flask-login
+groq
 google-generativeai
 huggingface_hub
 
