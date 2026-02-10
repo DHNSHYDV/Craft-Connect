@@ -21,9 +21,6 @@ sys.stderr.flush()
 
 # Load environment variables
 load_dotenv()
-# Diffsynth model cache: default to project folder (E:\craft-site\.diffsynth_cache) so downloads stay with the app
-if not os.getenv("DIFFSYNTH_CACHE"):
-    os.environ["DIFFSYNTH_CACHE"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".diffsynth_cache")
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
 
@@ -285,154 +282,32 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
     except Exception as e:
         raise Exception(f"SambaNova Request Failed: {str(e)}")
 
+
 # fal-ai text-to-image model (use one that supports HF token: e.g. zai-org/GLM-Image)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
-USE_DIFFSYNTH_ENGINE = os.getenv("USE_DIFFSYNTH_ENGINE", "").strip().lower() in ("1", "true", "yes")
-
-_diffsynth_pipe = None
-
-
-def generate_image_diffsynth(image_prompt):
-    """Generate image locally with Diffsynth-Engine (Qwen-Image-2512). Returns (data_url, error_message). Optional: set USE_DIFFSYNTH_ENGINE=1 in .env."""
-    global _diffsynth_pipe
-    # if not USE_DIFFSYNTH_ENGINE:  <-- REMOVED GUARD
-    #    return None, None
-    try:
-        import math
-        import sys
-        import types
-        # PyTorch 2.10+ removed torch.distributed.tensor.parallel._utils; shim for diffsynth_engine
-        import torch.distributed.tensor.parallel  # noqa: F401
-        if not hasattr(torch.distributed.tensor.parallel, "_utils"):
-            _utils_mod = types.ModuleType("torch.distributed.tensor.parallel._utils")
-            def _validate_tp_mesh_dim(device_mesh):
-                pass
-            _utils_mod._validate_tp_mesh_dim = _validate_tp_mesh_dim
-            torch.distributed.tensor.parallel._utils = _utils_mod
-            sys.modules["torch.distributed.tensor.parallel._utils"] = _utils_mod
-        from diffsynth_engine import fetch_model, QwenImagePipeline, QwenImagePipelineConfig
-        import io
-    except ImportError as e:
-        msg = str(e)
-        if "diffsynth" in msg.lower() or "No module named 'diffsynth" in msg:
-            return None, "Diffsynth not installed. Run: pip install diffsynth-engine"
-        return None, f"Diffsynth dependency error: {msg}. Try: pip install -U torch"
-    try:
-        if _diffsynth_pipe is None:
-            print("Loading Diffsynth-Engine (Qwen-Image-2512)...")
-            config = QwenImagePipelineConfig.basic_config(
-                model_path=fetch_model("Qwen/Qwen-Image-2512", path="transformer/*.safetensors"),
-                encoder_path=fetch_model("Qwen/Qwen-Image-2512", path="text_encoder/*.safetensors"),
-                vae_path=fetch_model("Qwen/Qwen-Image-2512", path="vae/*.safetensors"),
-                offload_mode="cpu_offload",
-            )
-            _diffsynth_pipe = QwenImagePipeline.from_pretrained(config)
-            try:
-                _diffsynth_pipe.load_lora(
-                    path=fetch_model("Wuli-art/Qwen-Image-2512-Turbo-LoRA-2-Steps", path="Wuli-Qwen-Image-2512-Turbo-LoRA-2steps-V1.0-bf16.safetensors"),
-                    scale=1.0,
-                    fused=True,
-                )
-            except Exception as e:
-                print(f"Diffsynth LoRA load skipped: {e}")
-            scheduler_config = {
-                "exponential_shift_mu": math.log(2.5),
-                "use_dynamic_shifting": True,
-                "shift_terminal": 0.7155,
-            }
-            _diffsynth_pipe.apply_scheduler_config(scheduler_config)
-        import random
-        output = _diffsynth_pipe(
-            prompt=image_prompt[:1000],
-            cfg_scale=1,
-            num_inference_steps=2,
-            seed=random.randint(0, 2**31 - 1),
-            width=1024,
-            height=1024,
-        )
-        buf = io.BytesIO()
-        output.save(buf, format="PNG")
-        buf.seek(0)
-        raw = buf.read()
-        if len(raw) < 100:
-            return None, "Diffsynth image too small"
-        b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:image/png;base64,{b64}", None
-    except Exception as e:
-        print(f"Diffsynth-Engine failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return None, str(e)
-
-
-def generate_image_hf(image_prompt):
-    """Generate image via Hugging Face. Uses free Inference API first (no fal-ai credits needed). Returns (data_url, error_message)."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None, "HF_TOKEN is not set in .env"
-    token = HF_TOKEN.strip()
-    err_msg = "Hugging Face inference is busy (503). Wait a minute and try again, or set USE_DIFFSYNTH_ENGINE=1 in .env for local generation."
-    # 1) Free HF Inference API first (no 402 / pre-paid credits); retry once on 503
-    for model_id in ["stabilityai/stable-diffusion-xl-base-1.0", "runwayml/stable-diffusion-v1-5", "CompVis/stable-diffusion-v1-4"]:
-        for attempt in range(2):
-            try:
-                url = f"https://router.huggingface.co/models/{model_id}"
-                r = requests.post(
-                    url,
-                    headers={"Authorization": f"Bearer {token}"},
-                    json={"inputs": image_prompt[:1000]},
-                    timeout=90,
-                )
-                if r.status_code == 200 and len(r.content) >= 100:
-                    b64 = base64.b64encode(r.content).decode("utf-8")
-                    return f"data:image/png;base64,{b64}", None
-                if r.status_code == 401 or r.status_code == 403:
-                    return None, "HF token invalid or no permission. Use a token with 'Inference' at huggingface.co/settings/tokens."
-                if r.status_code == 503:
-                    if attempt == 0:
-                        time.sleep(5)
-                        continue
-                    break
-            except Exception as e:
-                print(f"HF Inference API {model_id} failed: {e}")
-                err_msg = str(e)
-                break
-    # 2) Optional: fal-ai (requires pre-paid credits; skip if you hit 402)
-    try:
-        from huggingface_hub import InferenceClient
-        import io
-        client = InferenceClient(provider="fal-ai", api_key=token)
-        image = client.text_to_image(image_prompt, model=HF_IMAGE_MODEL)
-        if image is not None and hasattr(image, "save"):
-            buf = io.BytesIO()
-            image.save(buf, format="PNG")
-            buf.seek(0)
-            raw = buf.read()
-            if len(raw) >= 100:
-                b64 = base64.b64encode(raw).decode("utf-8")
-                return f"data:image/png;base64,{b64}", None
-    except Exception as e:
-        if "402" not in str(e):
-            err_msg = str(e)
-        print(f"HF image (fal-ai) failed: {e}")
-    return None, err_msg or "Image generation failed. Free HF models may be loading (503). Try again in a minute."
-
-
-
-
-
-
-
-
-
 
 def generate_image_pollinations(prompt_text):
-    """Generate image via Pollinations.ai (Free, Unlimited). Returns (data_url, error_message)."""
+    """Generate image via Pollinations.ai (New Gen API). Returns (data_url, error_message)."""
     try:
         # Pollinations uses a simple get URL for generation
         import urllib.parse
         encoded_prompt = urllib.parse.quote(prompt_text[:1000])
-        url = f"https://image.pollinations.ai/prompt/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true"
-        response = requests.get(url, timeout=60)
+        # Use a random seed to ensure variety
+        import random
+        seed = random.randint(0, 999999)
+        
+        # CHANGED: New endpoint gen.pollinations.ai
+        base_url = "https://gen.pollinations.ai/image"
+        url = f"{base_url}/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
+        
+        headers = {}
+        api_key = os.getenv("POLLINATIONS_API_KEY")
+        if api_key:
+             headers["Authorization"] = f"Bearer {api_key}"
+             # Also append key to URL just in case, as some versions prefer it
+             # url += f"&key={api_key}" 
+
+        response = requests.get(url, headers=headers, timeout=60)
         response.raise_for_status()
         image_bytes = response.content
         if len(image_bytes) < 100:
@@ -444,26 +319,17 @@ def generate_image_pollinations(prompt_text):
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Priority: Local Diffsynth -> Pollinations (Unlimited)."""
+    """Generate image. Primary: Pollinations (Unlimited/Free)."""
     
-    # 1. PRIORITY: LOCAL DIFFSYNTH (User Preference)
-    # Be robust: if it fails (not installed, OOM), we catch it and fallback.
-    print("Attempting Local Diffsynth Generation (Priority)...")
-    url, err = generate_image_diffsynth(prompt_text)
-    if url: 
-        print("✓ Diffsynth succeeded")
-        return url, None
-    print(f"Diffsynth failed/skipped ({err}), falling back to Pollinations...")
-
-    # 2. FALLBACK: POLLINATIONS (UNLIMITED, FREE)
+    # 1. PRIMARY: POLLINATIONS (UNLIMITED, FREE)
     print("Attempting Pollinations.ai (Unlimited)...")
     url, err = generate_image_pollinations(prompt_text)
     if url:
         print("✓ Pollinations succeeded")
         return url, None
-    print(f"Pollinations failed ({err}). No other fallbacks available.")
-
-    return None, "Image generation failed (Diffsynth crash + Pollinations error)."
+    
+    print(f"Pollinations failed ({err}).")
+    return None, f"Image generation failed: {err}"
 
 
 
@@ -794,18 +660,15 @@ def generate_design():
         except Exception as e:
             print(f"Gemini prompt refinement failed: {e}")
 
-    # 2. Generate Image URL using Pollinations.ai (Free, High Quality)
-    # Adding 'nologo=true' and 'enhance=true'
+    # 2. Generate Image (Server-Side Proxy with Key)
     # We use the refined prompt from Gemini for best results
-    base_url = "https://pollinations.ai/p/"
+    image_url, err_msg = generate_image_design(refined_prompt)
     
-    # Encode the prompt
-    encoded_prompt = urllib.parse.quote(refined_prompt)
-    seed = random.randint(1, 99999)
-    image_url = f"{base_url}{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}&model=flux"
+    if not image_url:
+         return jsonify({"error": err_msg or "Image generation failed."}), 502
 
     return jsonify({
-        "image_url": image_url,
+        "image_url": image_url, # Now a Base64 data URI
         "title": title,
         "description": desc,
         "prompt_used": refined_prompt

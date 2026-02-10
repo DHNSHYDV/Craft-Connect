@@ -12,10 +12,8 @@ groq
 google-generativeai
 huggingface_hub
 
-# Diffsynth dependencies (Heavy!)
+# Heavy dependencies
 torch
 torchvision
-diffsynth-engine
-peft
 transformers
 accelerate
