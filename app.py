@@ -975,8 +975,24 @@ def build_chatbot_context(user_query=""):
     # 1. Search for relevant products
     relevant_products = search_products_heritage(user_query)
     
-    # 2. If no specific results, provide a diverse mix (fallback to 'featured')
-    if not relevant_products:
+    # 2. Search for relevant Artisans (New Logic)
+    # Re-generate the stable list of artists to check for name matches
+    all_artists = get_artists() 
+    found_artist_info = ""
+    
+    for artist in all_artists:
+        if artist['name'].lower() in user_query.lower():
+            found_artist_info += f"""
+### FOUND ARTISAN PROFILE
+- Name: {artist['name']}
+- State: {artist['state']}
+- Craft: {artist['style']}
+- Experience: {artist['experience']} Years
+- Bio: {artist['description']}
+"""
+    
+    # 3. If no specific results, provide a diverse mix (fallback to 'featured')
+    if not relevant_products and not found_artist_info:
         # Fallback: Get 1 item from each valid state to show diversity
         from data.products_heritage import HERITAGE_DATA
         for state, data in list(HERITAGE_DATA.items())[:8]:
@@ -990,12 +1006,14 @@ def build_chatbot_context(user_query=""):
                     "fun_fact": item.get("fun_fact", "")
                  })
 
-    # 3. Format product list for LLM
+    # 4. Format product list for LLM
     products_json = json.dumps(relevant_products, indent=2)
 
     context = f"""
 You are the Craft Assistant for Desh Ke Haath, India's premier heritage craft platform.
 Your goal is to be a knowledgeable, warm, and culturally rich guide to Indian handicrafts and culture.
+
+{found_artist_info}
 
 ### CORE IDENTITY
 - Name: Craft Assistant (Desh Ke Haath)
