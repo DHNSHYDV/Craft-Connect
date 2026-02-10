@@ -91,8 +91,16 @@
                             </div>
                         </div>
 
-                        <button class="btn-primary btn-buy-custom" id="buyCustomBtn">
-                            Buy This Masterpiece
+                        <button class="btn-primary btn-add-to-cart-custom" id="addToCartBtn"
+                            style="width: 100%; justify-content: center; margin-top: 1rem;">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" style="margin-right: 8px;">
+                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                                <line x1="3" y1="6" x2="21" y2="6"></line>
+                                <path d="M16 10a4 4 0 0 1-8 0"></path>
+                            </svg>
+                            Add to Cart
                         </button>
                     </div>
                 </div>
@@ -236,19 +244,29 @@
             if (resMaterial) resMaterial.textContent = selectedMaterial;
             if (resStyle) resStyle.textContent = selectedStyle;
 
-            // Setup Buy Button
-            if (buyCustomBtn) {
-                buyCustomBtn.onclick = () => {
+            // Setup Add to Cart Button
+            const addToCartBtn = document.getElementById('addToCartBtn');
+            if (addToCartBtn) {
+                addToCartBtn.onclick = () => {
                     if (typeof window.addToCart === 'function') {
+                        const customId = 'custom_' + Date.now();
                         window.addToCart({
-                            id: 'custom_' + Math.floor(Math.random() * 1000000),
+                            id: customId,
                             name: `Custom ${selectedStyle} ${selectedMaterial} Design`,
                             price: 2999,
                             image: data.image_url,
                             state: 'AI Studio',
                             quantity: 1
                         });
-                        alert("Added your custom masterpiece to cart!");
+
+                        // Visual feedback
+                        const originalContent = addToCartBtn.innerHTML;
+                        addToCartBtn.innerHTML = '✓ Added to Cart';
+                        addToCartBtn.style.background = '#388e3c';
+                        setTimeout(() => {
+                            addToCartBtn.innerHTML = originalContent;
+                            addToCartBtn.style.background = '';
+                        }, 2000);
                     }
                 };
             }

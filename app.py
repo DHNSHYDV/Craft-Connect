@@ -98,6 +98,111 @@ class GeminiClient:
             print(f"Gemini API Error: {e}")
             return type('obj', (object,), {'text': f"AI Error: {e}"})
 
+class GeminiImageClient:
+    """Client for generating images using Gemini Imagen 3 (via REST)."""
+    def __init__(self, api_key):
+        self.api_key = api_key
+        # Using Imagen 4 Fast endpoint (Verified available for this key)
+        self.url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict"
+
+    def generate_image(self, prompt):
+        if not self.api_key:
+            return None, "Gemini API Key missing"
+
+        
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "instances": [
+                {"prompt": prompt}
+            ],
+            "parameters": {
+                "sampleCount": 1,
+                "aspectRatio": "1:1"
+            }
+        }
+        
+        try:
+            print(f"Generating image with Gemini Imagen 3: {prompt[:50]}...")
+            resp = requests.post(
+                f"{self.url}?key={self.api_key}",
+                headers=headers,
+                json=payload,
+                timeout=30
+            )
+            
+            if resp.status_code != 200:
+                print(f"Gemini Image Error {resp.status_code}: {resp.text}")
+                return None, f"Gemini Error {resp.status_code}: {resp.text[:200]}"
+                
+            result = resp.json()
+            # Response format: { "predictions": [ { "bytesBase64Encoded": "..." } ] }
+            predictions = result.get('predictions')
+            if not predictions:
+                # Sometimes it might be directly in bytesBase64Encoded if the format differs
+                print(f"Unexpected Gemini response: {str(result)[:200]}")
+                return None, "No image predictions returned"
+                
+            b64_data = predictions[0].get('bytesBase64Encoded')
+            if b64_data:
+                # Return data URI
+                return f"data:image/jpeg;base64,{b64_data}", None
+                
+            return None, "No base64 data in response"
+            
+        except Exception as e:
+            print(f"Gemini Image Exception: {e}")
+            return None, str(e)
+
+class HFImageClient:
+    """Client for generating images via Hugging Face Inference API."""
+    def __init__(self, token, model="black-forest-labs/FLUX.1-schnell"):
+        self.token = token
+        self.model = model
+        self.url = f"https://router.huggingface.co/hf-inference/models/{model}"
+
+    def generate_image(self, prompt):
+        if not self.token:
+            return None, "HF Token missing"
+        
+        headers = {"Authorization": f"Bearer {self.token}"}
+        payload = {"inputs": prompt}
+        
+        try:
+            print(f"Generating image with HF ({self.model}): {prompt[:50]}...")
+            
+            # Implementation of retry logic for 503 (Model Loading)
+            import time
+            max_retries = 3
+            for i in range(max_retries):
+                resp = requests.post(self.url, headers=headers, json=payload, timeout=90)
+                
+                if resp.status_code == 200:
+                    # HF returns raw bytes of the image
+                    import base64
+                    b64_data = base64.b64encode(resp.content).decode("utf-8")
+                    return f"data:image/jpeg;base64,{b64_data}", None
+                
+                if resp.status_code == 503:
+                    # Model is loading, wait and retry
+                    wait_time = resp.json().get('estimated_time', 20)
+                    print(f"HF Model loading, waiting {wait_time}s (try {i+1}/{max_retries})...")
+                    time.sleep(min(wait_time, 30))
+                    continue
+                
+                print(f"HF Image Error {resp.status_code}: {resp.text}")
+                return None, f"HF Error {resp.status_code}: {resp.text[:200]}"
+            
+            return None, "HF Error: Model still loading after retries"
+            
+        except Exception as e:
+            print(f"HF Image Exception: {e}")
+            return None, str(e)
+
+# Initialize Image Clients
+gemini_img_client = GeminiImageClient(GEMINI_API_KEY)
+hf_img_client = HFImageClient(HF_TOKEN)
+
+
 if GEMINI_API_KEY:
     # genai.configure(api_key=GEMINI_API_KEY)
     chatbot_model = GeminiClient(GEMINI_API_KEY, model='gemini-pro')
@@ -422,10 +527,28 @@ def proxy_pollinations_gen():
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Primary: Pollinations (Unlimited/Free)."""
+    """Generate image. Primary: Gemini Imagen 3. Fallback: Pollinations."""
     
-    # 1. PRIMARY: POLLINATIONS (UNLIMITED, FREE)
-    print("Attempting Pollinations.ai (Unlimited)...")
+    # 1. PRIMARY: GEMINI IMAGEN 3 (Free Tier, Higher Quality)
+    # 1. PRIMARY: Hugging Face (Requested by user)
+    if HF_TOKEN:
+        img_url, err = hf_img_client.generate_image(prompt_text)
+        if img_url:
+            print("✓ Hugging Face succeeded")
+            return img_url, None
+        print(f"Hugging Face failed: {err}")
+
+    # 2. FALLBACK: GEMINI IMAGEN
+    if GEMINI_API_KEY:
+        print("Attempting Gemini Imagen...")
+        img_url, err = gemini_img_client.generate_image(prompt_text)
+        if img_url:
+            print("✓ Gemini Imagen succeeded")
+            return img_url, None
+        print(f"Gemini Imagen failed: {err}")
+    
+    # 3. FINAL FALLBACK: POLLINATIONS
+    print("Attempting Pollinations.ai (Fallback)...")
     url, err = generate_image_pollinations(prompt_text)
     if url:
         print("✓ Pollinations succeeded")
