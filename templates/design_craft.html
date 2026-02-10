@@ -70,8 +70,30 @@
                         <img id="generatedImage" src="" alt="Generated design">
                     </div>
                     <div class="result-info">
-                        <h3 id="resultTitle"></h3>
+                        <div class="result-header">
+                            <span class="badge-new">New Creation</span>
+                            <h3 id="resultTitle"></h3>
+                        </div>
                         <p id="resultDesc"></p>
+
+                        <div class="generated-product-specs">
+                            <div class="spec-row">
+                                <span class="spec-label">Material</span>
+                                <span class="spec-value" id="resMaterial"></span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Style</span>
+                                <span class="spec-value" id="resStyle"></span>
+                            </div>
+                            <div class="spec-row">
+                                <span class="spec-label">Est. Price</span>
+                                <span class="spec-value price">₹2,999</span>
+                            </div>
+                        </div>
+
+                        <button class="btn-primary btn-buy-custom" id="buyCustomBtn">
+                            Buy This Masterpiece
+                        </button>
                     </div>
                 </div>
             </div>
@@ -101,6 +123,9 @@
     const generatedImage = document.getElementById('generatedImage');
     const resultTitle = document.getElementById('resultTitle');
     const resultDesc = document.getElementById('resultDesc');
+    const resMaterial = document.getElementById('resMaterial');
+    const resStyle = document.getElementById('resStyle');
+    const buyCustomBtn = document.getElementById('buyCustomBtn');
     const chips = document.querySelectorAll('.chip');
     let selectedStyle = 'Traditional';
     let selectedMaterial = 'Metal/Brass';
@@ -230,6 +255,26 @@
             outputResult.style.display = 'block';
             resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
             resultDesc.textContent = `A unique AI-generated design based on your vision.`;
+            // Update Specs
+            if (resMaterial) resMaterial.textContent = selectedMaterial;
+            if (resStyle) resStyle.textContent = selectedStyle;
+
+            // Setup Buy Button
+            if (buyCustomBtn) {
+                buyCustomBtn.onclick = () => {
+                    if (typeof window.addToCart === 'function') {
+                        window.addToCart({
+                            id: 'custom_' + seed,
+                            name: `Custom ${selectedStyle} ${selectedMaterial} Design`,
+                            price: 2999,
+                            image: finalSrc,
+                            state: 'AI Studio',
+                            quantity: 1
+                        });
+                        alert("Added your custom masterpiece to cart!");
+                    }
+                };
+            }
             generatedImage.src = finalSrc;
             outputResult.scrollIntoView({ behavior: 'smooth' });
 
