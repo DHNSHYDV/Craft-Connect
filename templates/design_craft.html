@@ -91,6 +91,25 @@
                             </div>
                         </div>
 
+                        <!-- Artisan Match Card -->
+                        <div id="artisanMatchCard"
+                            style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.05); border-radius: 12px; border: 1px solid var(--accent-color); animation: fadeIn 0.5s ease;">
+                            <div
+                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; color: var(--accent-color); font-weight: 700; font-size: 0.9rem;">
+                                <span style="font-size: 1.2rem;">✨</span> Craftsman Connection
+                            </div>
+                            <div style="font-size: 0.85rem; line-height: 1.4;">
+                                <div style="margin-bottom: 4px;"><strong>Historical Match:</strong> <span id="matchName"
+                                        style="color: var(--accent-color);"></span></div>
+                                <div style="margin-bottom: 4px;"><strong>Heritage Origin:</strong> <span
+                                        id="matchState"></span></div>
+                                <div
+                                    style="opacity: 0.8; font-style: italic; margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 8px;">
+                                    " <span id="matchFact"></span> "
+                                </div>
+                            </div>
+                        </div>
+
                         <button class="btn-primary btn-add-to-cart-custom" id="addToCartBtn"
                             style="width: 100%; justify-content: center; margin-top: 1rem;">
                             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
@@ -243,6 +262,17 @@
 
             if (resMaterial) resMaterial.textContent = selectedMaterial;
             if (resStyle) resStyle.textContent = selectedStyle;
+
+            // Handle Artisan Match
+            const matchCard = document.getElementById('artisanMatchCard');
+            if (matchCard && data.artisan_match) {
+                document.getElementById('matchName').textContent = data.artisan_match.name;
+                document.getElementById('matchState').textContent = data.artisan_match.state;
+                document.getElementById('matchFact').textContent = data.artisan_match.fact;
+                matchCard.style.display = 'block';
+            } else if (matchCard) {
+                matchCard.style.display = 'none';
+            }
 
             // Setup Add to Cart Button
             const addToCartBtn = document.getElementById('addToCartBtn');

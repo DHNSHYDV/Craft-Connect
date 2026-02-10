@@ -561,12 +561,47 @@ def generate_image_design(prompt_text):
 
 
 
+def find_artisan_match(material, style):
+    """Matches a material and style to a specific handicraft in HERITAGE_DATA."""
+    matches = []
+    
+    # Material mapping (Normalizing input to database categories/keywords)
+    mat_map = {
+        "Metal/Brass": ["Metal", "Brass", "Bell Metal", "Dhokra", "Wrought Iron"],
+        "Silk/Textile": ["Silk", "Textile", "Saree", "Mekhela", "Embroidery", "Weaving"],
+        "Clay/Pottery": ["Clay", "Pottery", "Terracotta", "Ceramic"],
+        "Wood": ["Wood", "Wooden", "Carving", "Bamboo", "Cane"],
+        "Stone/Marble": ["Stone", "Marble", "Inlay"],
+        "Gemstone/Jewelry": ["Jewellery", "Jewelry", "Bead", "Lac", "Shell"]
+    }
+    
+    keywords = mat_map.get(material, [material])
+    
+    for state, data in HERITAGE_DATA.items():
+        for item in data.get("items", []):
+            item_name = item.get("name", "").lower()
+            item_cat = item.get("category", "").lower()
+            
+            # Match based on keywords in name or category
+            if any(kw.lower() in item_name or kw.lower() in item_cat for kw in keywords):
+                matches.append({
+                    "name": item.get("name"),
+                    "state": state,
+                    "fact": item.get("fun_fact"),
+                    "category": item.get("category"),
+                    "production_time": item.get("production_time")
+                })
+                
+    if matches:
+        import random
+        return random.choice(matches)
+    return None
+
 @app.route('/api/generate-design-flux', methods=['POST'])
 def generate_design_flux():
-    """Generate design image with FLUX. Returns image_url or error with debug info."""
+    """Generate design image with FLUX and find an artisan match."""
     try:
         import sys
-        import traceback
         sys.stderr.write("DEBUG: generate_design_flux HIT!\n")
         sys.stderr.flush()
         
@@ -587,11 +622,18 @@ def generate_design_flux():
             return jsonify({
                 "error": err_msg or "Image generation phase failed",
                 "title": title,
-                "description": desc,
-                "debug_step": "image_generation"
+                "description": desc
             }), 502
             
-        return jsonify({"title": title, "description": desc, "image_url": image_url})
+        # Add Artisan Match
+        artisan_match = find_artisan_match(material, style)
+            
+        return jsonify({
+            "title": title, 
+            "description": desc, 
+            "image_url": image_url,
+            "artisan_match": artisan_match
+        })
         
     except Exception as e:
         import traceback
@@ -914,11 +956,15 @@ def generate_design():
         if not image_url:
              return jsonify({"error": err_msg or "Image generation failed."}), 502
 
+        # Add Artisan Match
+        artisan_match = find_artisan_match(material, style)
+
         return jsonify({
             "image_url": image_url, # Now a Base64 data URI
             "title": title,
             "description": desc,
-            "prompt_used": refined_prompt
+            "prompt_used": refined_prompt,
+            "artisan_match": artisan_match
         })
     except Exception as e:
         import traceback
