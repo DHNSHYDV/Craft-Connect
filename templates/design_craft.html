@@ -174,55 +174,62 @@
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         try {
-            // SERVER-SIDE GENERATION (High Quality)
-            console.log('🎨 Requesting server-side generation...');
+            // STEP 1: AI Prompt Refinement (Fast, safe for backend)
+            console.log('✨ Refining prompt with AI...');
+            let finalPrompt = `${selectedStyle} ${selectedMaterial} Indian handicraft: ${text}`;
 
-            const response = await fetch('/api/generate-design-flux', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    description: text,
-                    style: selectedStyle,
-                    material: selectedMaterial
-                })
-            });
-
-            let data = {};
             try {
-                data = await response.json();
-            } catch (pErr) {
-                console.warn("Could not parse JSON response", pErr);
+                const refineRes = await fetch('/api/refine-design-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: text, style: selectedStyle, material: selectedMaterial })
+                });
+                if (refineRes.ok) {
+                    const refineData = await refineRes.json();
+                    if (refineData.prompt) {
+                        finalPrompt = refineData.prompt;
+                        console.log('✅ AI Refinement complete');
+                    }
+                }
+            } catch (rErr) {
+                console.warn("Refinement failed, using original prompt", rErr);
             }
 
-            if (!response.ok) {
-                const msg = data.error || `Server returned ${response.status}`;
-                throw new Error(msg);
-            }
+            // STEP 2: Direct Frontend Generation (Bypasses Render Timeout)
+            console.log('🎨 Generating image directly from browser...');
+            const encoded = encodeURIComponent(finalPrompt).replace(/%2F/g, "%252F"); // Double encode slashes
+            const seed = Math.floor(Math.random() * 1000000);
+            const imageUrl = `https://gen.pollinations.ai/image/${encoded}?width=1024&height=1024&model=flux&nologo=true&seed=${seed}`;
 
-            if (!data.image_url) {
-                throw new Error("No image returned (server logic error)");
-            }
+            // Pre-load image to ensure it works before showing
+            const imgLoader = new Image();
+            imgLoader.src = imageUrl;
+
+            await new Promise((resolve, reject) => {
+                imgLoader.onload = resolve;
+                imgLoader.onerror = () => reject(new Error("AI service is busy. Please try again in a moment."));
+                // Timeout if it takes longer than 90s (browser limit is much higher than Render)
+                setTimeout(() => reject(new Error("Generation timed out. Please try a simpler description.")), 90000);
+            });
 
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
-            resultTitle.textContent = data.title || "";
-            resultDesc.textContent = data.description || "";
-            generatedImage.src = data.image_url;
+            resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
+            resultDesc.textContent = `A unique AI-generated design based on your vision.`;
+            generatedImage.src = imageUrl;
             outputResult.scrollIntoView({ behavior: 'smooth' });
 
         } catch (err) {
             console.error("Generation failed", err);
 
-            // FINAL FALLBACK: Show offline concept
-            if (!generatedImage.src || generatedImage.src === '') {
-                generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
-                resultTitle.textContent = "Design Visualization (Offline Mode)";
-                resultDesc.textContent = "We couldn't connect to the AI at the moment, but here is a similar concept from our gallery.";
-                outputPlaceholder.style.display = 'none';
-                outputResult.style.display = 'block';
-            }
+            // Fallback Image
+            generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
+            resultTitle.textContent = "Design Visualization (Sample)";
+            resultDesc.textContent = "We couldn't generate a custom image right now, but here is a similar concept.";
+            outputPlaceholder.style.display = 'none';
+            outputResult.style.display = 'block';
 
-            alert("AI generation notice: " + (err.message || "Connection issue. Showing offline concept instead."));
+            alert("Notice: " + err.message);
         } finally {
             generateBtn.disabled = false;
             generateBtn.querySelector('.btn-text').textContent = "Generate design";
