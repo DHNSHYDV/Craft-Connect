@@ -1,12 +1,12 @@
 HERITAGE_DATA = {
     "Andhra Pradesh": {
         "items": [
-            {"name": "Kondapalli Toys", "fun_fact": "These wooden toys are so light kids can throw them in the air without breaking them.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (499, 2999), "image_query": "traditional Kondapalli wooden toys India colorful", "local_image": "/static/images/products/kondapalli_toys.png"},
-            {"name": "Uppada Silk Saree", "fun_fact": "So fine you can pass an entire saree through a ring!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3999, 18000), "image_query": "Uppada silk saree fine weaving gold zari border", "local_image": "/static/images/products/andhra_pradesh_uppada_silk_saree.png"},
-            {"name": "Temple Jewellery", "fun_fact": "Designs are copied straight from ancient temple sculptures.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1299, 8500), "image_query": "traditional temple jewelry gold plated silver India", "local_image": "/static/images/products/andhra_pradesh_temple_jewellery.png"},
-            {"name": "Kalamkari Textile", "fun_fact": "Artists paint entire epic stories with natural dyes by hand.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (899, 4500), "image_query": "hand painted Kalamkari textile natural dyes story patterns", "local_image": "/static/images/products/andhra_pradesh_kalamkari_textile.png"},
-            {"name": "Etikoppaka Toys", "fun_fact": "Colors are made from seeds and veggies, safe even for babies.", "category": "Toys", "production_time": "3-5 Days", "price_range": (299, 1499), "image_query": "Etikoppaka lacquer wooden toys India colorful", "local_image": "/static/images/products/andhra_pradesh_etikoppaka_toys.png"},
-            {"name": "Cultural Heritage Item", "fun_fact": "Folk scrolls are hundreds of years old and still inspire artists.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (1499, 6500), "image_query": "Andhra Pradesh traditional folk scroll painting heritage", "local_image": "/static/images/products/andhra_pradesh_cultural_heritage_item.png"}
+            {"name": "Kondapalli Toys", "fun_fact": "These wooden toys are so light kids can throw them in the air without breaking them.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1200, 3500), "image_query": "traditional Kondapalli wooden toys India colorful", "local_image": "/static/images/products/kondapalli_toys.png"},
+            {"name": "Uppada Silk Saree", "fun_fact": "So fine you can pass an entire saree through a ring!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (15000, 120000), "image_query": "Uppada silk saree fine weaving gold zari border", "local_image": "/static/images/products/andhra_pradesh_uppada_silk_saree.png"},
+            {"name": "Temple Jewellery", "fun_fact": "Designs are copied straight from ancient temple sculptures.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (18000, 85000), "image_query": "traditional temple jewelry gold plated silver India", "local_image": "/static/images/products/andhra_pradesh_temple_jewellery.png"},
+            {"name": "Kalamkari Textile", "fun_fact": "Artists paint entire epic stories with natural dyes by hand.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (3500, 15000), "image_query": "hand painted Kalamkari textile natural dyes story patterns", "local_image": "/static/images/products/andhra_pradesh_kalamkari_textile.png"},
+            {"name": "Etikoppaka Toys", "fun_fact": "Colors are made from seeds and veggies, safe even for babies.", "category": "Toys", "production_time": "3-5 Days", "price_range": (400, 2500), "image_query": "Etikoppaka lacquer wooden toys India colorful", "local_image": "/static/images/products/andhra_pradesh_etikoppaka_toys.png"},
+            {"name": "Cultural Heritage Item", "fun_fact": "Folk scrolls are hundreds of years old and still inspire artists.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (8000, 45000), "image_query": "Andhra Pradesh traditional folk scroll painting heritage", "local_image": "/static/images/products/andhra_pradesh_cultural_heritage_item.png"}
         ],
         "stories": {
             "Kondapalli Toys": "Kondapalli toy-making began around 400 years ago, during the Vijayanagara Empire. The special wood used, Tella Poniki, comes from nearby forests and is light and durable.",
@@ -19,12 +19,12 @@ HERITAGE_DATA = {
     },
     "Arunachal Pradesh": {
         "items": [
-            {"name": "Bamboo Handicrafts", "fun_fact": "Bamboo can be twisted into furniture so strong it can hold water.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (699, 4500), "image_query": "Arunachal Pradesh tribal bamboo cane handicraft basket furniture", "local_image": "/static/images/products/arunachal_pradesh_bamboo_handicrafts.png"},
-            {"name": "Tribal Wrap Saree", "fun_fact": "Each tribe has secret patterns you won’t see anywhere else.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1299, 3500), "image_query": "northeast tribal traditional wrap saree textile patterns", "local_image": "/static/images/products/arunachal_pradesh_tribal_wrap_saree.png"},
-            {"name": "Bead Jewellery", "fun_fact": "Colors show your tribe, status, and bravery!", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (299, 1500), "image_query": "Arunachal Pradesh traditional tribal bead jewelry necklace", "local_image": "/static/images/products/arunachal_pradesh_bead_jewellery.png"},
-            {"name": "Handwoven Textile", "fun_fact": "Some pieces take months to make on simple home looms.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (899, 2500), "image_query": "traditional tribal handwoven textile fabric Arunachal", "local_image": "/static/images/products/arunachal_pradesh_handwoven_textile.png"},
-            {"name": "Wooden Masks", "fun_fact": "Festival masks are carved so detailed they look alive.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (999, 2999), "image_query": "traditional tribal wood carved mask festival India", "local_image": "/static/images/products/arunachal_pradesh_wooden_masks.png"},
-            {"name": "Traditional Baskets", "fun_fact": "So strong you can carry water in them without spilling.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (699, 2999), "image_query": "tightly woven traditional tribal bamboo basket", "local_image": "/static/images/products/arunachal_pradesh_traditional_baskets.png"}
+            {"name": "Bamboo Handicrafts", "fun_fact": "Bamboo can be twisted into furniture so strong it can hold water.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (8500, 15000), "image_query": "Arunachal Pradesh tribal bamboo cane handicraft basket furniture", "local_image": "/static/images/products/arunachal_pradesh_bamboo_handicrafts.png"},
+            {"name": "Tribal Wrap Saree", "fun_fact": "Each tribe has secret patterns you won’t see anywhere else.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (4500, 8000), "image_query": "northeast tribal traditional wrap saree textile patterns", "local_image": "/static/images/products/arunachal_pradesh_tribal_wrap_saree.png"},
+            {"name": "Bead Jewellery", "fun_fact": "Colors show your tribe, status, and bravery!", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (2100, 3500), "image_query": "Arunachal Pradesh traditional tribal bead jewelry necklace", "local_image": "/static/images/products/arunachal_pradesh_bead_jewellery.png"},
+            {"name": "Handwoven Textile", "fun_fact": "Some pieces take months to make on simple home looms.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (5000, 12000), "image_query": "traditional tribal handwoven textile fabric Arunachal", "local_image": "/static/images/products/arunachal_pradesh_handwoven_textile.png"},
+            {"name": "Wooden Masks", "fun_fact": "Festival masks are carved so detailed they look alive.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (5500, 10000), "image_query": "traditional tribal wood carved mask festival India", "local_image": "/static/images/products/arunachal_pradesh_wooden_masks.png"},
+            {"name": "Traditional Baskets", "fun_fact": "So strong you can carry water in them without spilling.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (2800, 4500), "image_query": "tightly woven traditional tribal bamboo basket", "local_image": "/static/images/products/arunachal_pradesh_traditional_baskets.png"}
         ],
         "stories": {
             "Bamboo Handicrafts": "Bamboo craft is as old as human settlement in the region. Tribal communities like the Adi, Apatani, Nyishi, and Mishmi depended entirely on bamboo.",
@@ -37,10 +37,10 @@ HERITAGE_DATA = {
     },
     "Assam": {
         "items": [
-            {"name": "Jaapi Hat", "fun_fact": "Kings once used them as both hats and umbrellas!", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (399, 2499), "image_query": "traditional Assamese Jaapi hat decorated bamboo", "local_image": "/static/images/products/assam_jaapi_hat.png"},
-            {"name": "Muga Silk Saree", "fun_fact": "Golden silk gets shinier every time you wash it.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (6500, 28000), "image_query": "Assam Muga raw silk golden saree traditional", "local_image": "/static/images/products/assam_muga_silk_saree.png"},
-            {"name": "Bamboo Jewellery", "fun_fact": "Lightweight but strong enough to survive a fall.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (199, 899), "image_query": "lightweight Assamese bamboo jewelry necklace artisan", "local_image": "/static/images/products/assam_bamboo_jewellery.png"},
-            {"name": "Mekhela Chador", "fun_fact": "Woven so fine sunlight can shine through it.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1299, 4500), "image_query": "traditional Assam Mekhela Chador traditional dress", "local_image": "/static/images/products/assam_mekhela_chador.png"},
+            {"name": "Jaapi Hat", "fun_fact": "Kings once used them as both hats and umbrellas!", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (1800, 1800), "image_query": "traditional Assamese Jaapi hat decorated bamboo", "local_image": "/static/images/products/assam_jaapi_hat.png"},
+            {"name": "Muga Silk Saree", "fun_fact": "Golden silk gets shinier every time you wash it.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (45000, 90000), "image_query": "Assam Muga raw silk golden saree traditional", "local_image": "/static/images/products/assam_muga_silk_saree.png"},
+            {"name": "Bamboo Jewellery", "fun_fact": "Lightweight but strong enough to survive a fall.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1200, 1200), "image_query": "lightweight Assamese bamboo jewelry necklace artisan", "local_image": "/static/images/products/assam_bamboo_jewellery.png"},
+            {"name": "Mekhela Chador", "fun_fact": "Woven so fine sunlight can shine through it.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (12500, 25000), "image_query": "traditional Assam Mekhela Chador traditional dress", "local_image": "/static/images/products/assam_mekhela_chador.png"},
             {"name": "Mask Making", "fun_fact": "Festival masks can sell for more than a month’s salary.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 6500), "image_query": "traditional Assamese mask making Majuli island craft", "local_image": "/static/images/products/assam_mask_making.png"},
             {"name": "Bell Metal Crafts", "fun_fact": "Utensils last generations; some are over 100 years old.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (899, 3500), "image_query": "Assam bell metal traditional craft utensil bowl", "local_image": "/static/images/products/assam_bell_metal_crafts.png"}
         ],
@@ -55,12 +55,12 @@ HERITAGE_DATA = {
     },
     "Bihar": {
         "items": [
-            {"name": "Madhubani Painting", "fun_fact": "Originally painted on mud walls with fingers and twigs.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (899, 4500), "image_query": "traditional Madhubani folk art painting Bihar colorful", "local_image": "/static/images/products/madhubani_painting.png"},
-            {"name": "Tussar Silk Saree", "fun_fact": "Made from wild silkworms in forested areas.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (2499, 6500), "image_query": "Bhagalpur Tussar silk saree textured raw silk", "local_image": "/static/images/products/bihar_tussar_silk_saree.png"},
-            {"name": "Sikki Grass Crafts", "fun_fact": "Golden grass is shaped into dolls and baskets that last decades.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (149, 1500), "image_query": "Bihar traditional Sikki grass craft basket doll golden", "local_image": "/static/images/products/bihar_sikki_grass_crafts.png"},
-            {"name": "Lac Bangles", "fun_fact": "Handmade resin bangles worn during festivals and weddings.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (99, 599), "image_query": "traditional Bihar lacquer bangles colorful handmade", "local_image": "/static/images/products/bihar_lac_bangles.png"},
-            {"name": "Manjusha Art", "fun_fact": "Boxes show folklore stories with dragons and heroes.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (499, 2500), "image_query": "traditional Manjusha art box painting Bihar folk", "local_image": "/static/images/products/bihar_manjusha_art.png"},
-            {"name": "Mud Clay Toys", "fun_fact": "Kids can play in mud or water without breaking them.", "category": "Toys", "production_time": "3-5 Days", "price_range": (149, 999), "image_query": "traditional eco friendly mud clay toys Bihar village", "local_image": "/static/images/products/bihar_mud_clay_toys.png"}
+            {"name": "Madhubani Painting", "fun_fact": "Originally painted on mud walls with fingers and twigs.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (6500, 25000), "image_query": "traditional Madhubani folk art painting Bihar colorful", "local_image": "/static/images/products/madhubani_painting.png"},
+            {"name": "Tussar Silk Saree", "fun_fact": "Made from wild silkworms in forested areas.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (8500, 35000), "image_query": "Bhagalpur Tussar silk saree textured raw silk", "local_image": "/static/images/products/bihar_tussar_silk_saree.png"},
+            {"name": "Sikki Grass Crafts", "fun_fact": "Golden grass is shaped into dolls and baskets that last decades.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (1500, 6000), "image_query": "Bihar traditional Sikki grass craft basket doll golden", "local_image": "/static/images/products/bihar_sikki_grass_crafts.png"},
+            {"name": "Lac Bangles", "fun_fact": "Handmade resin bangles worn during festivals and weddings.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (450, 1200), "image_query": "traditional Bihar lacquer bangles colorful handmade", "local_image": "/static/images/products/bihar_lac_bangles.png"},
+            {"name": "Manjusha Art", "fun_fact": "Boxes show folklore stories with dragons and heroes.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (3500, 12000), "image_query": "traditional Manjusha art box painting Bihar folk", "local_image": "/static/images/products/bihar_manjusha_art.png"},
+            {"name": "Mud Clay Toys", "fun_fact": "Kids can play in mud or water without breaking them.", "category": "Toys", "production_time": "3-5 Days", "price_range": (350, 1500), "image_query": "traditional eco friendly mud clay toys Bihar village", "local_image": "/static/images/products/bihar_mud_clay_toys.png"}
         ],
         "stories": {
             "Madhubani Painting": "Madhubani painting originated in Mithila and is believed to be over 2,000 years old. Traditionally painted on mud walls using natural dyes.",
@@ -74,11 +74,11 @@ HERITAGE_DATA = {
     "Chhattisgarh": {
         "items": [
             {"name": "Dhokra Metal Craft", "fun_fact": "Made with a 4,000-year-old lost-wax technique.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (999, 29999), "image_query": "Chhattisgarh tribal Dhokra metal craft lost wax casting sculpture", "local_image": "/static/images/products/chhattisgarh_dhokra_metal_craft.png"},
-            {"name": "Kosa Silk Saree", "fun_fact": "Soft silk from forest silkworms feels cool and warm at the same time.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3499, 19999), "image_query": "Chhattisgarh Kosa silk saree natural tussar silk textued", "local_image": "/static/images/products/chhattisgarh_kosa_silk_saree.png"},
-            {"name": "Wooden Tribal Masks", "fun_fact": "Masks show gods and animals used in dances.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 7999), "image_query": "Chhattisgarh tribal wooden mask god animal folk dance", "local_image": "/static/images/products/chhattisgarh_wooden_tribal_masks.png"},
-            {"name": "Wrought Iron Crafts", "fun_fact": "Iron is hammered and heated into beautiful art.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (499, 8999), "image_query": "Chhattisgarh wrought iron tribal art hammered iron", "local_image": "/static/images/products/chhattisgarh_wrought_iron_crafts.png"},
-            {"name": "Bamboo Utility Items", "fun_fact": "Baskets and tools are light, strong, and precise.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (299, 3999), "image_query": "tribal bamboo utility craft basket Chhattisgarh", "local_image": "/static/images/products/chhattisgarh_bamboo_utility_items.png"},
-            {"name": "Terracotta Jewellery", "fun_fact": "Clay jewellery is colorful, earthy, and long-lasting.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (199, 1999), "image_query": "traditional terracotta clay jewelry colorful earthy India", "local_image": "/static/images/products/chhattisgarh_terracotta_jewellery.png"}
+            {"name": "Kosa Silk Saree", "fun_fact": "Soft silk from forest silkworms feels cool and warm at the same time.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (16500, 25000), "image_query": "Chhattisgarh Kosa silk saree natural tussar silk textued", "local_image": "/static/images/products/chhattisgarh_kosa_silk_saree.png"},
+            {"name": "Wooden Tribal Masks", "fun_fact": "Masks show gods and animals used in dances.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (4800, 8500), "image_query": "Chhattisgarh tribal wooden mask god animal folk dance", "local_image": "/static/images/products/chhattisgarh_wooden_tribal_masks.png"},
+            {"name": "Wrought Iron Crafts", "fun_fact": "Iron is hammered and heated into beautiful art.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1800, 3500), "image_query": "Chhattisgarh wrought iron tribal art hammered iron", "local_image": "/static/images/products/chhattisgarh_wrought_iron_crafts.png"},
+            {"name": "Bamboo Utility Items", "fun_fact": "Baskets and tools are light, strong, and precise.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (800, 2200), "image_query": "tribal bamboo utility craft basket Chhattisgarh", "local_image": "/static/images/products/chhattisgarh_bamboo_utility_items.png"},
+            {"name": "Terracotta Jewellery", "fun_fact": "Clay jewellery is colorful, earthy, and long-lasting.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (500, 1500), "image_query": "traditional terracotta clay jewelry colorful earthy India", "local_image": "/static/images/products/chhattisgarh_terracotta_jewellery.png"}
         ],
         "stories": {
             "Dhokra Metal Craft": "One of the oldest surviving metal casting traditions, dating back to the Indus Valley period.",
@@ -91,12 +91,12 @@ HERITAGE_DATA = {
     },
     "Goa": {
         "items": [
-            {"name": "Coconut Shell Crafts", "fun_fact": "Waste shells become bowls and lamps that look amazing.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (299, 2499), "image_query": "Goa traditional coconut shell handicraft bowl candle holder", "local_image": "/static/images/products/goa_coconut_shell_crafts.png"},
-            {"name": "Kunbi Saree", "fun_fact": "Ancient cotton saree still worn by Goan women today.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1499, 6999), "image_query": "Goa Kunbi traditional cotton saree checked pattern", "local_image": "/static/images/products/goa_kunbi_saree.png"},
-            {"name": "Shell Jewellery", "fun_fact": "Made from real sea shells from Goa’s beaches.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (199, 2999), "image_query": "Goa traditional shell jewelry beach seashells handmade", "local_image": "/static/images/products/goa_shell_jewellery.png"},
-            {"name": "Azulejos Tile Art", "fun_fact": "Hand-painted tiles inspired by Portuguese style.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (499, 9999), "image_query": "Goan Azulejos hand painted ceramic tiles blue and white", "local_image": "/static/images/products/goa_azulejos_tile_art.png"},
-            {"name": "Wooden Christian Icons", "fun_fact": "Show Goa’s unique cultural mix.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (999, 14999), "image_query": "Goa traditional wood carved Christian icon saint sculpture", "local_image": "/static/images/products/goa_wooden_christian_icons.png"},
-            {"name": "Handcrafted Lamps", "fun_fact": "Lamps made with brass and local designs.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (699, 7999), "image_query": "traditional Goan brass hanging lamp handicraft", "local_image": "/static/images/products/goa_handcrafted_lamps.png"}
+            {"name": "Coconut Shell Crafts", "fun_fact": "Waste shells become bowls and lamps that look amazing.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (850, 2500), "image_query": "Goa traditional coconut shell handicraft bowl candle holder", "local_image": "/static/images/products/goa_coconut_shell_crafts.png"},
+            {"name": "Kunbi Saree", "fun_fact": "Ancient cotton saree still worn by Goan women today.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3250, 4800), "image_query": "Goa Kunbi traditional cotton saree checked pattern", "local_image": "/static/images/products/goa_kunbi_saree.png"},
+            {"name": "Shell Jewellery", "fun_fact": "Made from real sea shells from Goa’s beaches.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (500, 1800), "image_query": "Goa traditional shell jewelry beach seashells handmade", "local_image": "/static/images/products/goa_shell_jewellery.png"},
+            {"name": "Azulejos Tile Art", "fun_fact": "Hand-painted tiles inspired by Portuguese style.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (270, 3500), "image_query": "Goan Azulejos hand painted ceramic tiles blue and white", "local_image": "/static/images/products/goa_azulejos_tile_art.png"},
+            {"name": "Wooden Christian Icons", "fun_fact": "Show Goa’s unique cultural mix.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (3500, 12000), "image_query": "Goa traditional wood carved Christian icon saint sculpture", "local_image": "/static/images/products/goa_wooden_christian_icons.png"},
+            {"name": "Handcrafted Lamps", "fun_fact": "Lamps made with brass and local designs.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (2500, 7500), "image_query": "traditional Goan brass hanging lamp handicraft", "local_image": "/static/images/products/goa_handcrafted_lamps.png"}
         ],
         "stories": {
             "Coconut Shell Crafts": "For centuries, Goan households used every part of the coconut to avoid waste, a tradition that grew into fine craft.",
@@ -109,12 +109,12 @@ HERITAGE_DATA = {
     },
     "Gujarat": {
         "items": [
-            {"name": "Bandhani Textile", "fun_fact": "Thousands of tiny knots create bright tie-dye patterns.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (499, 4500), "image_query": "Gujarat Bandhani tie dye fabric thousands tiny knots", "local_image": "/static/images/products/gujarat_bandhani_textile.png"},
-            {"name": "Patola Saree", "fun_fact": "Each saree can take months to weave completely by hand.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (9900, 45000), "image_query": "Gujarat Patola double ikat silk saree geometric", "local_image": "/static/images/products/gujarat_patola_saree.png"},
-            {"name": "Kutch Embroidery", "fun_fact": "Mirrors and threads sparkle in sunlight.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (999, 5500), "image_query": "Kutch embroidery mirror work colorful traditional India", "local_image": "/static/images/products/gujarat_kutch_embroidery.png"},
-            {"name": "Lacquered Toys", "fun_fact": "Bright toys loved by kids all over India.", "category": "Toys", "production_time": "3-5 Days", "price_range": (299, 1500), "image_query": "Gujarat lacquered wooden toys colorful lacquer India", "local_image": "/static/images/products/gujarat_lacquered_toys.png"},
+            {"name": "Bandhani Textile", "fun_fact": "Thousands of tiny knots create bright tie-dye patterns.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (150000, 700000), "image_query": "Gujarat Bandhani tie dye fabric thousands tiny knots", "local_image": "/static/images/products/gujarat_bandhani_textile.png"},
+            {"name": "Patola Saree", "fun_fact": "Each saree can take months to weave completely by hand.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (5000, 45000), "image_query": "Gujarat Patola double ikat silk saree geometric", "local_image": "/static/images/products/gujarat_patola_saree.png"},
+            {"name": "Kutch Embroidery", "fun_fact": "Mirrors and threads sparkle in sunlight.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (4500, 45000), "image_query": "Kutch embroidery mirror work colorful traditional India", "local_image": "/static/images/products/gujarat_kutch_embroidery.png"},
+            {"name": "Lacquered Toys", "fun_fact": "Bright toys loved by kids all over India.", "category": "Toys", "production_time": "3-5 Days", "price_range": (3500, 15000), "image_query": "Gujarat lacquered wooden toys colorful lacquer India", "local_image": "/static/images/products/gujarat_lacquered_toys.png"},
             {"name": "Silver Tribal Jewellery", "fun_fact": "Heavy pieces worn in festivals show pride.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1499, 8500), "image_query": "Gujarat tribal silver jewelry heavy necklace Kutch", "local_image": "/static/images/products/gujarat_silver_tribal_jewellery.png"},
-            {"name": "Rogan Art", "fun_fact": "Designs are painted with castor oil by hand.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1999, 12500), "image_query": "Rogan art painting on fabric castor oil Gujarat", "local_image": "/static/images/products/gujarat_rogan_art.png"}
+            {"name": "Rogan Art", "fun_fact": "Designs are painted with castor oil by hand.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (450, 2500), "image_query": "Rogan art painting on fabric castor oil Gujarat", "local_image": "/static/images/products/gujarat_rogan_art.png"}
         ],
         "stories": {
             "Bandhani Textile": "One of the oldest textile traditions, involving tying thousands of tiny knots on fabric before dyeing.",
@@ -127,12 +127,12 @@ HERITAGE_DATA = {
     },
     "Haryana": {
         "items": [
-            {"name": "Phulkari Embroidery", "fun_fact": "Flower patterns symbolize happiness and prosperity.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1499, 12999), "image_query": "Haryana Phulkari embroidery floral patterns textile", "local_image": "/static/images/products/haryana_phulkari_embroidery.png"},
-            {"name": "Jhajjar Pottery", "fun_fact": "Pots naturally keep water cool without electricity.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (199, 1499), "image_query": "Jhajjar pottery traditional clay water pots Haryana", "local_image": "/static/images/products/haryana_jhajjar_pottery.png"},
-            {"name": "Handwoven Durries", "fun_fact": "Strong mats made on simple home looms.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (899, 5999), "image_query": "Haryana handwoven cotton durrie floor mat", "local_image": "/static/images/products/haryana_handwoven_durries.png"},
-            {"name": "Brass Utensils", "fun_fact": "Believed to be healthy for cooking.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (999, 14999), "image_query": "Haryana traditional brass cooking utensils heritage", "local_image": "/static/images/products/haryana_brass_utensils.png"},
-            {"name": "Wooden Toys", "fun_fact": "Simple toys remind people of village life.", "category": "Toys", "production_time": "3-5 Days", "price_range": (299, 1999), "image_query": "Haryana traditional village wooden toys craft", "local_image": "/static/images/products/haryana_wooden_toys.png"},
-            {"name": "Traditional Bangles", "fun_fact": "Handmade and worn in weddings and festivals.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (149, 1299), "image_query": "Haryana traditional lacquer glass bangles colorful", "local_image": "/static/images/products/haryana_traditional_bangles.png"}
+            {"name": "Phulkari Embroidery", "fun_fact": "Flower patterns symbolize happiness and prosperity.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (4500, 18000), "image_query": "Haryana Phulkari embroidery floral patterns textile", "local_image": "/static/images/products/haryana_phulkari_embroidery.png"},
+            {"name": "Jhajjar Pottery", "fun_fact": "Pots naturally keep water cool without electricity.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (350, 1200), "image_query": "Jhajjar pottery traditional clay water pots Haryana", "local_image": "/static/images/products/haryana_jhajjar_pottery.png"},
+            {"name": "Handwoven Durries", "fun_fact": "Strong mats made on simple home looms.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (1200, 4500), "image_query": "Haryana handwoven cotton durrie floor mat", "local_image": "/static/images/products/haryana_handwoven_durries.png"},
+            {"name": "Brass Utensils", "fun_fact": "Believed to be healthy for cooking.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (850, 1100), "image_query": "Haryana traditional brass cooking utensils heritage", "local_image": "/static/images/products/haryana_brass_utensils.png"},
+            {"name": "Wooden Toys", "fun_fact": "Simple toys remind people of village life.", "category": "Toys", "production_time": "3-5 Days", "price_range": (250, 1500), "image_query": "Haryana traditional village wooden toys craft", "local_image": "/static/images/products/haryana_wooden_toys.png"},
+            {"name": "Traditional Bangles", "fun_fact": "Handmade and worn in weddings and festivals.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (150, 650), "image_query": "Haryana traditional lacquer glass bangles colorful", "local_image": "/static/images/products/haryana_traditional_bangles.png"}
         ],
         "stories": {
             "Phulkari Embroidery": "Phulkari means 'flower work'. Traditionally, mothers passed the skill to daughters while preparing their wedding trousseau.",
@@ -145,12 +145,12 @@ HERITAGE_DATA = {
     },
     "Himachal Pradesh": {
         "items": [
-            {"name": "Kullu Shawls", "fun_fact": "Bright borders make wool shawls famous and cozy.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1499, 19999), "image_query": "Kullu wool shawl with bright geometric borders", "local_image": "/static/images/products/himachal_pradesh_kullu_shawls.png"},
-            {"name": "Chamba Rumal", "fun_fact": "Embroidery is perfect on both sides of the cloth.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (2499, 29999), "image_query": "Chamba Rumal traditional embroidery handkerchief Himachal", "local_image": "/static/images/products/himachal_pradesh_chamba_rumal.png"},
-            {"name": "Silver Jewellery", "fun_fact": "Designs inspired by mountain flowers and gods.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (999, 24999), "image_query": "Himachal traditional silver mountain jewelry necklace", "local_image": "/static/images/products/himachal_pradesh_silver_jewellery.png"},
-            {"name": "Wooden Temple Crafts", "fun_fact": "Carvings replicate hill architecture.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (4999, 99999), "image_query": "Himachal Pradesh traditional temple wood carving hill architecture", "local_image": "/static/images/products/himachal_pradesh_wooden_temple_crafts.png"},
-            {"name": "Woolen Caps", "fun_fact": "Hand-knitted to keep warm in freezing cold.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 1499), "image_query": "Kullu cap traditional handknitted Himachal wool", "local_image": "/static/images/products/himachal_pradesh_woolen_caps.png"},
-            {"name": "Metal Prayer Items", "fun_fact": "Used in temples for rituals and prayers.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (499, 9999), "image_query": "Himachal traditional brass temple bells prayer items", "local_image": "/static/images/products/himachal_pradesh_metal_prayer_items.png"}
+            {"name": "Kullu Shawls", "fun_fact": "Bright borders make wool shawls famous and cozy.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1500, 15000), "image_query": "Kullu wool shawl with bright geometric borders", "local_image": "/static/images/products/himachal_pradesh_kullu_shawls.png"},
+            {"name": "Chamba Rumal", "fun_fact": "Embroidery is perfect on both sides of the cloth.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (16000, 90000), "image_query": "Chamba Rumal traditional embroidery handkerchief Himachal", "local_image": "/static/images/products/himachal_pradesh_chamba_rumal.png"},
+            {"name": "Silver Jewellery", "fun_fact": "Designs inspired by mountain flowers and gods.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (3500, 25000), "image_query": "Himachal traditional silver mountain jewelry necklace", "local_image": "/static/images/products/himachal_pradesh_silver_jewellery.png"},
+            {"name": "Wooden Temple Crafts", "fun_fact": "Carvings replicate hill architecture.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (8000, 55000), "image_query": "Himachal Pradesh traditional temple wood carving hill architecture", "local_image": "/static/images/products/himachal_pradesh_wooden_temple_crafts.png"},
+            {"name": "Woolen Caps", "fun_fact": "Hand-knitted to keep warm in freezing cold.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (250, 850), "image_query": "Kullu cap traditional handknitted Himachal wool", "local_image": "/static/images/products/himachal_pradesh_woolen_caps.png"},
+            {"name": "Metal Prayer Items", "fun_fact": "Used in temples for rituals and prayers.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (1500, 4500), "image_query": "Himachal traditional brass temple bells prayer items", "local_image": "/static/images/products/himachal_pradesh_metal_prayer_items.png"}
         ],
         "stories": {
             "Kullu Shawls": "Originally plain, these shawls became famous for their colorful geometric borders after royal patronage in the 19th century.",
@@ -163,12 +163,12 @@ HERITAGE_DATA = {
     },
     "Jharkhand": {
         "items": [
-            {"name": "Sohrai Painting", "fun_fact": "Tribal wall art celebrates harvest and nature.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (999, 14999), "image_query": "Jharkhand Sohrai tribal wall painting folk art", "local_image": "/static/images/products/jharkhand_sohrai_painting.png"},
-            {"name": "Tussar Silk Saree", "fun_fact": "Soft silk with a natural golden glow.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (2999, 12999), "image_query": "Jharkhand Tussar silk saree golden glow natural silk", "local_image": "/static/images/products/jharkhand_tussar_silk_saree.png"},
-            {"name": "Bamboo Crafts", "fun_fact": "Baskets, lamps, and decor all made by hand.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 3999), "image_query": "Jharkhand tribal bamboo handicraft basket lamp", "local_image": "/static/images/products/jharkhand_bamboo_crafts.png"},
-            {"name": "Wooden Animal Toys", "fun_fact": "Inspired by forests and wildlife.", "category": "Toys", "production_time": "3-5 Days", "price_range": (299, 2499), "image_query": "Jharkhand traditional wooden animal toys forest craft", "local_image": "/static/images/products/jharkhand_wooden_animal_toys.png"},
-            {"name": "Tribal Bead Jewellery", "fun_fact": "Bright beads show culture and joy.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (149, 1999), "image_query": "Jharkhand traditional tribal bead jewelry colorful", "local_image": "/static/images/products/jharkhand_tribal_bead_jewellery.png"},
-            {"name": "Clay Diyas", "fun_fact": "Handmade lamps used in festivals for centuries.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (49, 499), "image_query": "traditional handmade clay diyas Jharkhand heritage", "local_image": "/static/images/products/jharkhand_clay_diyas.png"}
+            {"name": "Sohrai Painting", "fun_fact": "Tribal wall art celebrates harvest and nature.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1500, 12000), "image_query": "Jharkhand Sohrai tribal wall painting folk art", "local_image": "/static/images/products/jharkhand_sohrai_painting.png"},
+            {"name": "Tussar Silk Saree", "fun_fact": "Soft silk with a natural golden glow.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (5500, 15000), "image_query": "Jharkhand Tussar silk saree golden glow natural silk", "local_image": "/static/images/products/jharkhand_tussar_silk_saree.png"},
+            {"name": "Bamboo Crafts", "fun_fact": "Baskets, lamps, and decor all made by hand.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (450, 3500), "image_query": "Jharkhand tribal bamboo handicraft basket lamp", "local_image": "/static/images/products/jharkhand_bamboo_crafts.png"},
+            {"name": "Wooden Animal Toys", "fun_fact": "Inspired by forests and wildlife.", "category": "Toys", "production_time": "3-5 Days", "price_range": (150, 1200), "image_query": "Jharkhand traditional wooden animal toys forest craft", "local_image": "/static/images/products/jharkhand_wooden_animal_toys.png"},
+            {"name": "Tribal Bead Jewellery", "fun_fact": "Bright beads show culture and joy.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (500, 5000), "image_query": "Jharkhand traditional tribal bead jewelry colorful", "local_image": "/static/images/products/jharkhand_tribal_bead_jewellery.png"},
+            {"name": "Clay Diyas", "fun_fact": "Handmade lamps used in festivals for centuries.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (10, 500), "image_query": "traditional handmade clay diyas Jharkhand heritage", "local_image": "/static/images/products/jharkhand_clay_diyas.png"}
         ],
         "stories": {
             "Sohrai Painting": "Painted by tribal women on mud walls using natural soil colors, celebrating nature and ancestor worship.",
@@ -181,12 +181,12 @@ HERITAGE_DATA = {
     },
     "Karnataka": {
         "items": [
-            {"name": "Mysore Silk Saree", "fun_fact": "Famous for pure silk and real gold zari.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (9999, 95000), "image_query": "Mysore Silk Saree with gold zari borders", "local_image": "/static/images/products/karnataka_mysore_silk_saree.png"},
-            {"name": "Channapatna Toys", "fun_fact": "Bright toys made safely with vegetable dyes.", "category": "Toys", "production_time": "3-5 Days", "price_range": (299, 4999), "image_query": "Channapatna wooden toys colorful lacquer vegetable dyes", "local_image": "/static/images/products/karnataka_channapatna_toys.png"},
+            {"name": "Mysore Silk Saree", "fun_fact": "Famous for pure silk and real gold zari.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (23000, 250000), "image_query": "Mysore Silk Saree with gold zari borders", "local_image": "/static/images/products/karnataka_mysore_silk_saree.png"},
+            {"name": "Channapatna Toys", "fun_fact": "Bright toys made safely with vegetable dyes.", "category": "Toys", "production_time": "3-5 Days", "price_range": (350, 1800), "image_query": "Channapatna wooden toys colorful lacquer vegetable dyes", "local_image": "/static/images/products/karnataka_channapatna_toys.png"},
             {"name": "Sandalwood Carvings", "fun_fact": "Carvings smell amazing naturally for years.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 149999), "image_query": "intricate Sandalwood carving sculpture India", "local_image": "/static/images/products/karnataka_sandalwood_carvings.png"},
-            {"name": "Ilkal Saree", "fun_fact": "Traditional saree with unique red borders and pallu style.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1499, 9999), "image_query": "Ilkal saree with traditional Kasuti embroidery", "local_image": "/static/images/products/karnataka_ilkal_saree.png"},
-            {"name": "Bidriware Jewellery", "fun_fact": "Black metal with silver inlay is centuries old.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (999, 19999), "image_query": "Bidriware silver inlay work black metal handicraft", "local_image": "/static/images/products/karnataka_bidriware_jewellery.png"},
-            {"name": "Lambani Embroidery", "fun_fact": "Colorful stitches reflect nomadic life.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (499, 8999), "image_query": "Lambani tribal embroidery colorful patchwork mirror work", "local_image": "/static/images/products/karnataka_lambani_embroidery.png"}
+            {"name": "Ilkal Saree", "fun_fact": "Traditional saree with unique red borders and pallu style.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3500, 12000), "image_query": "Ilkal saree with traditional Kasuti embroidery", "local_image": "/static/images/products/karnataka_ilkal_saree.png"},
+            {"name": "Bidriware Jewellery", "fun_fact": "Black metal with silver inlay is centuries old.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1200, 4500), "image_query": "Bidriware silver inlay work black metal handicraft", "local_image": "/static/images/products/karnataka_bidriware_jewellery.png"},
+            {"name": "Lambani Embroidery", "fun_fact": "Colorful stitches reflect nomadic life.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (4500, 25000), "image_query": "Lambani tribal embroidery colorful patchwork mirror work", "local_image": "/static/images/products/karnataka_lambani_embroidery.png"}
         ],
         "stories": {
             "Mysore Silk Saree": "Maharaja Wadiyar IV established silk factories in Mysore to create sarees of unmatched purity and gold work.",
@@ -199,12 +199,12 @@ HERITAGE_DATA = {
     },
     "Kerala": {
         "items": [
-            {"name": "Kasavu Saree", "fun_fact": "White and gold saree that shows elegance and tradition.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1999, 29999), "image_query": "Kerala Kasavu saree white and gold silk", "local_image": "/static/images/products/kerala_kasavu_saree.png"},
-            {"name": "Coir Handicrafts", "fun_fact": "Made from coconut fiber and super strong.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (249, 4999), "image_query": "Kerala Coir handicraft door mat coconut fiber", "local_image": "/static/images/products/kerala_coir_handicrafts.png"},
-            {"name": "Nettur Petti", "fun_fact": "Wooden boxes once used by kings for valuables.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (4999, 24999), "image_query": "Nettur Petti traditional Kerala wooden jewelry box", "local_image": "/static/images/products/kerala_nettur_petti.png"},
-            {"name": "Bell Metal Lamps", "fun_fact": "Traditional lamps for temples and homes.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (899, 19999), "image_query": "Kerala brass Nilavilakku lamp bell metal", "local_image": "/static/images/products/kerala_bell_metal_lamps.png"},
-            {"name": "Kathakali Masks", "fun_fact": "Show Kerala’s famous dance drama in full color.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 12999), "image_query": "Kathakali dancer mask colorful traditional Kerala Art", "local_image": "/static/images/products/kerala_kathakali_masks.png"},
-            {"name": "Handwoven Mats", "fun_fact": "Mats keep floors cool in tropical weather.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 2999), "image_query": "handwoven screw pine mats Kerala", "local_image": "/static/images/products/kerala_handwoven_mats.png"}
+            {"name": "Kasavu Saree", "fun_fact": "White and gold saree that shows elegance and tradition.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (4500, 30000), "image_query": "Kerala Kasavu saree white and gold silk", "local_image": "/static/images/products/kerala_kasavu_saree.png"},
+            {"name": "Coir Handicrafts", "fun_fact": "Made from coconut fiber and super strong.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (650, 3500), "image_query": "Kerala Coir handicraft door mat coconut fiber", "local_image": "/static/images/products/kerala_coir_handicrafts.png"},
+            {"name": "Nettur Petti", "fun_fact": "Wooden boxes once used by kings for valuables.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (8500, 25000), "image_query": "Nettur Petti traditional Kerala wooden jewelry box", "local_image": "/static/images/products/kerala_nettur_petti.png"},
+            {"name": "Bell Metal Lamps", "fun_fact": "Traditional lamps for temples and homes.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (2800, 45000), "image_query": "Kerala brass Nilavilakku lamp bell metal", "local_image": "/static/images/products/kerala_bell_metal_lamps.png"},
+            {"name": "Kathakali Masks", "fun_fact": "Show Kerala’s famous dance drama in full color.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1500, 8500), "image_query": "Kathakali dancer mask colorful traditional Kerala Art", "local_image": "/static/images/products/kerala_kathakali_masks.png"},
+            {"name": "Handwoven Mats", "fun_fact": "Mats keep floors cool in tropical weather.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (450, 1800), "image_query": "handwoven screw pine mats Kerala", "local_image": "/static/images/products/kerala_handwoven_mats.png"}
         ],
         "stories": {
             "Kasavu Saree": "The simple white and gold of the Kasavu is symbolic of Kerala's culture of purity and the golden light of the land.",
@@ -217,12 +217,12 @@ HERITAGE_DATA = {
     },
     "Madhya Pradesh": {
         "items": [
-            {"name": "Gond Art Frames", "fun_fact": "Gond artists believe every line has a soul — empty spaces are avoided because they’re considered lifeless", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 19999), "image_query": "Gond tribal painting folk art Madhya Pradesh", "local_image": "/static/images/products/madhya_pradesh_gond_art_frames.png"},
-            {"name": "Chanderi Saree", "fun_fact": "Ancient Chanderi weavers used to weave by moonlight because daylight damaged the silk’s shine", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (2999, 45000), "image_query": "Chanderi silk saree with golden border", "local_image": "/static/images/products/madhya_pradesh_chanderi_saree.png"},
-            {"name": "Tribal Silver Jewellery", "fun_fact": "Many tribal ornaments make sound on purpose — protection against wild animals and evil spirits", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1499, 29999), "image_query": "Madhya Pradesh tribal silver jewelry heavy necklace", "local_image": "/static/images/products/madhya_pradesh_tribal_silver_jewellery.png"},
-            {"name": "Maheshwari Fabric", "fun_fact": "Maheshwari sarees have reversible borders — you can flip the pallu and wear it differently", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1999, 14999), "image_query": "Maheshwari handloom cotton silk fabric", "local_image": "/static/images/products/madhya_pradesh_maheshwari_fabric.png"},
-            {"name": "Wooden Toys", "fun_fact": "These toys were traditionally made without nails or glue — only wooden joints", "category": "Toys", "production_time": "3-5 Days", "price_range": (499, 4999), "image_query": "Budhni lacquered wooden toys Madhya Pradesh", "local_image": "/static/images/products/madhya_pradesh_wooden_toys.png"},
-            {"name": "Tribal Paintings", "fun_fact": "Used as a visual language to pass stories to people who couldn’t read", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (999, 9999), "image_query": "Bhil tribal art painting world tree life", "local_image": "/static/images/products/madhya_pradesh_tribal_paintings.png"}
+            {"name": "Gond Art Frames", "fun_fact": "Gond artists believe every line has a soul — empty spaces are avoided because they’re considered lifeless", "category": "Art", "production_time": "2-3 Weeks", "price_range": (4500, 35000), "image_query": "Gond tribal painting folk art Madhya Pradesh", "local_image": "/static/images/products/madhya_pradesh_gond_art_frames.png"},
+            {"name": "Chanderi Saree", "fun_fact": "Ancient Chanderi weavers used to weave by moonlight because daylight damaged the silk’s shine", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (8500, 25000), "image_query": "Chanderi silk saree with golden border", "local_image": "/static/images/products/madhya_pradesh_chanderi_saree.png"},
+            {"name": "Tribal Silver Jewellery", "fun_fact": "Many tribal ornaments make sound on purpose — protection against wild animals and evil spirits", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (4000, 12000), "image_query": "Madhya Pradesh tribal silver jewelry heavy necklace", "local_image": "/static/images/products/madhya_pradesh_tribal_silver_jewellery.png"},
+            {"name": "Maheshwari Fabric", "fun_fact": "Maheshwari sarees have reversible borders — you can flip the pallu and wear it differently", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (12000, 60000), "image_query": "Maheshwari handloom cotton silk fabric", "local_image": "/static/images/products/madhya_pradesh_maheshwari_fabric.png"},
+            {"name": "Wooden Toys", "fun_fact": "These toys were traditionally made without nails or glue — only wooden joints", "category": "Toys", "production_time": "3-5 Days", "price_range": (450, 2500), "image_query": "Budhni lacquered wooden toys Madhya Pradesh", "local_image": "/static/images/products/madhya_pradesh_wooden_toys.png"},
+            {"name": "Tribal Paintings", "fun_fact": "Used as a visual language to pass stories to people who couldn’t read", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (3500, 18000), "image_query": "Bhil tribal art painting world tree life", "local_image": "/static/images/products/madhya_pradesh_tribal_paintings.png"}
         ],
         "stories": {
             "Gond Art Frames": "The Gond tribe's wall art transitioned to paper in the late 20th century, gaining worldwide fame for its dot-and-line style.",
@@ -235,11 +235,11 @@ HERITAGE_DATA = {
     },
     "Maharashtra": {
         "items": [
-            {"name": "Warli Art Frames", "fun_fact": "Warli figures have no facial features because identity is considered less important than community", "category": "Art", "production_time": "2-3 Weeks", "price_range": (999, 12999), "image_query": "Warli tribal painting white on brown background", "local_image": "/static/images/products/maharashtra_warli_art_frames.png"},
-            {"name": "Paithani Saree", "fun_fact": "A real Paithani’s border is woven using pure gold/silver wire", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (8999, 150000), "image_query": "Paithani silk saree with peacock design pallu", "local_image": "/static/images/products/maharashtra_paithani_saree.png"},
-            {"name": "Kolhapuri Jewellery", "fun_fact": "Heavy Kolhapuri silver pieces were designed to strengthen bones due to constant weight", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1299, 19999), "image_query": "Kolhapuri Saaj gold necklace jewelry", "local_image": "/static/images/products/maharashtra_kolhapuri_jewellery.png"},
-            {"name": "Handloom Cotton Fabric", "fun_fact": "Maharashtrian cotton absorbs sweat so well it was preferred by Maratha soldiers", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (499, 4999), "image_query": "Maharashtra handloom cotton fabric textile", "local_image": "/static/images/products/maharashtra_handloom_cotton_fabric.png"},
-            {"name": "Sawantwadi Toys", "fun_fact": "Painted with natural lac dye, the same resin used in ancient food coatings", "category": "Toys", "production_time": "3-5 Days", "price_range": (399, 5999), "image_query": "Sawantwadi wooden toys lacquered India", "local_image": "/static/images/products/maharashtra_sawantwadi_toys.png"},
+            {"name": "Warli Art Frames", "fun_fact": "Warli figures have no facial features because identity is considered less important than community", "category": "Art", "production_time": "2-3 Weeks", "price_range": (25000, 250000), "image_query": "Warli tribal painting white on brown background", "local_image": "/static/images/products/maharashtra_warli_art_frames.png"},
+            {"name": "Paithani Saree", "fun_fact": "A real Paithani’s border is woven using pure gold/silver wire", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1500, 8500), "image_query": "Paithani silk saree with peacock design pallu", "local_image": "/static/images/products/maharashtra_paithani_saree.png"},
+            {"name": "Kolhapuri Jewellery", "fun_fact": "Heavy Kolhapuri silver pieces were designed to strengthen bones due to constant weight", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (15000, 55000), "image_query": "Kolhapuri Saaj gold necklace jewelry", "local_image": "/static/images/products/maharashtra_kolhapuri_jewellery.png"},
+            {"name": "Handloom Cotton Fabric", "fun_fact": "Maharashtrian cotton absorbs sweat so well it was preferred by Maratha soldiers", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (450, 2500), "image_query": "Maharashtra handloom cotton fabric textile", "local_image": "/static/images/products/maharashtra_handloom_cotton_fabric.png"},
+            {"name": "Sawantwadi Toys", "fun_fact": "Painted with natural lac dye, the same resin used in ancient food coatings", "category": "Toys", "production_time": "3-5 Days", "price_range": (1200, 3500), "image_query": "Sawantwadi wooden toys lacquered India", "local_image": "/static/images/products/maharashtra_sawantwadi_toys.png"},
             {"name": "Warli Wall Art", "fun_fact": "Traditionally painted only during weddings, not as daily decoration", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (1999, 29999), "image_query": "Warli ritual wall painting Maharashtra folk art", "local_image": "/static/images/products/maharashtra_warli_wall_art.png"}
         ],
         "stories": {
@@ -253,12 +253,12 @@ HERITAGE_DATA = {
     },
     "Meghalaya": {
         "items": [
-            {"name": "Cane and Bamboo Bowls", "fun_fact": "So tightly woven they can hold fruit juice without leaking.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (399, 4999), "image_query": "Meghalaya bamboo cane handicraft bowls tightly woven", "local_image": "/static/images/products/meghalaya_cane_and_bamboo_bowls.png"},
-            {"name": "Eri Silk Shawl", "fun_fact": "Known as 'peace silk' because the silkworm isn't harmed during extraction.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3499, 14999), "image_query": "Meghalaya Eri peace silk shawl traditional", "local_image": "/static/images/products/meghalaya_eri_silk_shawl.png"},
-            {"name": "Khasi Traditional Jewellery", "fun_fact": "Large red coral beads are more precious than gold in some hill tribes.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1499, 29999), "image_query": "Khasi traditional jewelry gold beads red coral Meghalaya", "local_image": "/static/images/products/meghalaya_khasi_traditional_jewellery.png"},
-            {"name": "Black Pottery", "fun_fact": "Made from a special rock found only in Sung Valley, not clay.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (299, 3499), "image_query": "Meghalaya traditional black pottery Sung Valley rock", "local_image": "/static/images/products/meghalaya_black_pottery.png"},
-            {"name": "Traditional Baskets", "fun_fact": "Conical 'Khoh' baskets are designed to distribute weight perfectly on the head.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (499, 2499), "image_query": "traditional conical Khoh basket Meghalaya tribal", "local_image": "/static/images/products/meghalaya_traditional_baskets.png"},
-            {"name": "Tribal Woven Bags", "fun_fact": "Patterns are inspired by local spider webs and bamboo leaves.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (199, 1999), "image_query": "traditional tribal woven bags Meghalaya patterns", "local_image": "/static/images/products/meghalaya_tribal_woven_bags.png"}
+            {"name": "Cane and Bamboo Bowls", "fun_fact": "So tightly woven they can hold fruit juice without leaking.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (1800, 4500), "image_query": "Meghalaya bamboo cane handicraft bowls tightly woven", "local_image": "/static/images/products/meghalaya_cane_and_bamboo_bowls.png"},
+            {"name": "Eri Silk Shawl", "fun_fact": "Known as 'peace silk' because the silkworm isn't harmed during extraction.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (5500, 12000), "image_query": "Meghalaya Eri peace silk shawl traditional", "local_image": "/static/images/products/meghalaya_eri_silk_shawl.png"},
+            {"name": "Khasi Traditional Jewellery", "fun_fact": "Large red coral beads are more precious than gold in some hill tribes.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (2500, 18000), "image_query": "Khasi traditional jewelry gold beads red coral Meghalaya", "local_image": "/static/images/products/meghalaya_khasi_traditional_jewellery.png"},
+            {"name": "Black Pottery", "fun_fact": "Made from a special rock found only in Sung Valley, not clay.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (4200, 9500), "image_query": "Meghalaya traditional black pottery Sung Valley rock", "local_image": "/static/images/products/meghalaya_black_pottery.png"},
+            {"name": "Traditional Baskets", "fun_fact": "Conical 'Khoh' baskets are designed to distribute weight perfectly on the head.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (800, 3000), "image_query": "traditional conical Khoh basket Meghalaya tribal", "local_image": "/static/images/products/meghalaya_traditional_baskets.png"},
+            {"name": "Tribal Woven Bags", "fun_fact": "Patterns are inspired by local spider webs and bamboo leaves.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (15000, 60000), "image_query": "traditional tribal woven bags Meghalaya patterns", "local_image": "/static/images/products/meghalaya_tribal_woven_bags.png"}
         ],
         "stories": {
             "Cane and Bamboo Bowls": "Meghalaya's artisans use 'Tlieng' bamboo, which is soaked for months to become flexible enough for ultra-fine weaving.",
@@ -271,12 +271,12 @@ HERITAGE_DATA = {
     },
     "Mizoram": {
         "items": [
-            {"name": "Puan Saree", "fun_fact": "Every pattern on a Puan corresponds to a different social event — like a wearable calendar!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (2499, 12999), "image_query": "Mizoram Puan traditional woven saree colorful patterns", "local_image": "/static/images/products/mizoram_puan_saree.png"},
-            {"name": "Bamboo Hats", "fun_fact": "Designed with a built-in ventilation gap to keep the head cool in the humid NE sun.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 1499), "image_query": "traditional Mizo bamboo hat Khumbeu ventilation", "local_image": "/static/images/products/mizoram_bamboo_hats.png"},
-            {"name": "Tribal Beadwork", "fun_fact": "Mizo beads were historically used as currency for trading forest wood.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (499, 4999), "image_query": "Mizoram traditional tribal beadwork jewelry necklace", "local_image": "/static/images/products/mizoram_tribal_beadwork.png"},
-            {"name": "Traditional Woven Belts", "fun_fact": "Woven so strong they were used to pull heavy water logs up hills.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (199, 2499), "image_query": "traditional Mizo woven belt textile northeast", "local_image": "/static/images/products/mizoram_traditional_woven_belts.png"},
-            {"name": "Bamboo Thul Baskets", "fun_fact": "So airtight they can keep rice dry even during the massive Mizo monsoons.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (599, 3999), "image_query": "traditional Mizo bamboo Thul basket airtight", "local_image": "/static/images/products/mizoram_bamboo_thul_baskets.png"},
-            {"name": "Mizo Traditional Bags", "fun_fact": "The 'Hnam' strap is made to be carried across the forehead for stability.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (249, 1299), "image_query": "traditional Mizo woven bag Hnam strap", "local_image": "/static/images/products/mizoram_mizo_traditional_bags.png"}
+            {"name": "Puan Saree", "fun_fact": "Every pattern on a Puan corresponds to a different social event — like a wearable calendar!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (12003800, 12003800), "image_query": "Mizoram Puan traditional woven saree colorful patterns", "local_image": "/static/images/products/mizoram_puan_saree.png"},
+            {"name": "Bamboo Hats", "fun_fact": "Designed with a built-in ventilation gap to keep the head cool in the humid NE sun.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (6500, 45000), "image_query": "traditional Mizo bamboo hat Khumbeu ventilation", "local_image": "/static/images/products/mizoram_bamboo_hats.png"},
+            {"name": "Tribal Beadwork", "fun_fact": "Mizo beads were historically used as currency for trading forest wood.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (2500, 25000), "image_query": "Mizoram traditional tribal beadwork jewelry necklace", "local_image": "/static/images/products/mizoram_tribal_beadwork.png"},
+            {"name": "Traditional Woven Belts", "fun_fact": "Woven so strong they were used to pull heavy water logs up hills.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (3500, 12000), "image_query": "traditional Mizo woven belt textile northeast", "local_image": "/static/images/products/mizoram_traditional_woven_belts.png"},
+            {"name": "Bamboo Thul Baskets", "fun_fact": "So airtight they can keep rice dry even during the massive Mizo monsoons.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (350, 1200), "image_query": "traditional Mizo bamboo Thul basket airtight", "local_image": "/static/images/products/mizoram_bamboo_thul_baskets.png"},
+            {"name": "Mizo Traditional Bags", "fun_fact": "The 'Hnam' strap is made to be carried across the forehead for stability.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (12000, 35000), "image_query": "traditional Mizo woven bag Hnam strap", "local_image": "/static/images/products/mizoram_mizo_traditional_bags.png"}
         ],
         "stories": {
             "Puan Saree": "The 'Puanchei' is the most beautiful of Mizo textiles, traditionally worn by brides. It features the 'Tawlhloh Puan' pattern, symbolizing bravery.",
@@ -289,12 +289,12 @@ HERITAGE_DATA = {
     },
     "Nagaland": {
         "items": [
-            {"name": "Naga Warrior Shawls", "fun_fact": "The patterns on these shawls are like military medals — only certain people can wear specific designs!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (2999, 19999), "image_query": "Nagaland traditional Naga warrior shawl tribal patterns", "local_image": "/static/images/products/nagaland_naga_warrior_shawls.png"},
-            {"name": "Hornbill Feather Art", "fun_fact": "Historically, one feather was awarded for every act of bravery for the community.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (999, 9999), "image_query": "Nagaland traditional Hornbill feather art tribal bravery", "local_image": "/static/images/products/nagaland_hornbill_feather_art.png"},
+            {"name": "Naga Warrior Shawls", "fun_fact": "The patterns on these shawls are like military medals — only certain people can wear specific designs!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (3500, 18000), "image_query": "Nagaland traditional Naga warrior shawl tribal patterns", "local_image": "/static/images/products/nagaland_naga_warrior_shawls.png"},
+            {"name": "Hornbill Feather Art", "fun_fact": "Historically, one feather was awarded for every act of bravery for the community.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (6000, 25000), "image_query": "Nagaland traditional Hornbill feather art tribal bravery", "local_image": "/static/images/products/nagaland_hornbill_feather_art.png"},
             {"name": "Beaded Tribal Necklaces", "fun_fact": "A single necklace can weigh up to 2kg because it's packed with thousands of glass and stone beads.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1499, 12999), "image_query": "Nagaland traditional beaded tribal necklace heavy glass stone", "local_image": "/static/images/products/nagaland_beaded_tribal_necklaces.png"},
-            {"name": "Naga Wooden Bowls", "fun_fact": "Carved from a single block of wood — no joints, no glue, pure strength.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (899, 5999), "image_query": "traditional Naga wood carved bowl single block", "local_image": "/static/images/products/nagaland_naga_wooden_bowls.png"},
-            {"name": "Bamboo Drinking Cups", "fun_fact": "Naturally insulated — keeps your tea hot and your water cold.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (199, 999), "image_query": "Nagaland traditional bamboo drinking cups insulated craft", "local_image": "/static/images/products/nagaland_bamboo_drinking_cups.png"},
-            {"name": "Tribal Woven Mats", "fun_fact": "Woven using 'Madar' fiber, which is naturally resistant to fire.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (499, 4499), "image_query": "traditional Naga tribal woven mat mountain reeds", "local_image": "/static/images/products/nagaland_tribal_woven_mats.png"}
+            {"name": "Naga Wooden Bowls", "fun_fact": "Carved from a single block of wood — no joints, no glue, pure strength.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (4500, 12000), "image_query": "traditional Naga wood carved bowl single block", "local_image": "/static/images/products/nagaland_naga_wooden_bowls.png"},
+            {"name": "Bamboo Drinking Cups", "fun_fact": "Naturally insulated — keeps your tea hot and your water cold.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1800, 8500), "image_query": "Nagaland traditional bamboo drinking cups insulated craft", "local_image": "/static/images/products/nagaland_bamboo_drinking_cups.png"},
+            {"name": "Tribal Woven Mats", "fun_fact": "Woven using 'Madar' fiber, which is naturally resistant to fire.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (650, 2200), "image_query": "traditional Naga tribal woven mat mountain reeds", "local_image": "/static/images/products/nagaland_tribal_woven_mats.png"}
         ],
         "stories": {
             "Naga Warrior Shawls": "Each of Nagaland's 16 tribes has its own shawl. The 'Tsungkotepsu' of the Ao tribe features animals representing the wearer's wealth.",
@@ -307,12 +307,12 @@ HERITAGE_DATA = {
     },
     "Odisha": {
         "items": [
-            {"name": "Pattachitra Art", "fun_fact": "The paint is made from ground sea shells and stones — it never fades, even after 100 years!", "category": "Art", "production_time": "2-3 Weeks", "price_range": (699, 5500), "image_query": "Pattachitra scroll painting Odisha Lord Jagannath", "local_image": "/static/images/products/odisha_pattachitra_art.png"},
-            {"name": "Sambalpuri Saree", "fun_fact": "The design is tied and dyed into the threads *before* the weaving starts. It’s like solving a puzzle with thread.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1499, 12000), "image_query": "Sambalpuri silk ikat saree Odisha", "local_image": "/static/images/products/odisha_sambalpuri_saree.png"},
+            {"name": "Pattachitra Art", "fun_fact": "The paint is made from ground sea shells and stones — it never fades, even after 100 years!", "category": "Art", "production_time": "2-3 Weeks", "price_range": (3500, 45000), "image_query": "Pattachitra scroll painting Odisha Lord Jagannath", "local_image": "/static/images/products/odisha_pattachitra_art.png"},
+            {"name": "Sambalpuri Saree", "fun_fact": "The design is tied and dyed into the threads *before* the weaving starts. It’s like solving a puzzle with thread.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (4500, 35000), "image_query": "Sambalpuri silk ikat saree Odisha", "local_image": "/static/images/products/odisha_sambalpuri_saree.png"},
             {"name": "Silver Filigree (Tarakasi)", "fun_fact": "Artists can spin silver as thin as a human hair to build these structures.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (999, 8500), "image_query": "Cuttack silver filigree Tarakasi handicraft jewelry", "local_image": "/static/images/products/odisha_silver_filigree_(tarakasi).png"},
             {"name": "Applique Work (Pipli)", "fun_fact": "Used for the massive umbrellas of the Puri Ratha Yatra festival.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (299, 3500), "image_query": "Pipli applique work colorful fabric Odisha", "local_image": "/static/images/products/odisha_applique_work_(pipli).png"},
-            {"name": "Palm Leaf Engravings", "fun_fact": "Ancient horoscopes were written on these, and they last longer than modern paper.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (399, 2999), "image_query": "Talapatrachitra palm leaf engraving Odisha", "local_image": "/static/images/products/odisha_palm_leaf_engravings.png"},
-            {"name": "Dhokra Metal Figures", "fun_fact": "The 'lost-wax' method means every single piece is unique — you can never make an exact copy.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (599, 4500), "image_query": "Odisha Dhokra metal casting tribal sculpture", "local_image": "/static/images/products/odisha_dhokra_metal_figures.png"}
+            {"name": "Palm Leaf Engravings", "fun_fact": "Ancient horoscopes were written on these, and they last longer than modern paper.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (450, 1800), "image_query": "Talapatrachitra palm leaf engraving Odisha", "local_image": "/static/images/products/odisha_palm_leaf_engravings.png"},
+            {"name": "Dhokra Metal Figures", "fun_fact": "The 'lost-wax' method means every single piece is unique — you can never make an exact copy.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1200, 8500), "image_query": "Odisha Dhokra metal casting tribal sculpture", "local_image": "/static/images/products/odisha_dhokra_metal_figures.png"}
         ],
         "stories": {
             "Pattachitra Art": "Originating from Raghurajpur village, these cloth-based scrolls depict the life of Lord Jagannath using 100% natural pigments.",
@@ -325,12 +325,12 @@ HERITAGE_DATA = {
     },
     "Punjab": {
         "items": [
-            {"name": "Phulkari Embroidery", "fun_fact": "A daughter's wedding shawl can have over 100,000 hand-done stitches!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1499, 25000), "image_query": "Phulkari embroidery Punjab shawl colorful", "local_image": "/static/images/products/phulkari.png"},
-            {"name": "Punjabi Jutti", "fun_fact": "There is no 'left' or 'right' foot; the shoes adapt to your feet as you wear them.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (499, 3999), "image_query": "Punjabi Jutti leather shoes embroidery", "local_image": "/static/images/products/punjab_punjabi_jutti.png"},
-            {"name": "Traditional Parandi", "fun_fact": "The bright tassels are designed to dance along with the wearer during Gidda.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (199, 1299), "image_query": "Punjabi Parandi hair accessory tassels colorful", "local_image": "/static/images/products/punjab_traditional_parandi.png"},
-            {"name": "Wooden Inlay Work", "fun_fact": "Hoshiarpur artisans use bone or plastic to create designs that look like real ivory.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 19999), "image_query": "Hoshiarpur wood inlay work Sheesham", "local_image": "/static/images/products/punjab_wooden_inlay_work.png"},
-            {"name": "Hand-painted Trunk", "fun_fact": "Traditional steel trunks once used as safes in old farmhouses.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (2499, 14999), "image_query": "Punjab traditional hand painted floral steel trunk", "local_image": "/static/images/products/punjab_hand-painted_trunk.png"},
-            {"name": "Phulkari Dupatta", "fun_fact": "Geometrical patterns that tell rural stories of love and harvest.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (999, 7999), "image_query": "Phulkari dupatta cotton scarf Punjab", "local_image": "/static/images/products/punjab_phulkari_dupatta.png"}
+            {"name": "Phulkari Embroidery", "fun_fact": "A daughter's wedding shawl can have over 100,000 hand-done stitches!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (6500, 35000), "image_query": "Phulkari embroidery Punjab shawl colorful", "local_image": "/static/images/products/phulkari.png"},
+            {"name": "Punjabi Jutti", "fun_fact": "There is no 'left' or 'right' foot; the shoes adapt to your feet as you wear them.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (5500, 15500), "image_query": "Punjabi Jutti leather shoes embroidery", "local_image": "/static/images/products/punjab_punjabi_jutti.png"},
+            {"name": "Traditional Parandi", "fun_fact": "The bright tassels are designed to dance along with the wearer during Gidda.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1200, 6500), "image_query": "Punjabi Parandi hair accessory tassels colorful", "local_image": "/static/images/products/punjab_traditional_parandi.png"},
+            {"name": "Wooden Inlay Work", "fun_fact": "Hoshiarpur artisans use bone or plastic to create designs that look like real ivory.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (15000, 75000), "image_query": "Hoshiarpur wood inlay work Sheesham", "local_image": "/static/images/products/punjab_wooden_inlay_work.png"},
+            {"name": "Hand-painted Trunk", "fun_fact": "Traditional steel trunks once used as safes in old farmhouses.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (650, 3200), "image_query": "Punjab traditional hand painted floral steel trunk", "local_image": "/static/images/products/punjab_hand-painted_trunk.png"},
+            {"name": "Phulkari Dupatta", "fun_fact": "Geometrical patterns that tell rural stories of love and harvest.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3000, 12000), "image_query": "Phulkari dupatta cotton scarf Punjab", "local_image": "/static/images/products/punjab_phulkari_dupatta.png"}
         ],
         "stories": {
             "Phulkari Embroidery": "Phulkari ('Flower Work') was the spiritual labor of women in Punjab. Patterns like 'Bagh' are so dense the base cloth is invisible.",
@@ -343,12 +343,12 @@ HERITAGE_DATA = {
     },
     "Rajasthan": {
         "items": [
-            {"name": "Blue Pottery Vase", "fun_fact": "Made without clay — uses ground quartz and glass instead!", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 14999), "image_query": "Jaipur blue pottery vase floral pattern quartz", "local_image": "/static/images/products/rajasthan_blue_pottery_vase.png"},
+            {"name": "Blue Pottery Vase", "fun_fact": "Made without clay — uses ground quartz and glass instead!", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (650, 8500), "image_query": "Jaipur blue pottery vase floral pattern quartz", "local_image": "/static/images/products/rajasthan_blue_pottery_vase.png"},
             {"name": "Bandhani Saree", "fun_fact": "Tiny knots work as an ancient anti-theft device: if the knots are gone, you know it's not original.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1999, 125000), "image_query": "Rajasthan Bandhani tie-dye silk saree colorful", "local_image": "/static/images/products/rajasthan_bandhani_saree.png"},
             {"name": "Thewa Jewellery", "fun_fact": "24k gold is fused onto glass in a secret process kept by just a few families.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (4999, 150000), "image_query": "Thewa jewelry gold on green glass Pratapgarh Rajasthan", "local_image": "/static/images/products/rajasthan_thewa_jewellery.png"},
-            {"name": "Block Print Textile", "fun_fact": "Natural wooden blocks are used to print 100 meters of fabric in just an hour.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (499, 7999), "image_query": "Sanganeri block print fabric floral wooden block India", "local_image": "/static/images/products/rajasthan_block_print_textile.png"},
+            {"name": "Block Print Textile", "fun_fact": "Natural wooden blocks are used to print 100 meters of fabric in just an hour.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (150, 1500), "image_query": "Sanganeri block print fabric floral wooden block India", "local_image": "/static/images/products/rajasthan_block_print_textile.png"},
             {"name": "Miniature Painting", "fun_fact": "Brushes are made from just 3 squirrel hairs for ultra-fine detail.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 85000), "image_query": "Rajasthani miniature painting Rajput royal court", "local_image": "/static/images/products/rajasthan_miniature_painting.png"},
-            {"name": "Puppet (Kathputli)", "fun_fact": "Hand-carved wood puppets that 'speak' through whistles.", "category": "Toys", "production_time": "3-5 Days", "price_range": (299, 4999), "image_query": "Rajasthani Kathputli wooden puppet colorful folk art", "local_image": "/static/images/products/rajasthan_puppet_(kathputli).png"}
+            {"name": "Puppet (Kathputli)", "fun_fact": "Hand-carved wood puppets that 'speak' through whistles.", "category": "Toys", "production_time": "3-5 Days", "price_range": (2500, 12000), "image_query": "Rajasthani Kathputli wooden puppet colorful folk art", "local_image": "/static/images/products/rajasthan_puppet_(kathputli).png"}
         ],
         "stories": {
             "Blue Pottery Vase": "Introduced by Sawai Ram Singh II of Jaipur, this Persian-origin craft is unique because it doesn't use any clay.",
@@ -361,11 +361,11 @@ HERITAGE_DATA = {
     },
     "Sikkim": {
         "items": [
-            {"name": "Thangka Paintings", "fun_fact": "Usually kept rolled up; unrolling one is considered a sacred event.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (4999, 250000), "image_query": "Tibetan Thangka painting Buddhist deity Thangka Sikkim", "local_image": "/static/images/products/sikkim_thangka_paintings.png"},
-            {"name": "Lepcha Weaving", "fun_fact": "The vertical stripes represent the ridges and valleys of the Himalayas.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1499, 9999), "image_query": "Lepcha handloom weaving textile Sikkim stripes", "local_image": "/static/images/products/sikkim_lepcha_weaving.png"},
-            {"name": "Wooden Carved Tables", "fun_fact": "Folding 'Choktse' tables were made for monasteries and used by high lamas.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (2499, 24999), "image_query": "Choktse Tibetan carved wooden folding table Sikkim", "local_image": "/static/images/products/sikkim_wooden_carved_tables.png"},
-            {"name": "Traditional Masks", "fun_fact": "Worn during the 'Chaam' dance to scare away bad spirits from the village.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 12999), "image_query": "Sikkim traditional Buddhist mask Chaam dance", "local_image": "/static/images/products/sikkim_traditional_masks.png"},
-            {"name": "Cane Basketware", "fun_fact": "Made from high-altitude bamboo that can survive freezing mountain temperatures.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 2999), "image_query": "Sikkim cane bamboo basket mountain craft", "local_image": "/static/images/products/sikkim_cane_basketware.png"},
+            {"name": "Thangka Paintings", "fun_fact": "Usually kept rolled up; unrolling one is considered a sacred event.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (15000, 150000), "image_query": "Tibetan Thangka painting Buddhist deity Thangka Sikkim", "local_image": "/static/images/products/sikkim_thangka_paintings.png"},
+            {"name": "Lepcha Weaving", "fun_fact": "The vertical stripes represent the ridges and valleys of the Himalayas.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (5000, 35000), "image_query": "Lepcha handloom weaving textile Sikkim stripes", "local_image": "/static/images/products/sikkim_lepcha_weaving.png"},
+            {"name": "Wooden Carved Tables", "fun_fact": "Folding 'Choktse' tables were made for monasteries and used by high lamas.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (2500, 8500), "image_query": "Choktse Tibetan carved wooden folding table Sikkim", "local_image": "/static/images/products/sikkim_wooden_carved_tables.png"},
+            {"name": "Traditional Masks", "fun_fact": "Worn during the 'Chaam' dance to scare away bad spirits from the village.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (8000, 22000), "image_query": "Sikkim traditional Buddhist mask Chaam dance", "local_image": "/static/images/products/sikkim_traditional_masks.png"},
+            {"name": "Cane Basketware", "fun_fact": "Made from high-altitude bamboo that can survive freezing mountain temperatures.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (800, 4500), "image_query": "Sikkim cane bamboo basket mountain craft", "local_image": "/static/images/products/sikkim_cane_basketware.png"},
             {"name": "Tibetan Style Jewellery", "fun_fact": "Turquoise and coral stones are believed to bring health to the wearer.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (999, 19999), "image_query": "Tibetan jewelry silver turquoise coral Sikkim", "local_image": "/static/images/products/sikkim_tibetan_style_jewellery.png"}
         ],
         "stories": {
@@ -380,10 +380,10 @@ HERITAGE_DATA = {
     "Tamil Nadu": {
         "items": [
             {"name": "Kanchipuram Silk Saree", "fun_fact": "The border and body are woven separately and then joined — so strong you can't rip them apart!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3999, 28000), "image_query": "Kanchipuram silk saree temple border gold zari", "local_image": "/static/images/products/tamil_nadu_kanchipuram_silk_saree.png"},
-            {"name": "Tanjore Painting", "fun_fact": "Uses real 22k gold foil and semi-precious stones for a 3D effect.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1999, 25000), "image_query": "Tanjore painting gold foil stones divine Tamil Nadu", "local_image": "/static/images/products/tamil_nadu_tanjore_painting.png"},
-            {"name": "Temple Jewellery", "fun_fact": "Inspired by the ornaments worn by bronze idols in Chola temples.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (999, 12000), "image_query": "traditional Temple jewelry gold plated silver Tamil Nadu", "local_image": "/static/images/products/tamil_nadu_temple_jewellery.png"},
-            {"name": "Brass Lamps (Villakku)", "fun_fact": "The 'Nacharkoil' lamps are made so perfectly they balance even on a single finger.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (599, 6500), "image_query": "Tamil Nadu brass Kuthuvilakku lamp temple", "local_image": "/static/images/products/tamil_nadu_brass_lamps_(villakku).png"},
-            {"name": "Toda Embroidery", "fun_fact": "The patterns look like they are woven into the cloth, but they are hand-stitched on the back!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (599, 3500), "image_query": "Toda tribal embroidery shawl black and red Nilgiris", "local_image": "/static/images/products/tamil_nadu_toda_embroidery.png"},
+            {"name": "Tanjore Painting", "fun_fact": "Uses real 22k gold foil and semi-precious stones for a 3D effect.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (18000, 250000), "image_query": "Tanjore painting gold foil stones divine Tamil Nadu", "local_image": "/static/images/products/tamil_nadu_tanjore_painting.png"},
+            {"name": "Temple Jewellery", "fun_fact": "Inspired by the ornaments worn by bronze idols in Chola temples.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (25000, 300000), "image_query": "traditional Temple jewelry gold plated silver Tamil Nadu", "local_image": "/static/images/products/tamil_nadu_temple_jewellery.png"},
+            {"name": "Brass Lamps (Villakku)", "fun_fact": "The 'Nacharkoil' lamps are made so perfectly they balance even on a single finger.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (450, 3200), "image_query": "Tamil Nadu brass Kuthuvilakku lamp temple", "local_image": "/static/images/products/tamil_nadu_brass_lamps_(villakku).png"},
+            {"name": "Toda Embroidery", "fun_fact": "The patterns look like they are woven into the cloth, but they are hand-stitched on the back!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1200, 3500), "image_query": "Toda tribal embroidery shawl black and red Nilgiris", "local_image": "/static/images/products/tamil_nadu_toda_embroidery.png"},
             {"name": "Wood Carvings", "fun_fact": "Carvings from sacred trees like Vengai, often used for temple doors.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1499, 35000), "image_query": "Tamil Nadu temple wood carving sculpture chariot door", "local_image": "/static/images/products/tamil_nadu_wood_carvings.png"}
         ],
         "stories": {
@@ -397,11 +397,11 @@ HERITAGE_DATA = {
     },
     "Telangana": {
         "items": [
-            {"name": "Pochampally Ikat Saree", "fun_fact": "Designers create the pattern from memory while tying thousands of knots!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3999, 45000), "image_query": "Pochampally ikat silk saree geometric textile", "local_image": "/static/images/products/telangana_pochampally_ikat_saree.png"},
-            {"name": "Bidriware Artifact", "fun_fact": "The black finish comes from a special soil found in Bidar fort — nothing else works!", "category": "Art", "production_time": "2-3 Weeks", "price_range": (999, 24999), "image_query": "Bidriware silver inlay artifact black metal Telangana", "local_image": "/static/images/products/telangana_bidriware_artifact.png"},
-            {"name": "Nirmal Paintings", "fun_fact": "Uses 100% natural colors made from wood and minerals discovered in the 14th century.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (1499, 19999), "image_query": "Nirmal gold painting floral bird design Telangana", "local_image": "/static/images/products/telangana_nirmal_paintings.png"},
-            {"name": "Pembarthi Brass Work", "fun_fact": "Used for the massive domes and gateways of South Indian temples.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (899, 45000), "image_query": "Pembarthi brass sheet craft decorative plaque", "local_image": "/static/images/products/telangana_pembarthi_brass_work.png"},
-            {"name": "Gollabhama Saree", "fun_fact": "Features tiny 'milkmaid' figures hidden in the weave patterns.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (2499, 9999), "image_query": "Gollabhama saree milkmaid motifs Telangana", "local_image": "/static/images/products/telangana_gollabhama_saree.png"},
+            {"name": "Pochampally Ikat Saree", "fun_fact": "Designers create the pattern from memory while tying thousands of knots!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (3500, 18000), "image_query": "Pochampally ikat silk saree geometric textile", "local_image": "/static/images/products/telangana_pochampally_ikat_saree.png"},
+            {"name": "Bidriware Artifact", "fun_fact": "The black finish comes from a special soil found in Bidar fort — nothing else works!", "category": "Art", "production_time": "2-3 Weeks", "price_range": (9000, 45000), "image_query": "Bidriware silver inlay artifact black metal Telangana", "local_image": "/static/images/products/telangana_bidriware_artifact.png"},
+            {"name": "Nirmal Paintings", "fun_fact": "Uses 100% natural colors made from wood and minerals discovered in the 14th century.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (450, 2500), "image_query": "Nirmal gold painting floral bird design Telangana", "local_image": "/static/images/products/telangana_nirmal_paintings.png"},
+            {"name": "Pembarthi Brass Work", "fun_fact": "Used for the massive domes and gateways of South Indian temples.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (5000, 85000), "image_query": "Pembarthi brass sheet craft decorative plaque", "local_image": "/static/images/products/telangana_pembarthi_brass_work.png"},
+            {"name": "Gollabhama Saree", "fun_fact": "Features tiny 'milkmaid' figures hidden in the weave patterns.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (550, 4500), "image_query": "Gollabhama saree milkmaid motifs Telangana", "local_image": "/static/images/products/telangana_gollabhama_saree.png"},
             {"name": "Filigree Work", "fun_fact": "Silver wire work that is so fine it floats on water.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1999, 39999), "image_query": "Karimnagar silver filigree jewelry transparent mesh", "local_image": "/static/images/products/telangana_filigree_work.png"}
         ],
         "stories": {
@@ -415,11 +415,11 @@ HERITAGE_DATA = {
     },
     "Tripura": {
         "items": [
-            {"name": "Bamboo and Cane Art", "fun_fact": "Tripura's bamboo screens are so thin they were once used as curtains in Mughal places.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (499, 9999), "image_query": "Tripura bamboo cane handicraft basketry thin bamboo strips", "local_image": "/static/images/products/tripura_bamboo_and_cane_art.png"},
-            {"name": "Traditional Handloom", "fun_fact": "The patterns represent the unique ripples and waves of Northeast rivers.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1499, 12999), "image_query": "Tripura handloom textile Rignai patterns northeast", "local_image": "/static/images/products/tripura_traditional_handloom.png"},
-            {"name": "Cane Furniture", "fun_fact": "Lasts longer than teak wood if kept away from direct sun — some pieces are 40 years old!", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (4999, 45000), "image_query": "Tripura cane furniture chair natural woven", "local_image": "/static/images/products/tripura_cane_furniture.png"},
-            {"name": "Tribal Breast Plate", "fun_fact": "Made from silver coins and beads; once worn as a status symbol of tribal royalty.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (999, 7999), "image_query": "Tripura tribal silver coin necklace breastplate jewelry", "local_image": "/static/images/products/tripura_tribal_breast_plate.png"},
-            {"name": "Traditional Woven Wraps", "fun_fact": "Colors change based on the wearer's age and clan.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1999, 8999), "image_query": "Tripuri tribal woven wrap dress textile", "local_image": "/static/images/products/tripura_traditional_woven_wraps.png"},
+            {"name": "Bamboo and Cane Art", "fun_fact": "Tripura's bamboo screens are so thin they were once used as curtains in Mughal places.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1200, 6500), "image_query": "Tripura bamboo cane handicraft basketry thin bamboo strips", "local_image": "/static/images/products/tripura_bamboo_and_cane_art.png"},
+            {"name": "Traditional Handloom", "fun_fact": "The patterns represent the unique ripples and waves of Northeast rivers.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (2800, 7500), "image_query": "Tripura handloom textile Rignai patterns northeast", "local_image": "/static/images/products/tripura_traditional_handloom.png"},
+            {"name": "Cane Furniture", "fun_fact": "Lasts longer than teak wood if kept away from direct sun — some pieces are 40 years old!", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (800, 3500), "image_query": "Tripura cane furniture chair natural woven", "local_image": "/static/images/products/tripura_cane_furniture.png"},
+            {"name": "Tribal Breast Plate", "fun_fact": "Made from silver coins and beads; once worn as a status symbol of tribal royalty.", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (850, 2200), "image_query": "Tripura tribal silver coin necklace breastplate jewelry", "local_image": "/static/images/products/tripura_tribal_breast_plate.png"},
+            {"name": "Traditional Woven Wraps", "fun_fact": "Colors change based on the wearer's age and clan.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (350, 1200), "image_query": "Tripuri tribal woven wrap dress textile", "local_image": "/static/images/products/tripura_traditional_woven_wraps.png"},
             {"name": "Hand-carved Flutes", "fun_fact": "Made from 'Muli' bamboo, famous for its deep, melodic resonance.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (199, 1499), "image_query": "Tripura Muli bamboo flute hand carved northeast", "local_image": "/static/images/products/tripura_hand-carved_flutes.png"}
         ],
         "stories": {
@@ -433,11 +433,11 @@ HERITAGE_DATA = {
     },
     "Uttar Pradesh": {
         "items": [
-            {"name": "Chikan Embroidery", "fun_fact": "It’s called 'shadow-work' because the pattern is shown through the fabric from the back.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (999, 45000), "image_query": "Lucknow Chikan embroidery white thread on muslin cotton fabric", "local_image": "/static/images/products/uttar_pradesh_chikan_embroidery.png"},
-            {"name": "Banarasi Silk Saree", "fun_fact": "Usually weighs so much (1kg+) that brides need help just walking!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (5999, 450000), "image_query": "Banarasi silk saree gold brocade Varanasi India", "local_image": "/static/images/products/banarasi_saree.png"},
-            {"name": "Brassware Artifact", "fun_fact": "Moradabad is called 'Peetal Nagri' because you can hear the tapping of hammers everywhere.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (499, 24999), "image_query": "Moradabad brass artifact engraved brassware Peetal", "local_image": "/static/images/products/uttar_pradesh_brassware_artifact.png"},
-            {"name": "Zardozi Wall Art", "fun_fact": "Uses real gold and silver threads to embroider large-scale scenes of history.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (2499, 85000), "image_query": "Zardozi gold embroidery wall art frame royal India", "local_image": "/static/images/products/uttar_pradesh_zardozi_wall_art.png"},
-            {"name": "Glass Art of Firozabad", "fun_fact": "Everything from bangles to chandeliers is made from 100% recycled glass.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (199, 14999), "image_query": "Firozabad glass bangles colorful India street market", "local_image": "/static/images/products/uttar_pradesh_glass_art_of_firozabad.png"},
+            {"name": "Chikan Embroidery", "fun_fact": "It’s called 'shadow-work' because the pattern is shown through the fabric from the back.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (22000, 250000), "image_query": "Lucknow Chikan embroidery white thread on muslin cotton fabric", "local_image": "/static/images/products/uttar_pradesh_chikan_embroidery.png"},
+            {"name": "Banarasi Silk Saree", "fun_fact": "Usually weighs so much (1kg+) that brides need help just walking!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (4500, 55000), "image_query": "Banarasi silk saree gold brocade Varanasi India", "local_image": "/static/images/products/banarasi_saree.png"},
+            {"name": "Brassware Artifact", "fun_fact": "Moradabad is called 'Peetal Nagri' because you can hear the tapping of hammers everywhere.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1500, 12000), "image_query": "Moradabad brass artifact engraved brassware Peetal", "local_image": "/static/images/products/uttar_pradesh_brassware_artifact.png"},
+            {"name": "Zardozi Wall Art", "fun_fact": "Uses real gold and silver threads to embroider large-scale scenes of history.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (12000, 85000), "image_query": "Zardozi gold embroidery wall art frame royal India", "local_image": "/static/images/products/uttar_pradesh_zardozi_wall_art.png"},
+            {"name": "Glass Art of Firozabad", "fun_fact": "Everything from bangles to chandeliers is made from 100% recycled glass.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (150, 1200), "image_query": "Firozabad glass bangles colorful India street market", "local_image": "/static/images/products/uttar_pradesh_glass_art_of_firozabad.png"},
             {"name": "Wood Inlay (Saharanpur)", "fun_fact": "The 'jaali' (net) work is so intricate it can filter moonlight into patterns on the floor.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1499, 39999), "image_query": "Saharanpur wood inlay jaali screen Sheesham wood carving", "local_image": "/static/images/products/uttar_pradesh_wood_inlay_(saharanpur).png"}
         ],
         "stories": {
@@ -451,11 +451,11 @@ HERITAGE_DATA = {
     },
     "Uttarakhand": {
         "items": [
-            {"name": "Pichora Saree", "fun_fact": "Given by mother-in-laws to new brides — it's always in saffron and red to symbolize health and luck.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (1499, 9999), "image_query": "Kumaoni Pichora saree saffron and red tradition Uttarakhand", "local_image": "/static/images/products/uttarakhand_pichora_saree.png"},
-            {"name": "Ringaal Basketry", "fun_fact": "Made from high-altitude dwarf bamboo that grows near the glacier lines.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (299, 3499), "image_query": "Ringaal bamboo basketry traditional Uttarakhand mountain craft", "local_image": "/static/images/products/uttarakhand_ringaal_basketry.png"},
-            {"name": "Kumaoni Aipan Art", "fun_fact": "Usually painted on the floor to welcome gods into the house during festivals.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (699, 7999), "image_query": "Kumaoni Aipan art floor painting red and white tradition", "local_image": "/static/images/products/uttarakhand_kumaoni_aipan_art.png"},
-            {"name": "Woolen Shawls", "fun_fact": "Woven by shepherds while they are graze their sheep on the mountain slopes.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1999, 14999), "image_query": "Uttarakhand handloomed woolen shawl traditional Himalayan", "local_image": "/static/images/products/uttarakhand_woolen_shawls.png"},
-            {"name": "Copperware (Tamta)", "fun_fact": "Believed to kill all bacteria in water within 8 hours. Nature's purifier!", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (499, 8999), "image_query": "traditional Uttarakhand copperware vessel hammered metal Tamta", "local_image": "/static/images/products/uttarakhand_copperware_(tamta).png"},
+            {"name": "Pichora Saree", "fun_fact": "Given by mother-in-laws to new brides — it's always in saffron and red to symbolize health and luck.", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (450, 4500), "image_query": "Kumaoni Pichora saree saffron and red tradition Uttarakhand", "local_image": "/static/images/products/uttarakhand_pichora_saree.png"},
+            {"name": "Ringaal Basketry", "fun_fact": "Made from high-altitude dwarf bamboo that grows near the glacier lines.", "category": "Handicrafts", "production_time": "4-7 Days", "price_range": (1500, 8500), "image_query": "Ringaal bamboo basketry traditional Uttarakhand mountain craft", "local_image": "/static/images/products/uttarakhand_ringaal_basketry.png"},
+            {"name": "Kumaoni Aipan Art", "fun_fact": "Usually painted on the floor to welcome gods into the house during festivals.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (5000, 45000), "image_query": "Kumaoni Aipan art floor painting red and white tradition", "local_image": "/static/images/products/uttarakhand_kumaoni_aipan_art.png"},
+            {"name": "Woolen Shawls", "fun_fact": "Woven by shepherds while they are graze their sheep on the mountain slopes.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1800, 5500), "image_query": "Uttarakhand handloomed woolen shawl traditional Himalayan", "local_image": "/static/images/products/uttarakhand_woolen_shawls.png"},
+            {"name": "Copperware (Tamta)", "fun_fact": "Believed to kill all bacteria in water within 8 hours. Nature's purifier!", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (250, 1800), "image_query": "traditional Uttarakhand copperware vessel hammered metal Tamta", "local_image": "/static/images/products/uttarakhand_copperware_(tamta).png"},
             {"name": "Traditional Nose Ring (Nath)", "fun_fact": "The larger the Nath, the more royal the family lineage!", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (2499, 75000), "image_query": "Tehri Nath large gold nose ring traditional Uttarakhand jewelry", "local_image": "/static/images/products/uttarakhand_traditional_nose_ring_(nath).png"}
         ],
         "stories": {
@@ -469,11 +469,11 @@ HERITAGE_DATA = {
     },
     "West Bengal": {
         "items": [
-            {"name": "Baluchari Silk Saree", "fun_fact": "The borders show scenes from the Ramayana and Mahabharata — it's like a storybook you can wear!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (4999, 45000), "image_query": "Baluchari silk saree mythological scene border West Bengal", "local_image": "/static/images/products/west_bengal_baluchari_silk_saree.png"},
-            {"name": "Terracotta Horse", "fun_fact": "The symbol of Bankura — once given as temple offerings, now a world-famous art icon.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (199, 8999), "image_query": "Bankura terracotta horse traditional West Bengal art icon", "local_image": "/static/images/products/west_bengal_terracotta_horse.png"},
-            {"name": "Sholapith Decor", "fun_fact": "Looks like marble but is actually made from the bark of a spongey water plant.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 12999), "image_query": "Sholapith traditional decorative item milky white West Bengal", "local_image": "/static/images/products/west_bengal_sholapith_decor.png"},
-            {"name": "Kantha Embroidery", "fun_fact": "Recycles old fabrics into masterpieces — an ancient eco-friendly art form.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (999, 19999), "image_query": "Kantha embroidery quilt stitch West Bengal textile", "local_image": "/static/images/products/west_bengal_kantha_embroidery.png"},
-            {"name": "Dokra Metal Art", "fun_fact": "West Bengal's Dokra has a unique 'netting' finish not seen in other states.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (899, 29999), "image_query": "West Bengal Dokra metal craft tribal art netting finish", "local_image": "/static/images/products/west_bengal_dokra_metal_art.png"},
+            {"name": "Baluchari Silk Saree", "fun_fact": "The borders show scenes from the Ramayana and Mahabharata — it's like a storybook you can wear!", "category": "Sarees", "production_time": "3-4 Weeks", "price_range": (12000, 45000), "image_query": "Baluchari silk saree mythological scene border West Bengal", "local_image": "/static/images/products/west_bengal_baluchari_silk_saree.png"},
+            {"name": "Terracotta Horse", "fun_fact": "The symbol of Bankura — once given as temple offerings, now a world-famous art icon.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (2500, 25000), "image_query": "Bankura terracotta horse traditional West Bengal art icon", "local_image": "/static/images/products/west_bengal_terracotta_horse.png"},
+            {"name": "Sholapith Decor", "fun_fact": "Looks like marble but is actually made from the bark of a spongey water plant.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (450, 8500), "image_query": "Sholapith traditional decorative item milky white West Bengal", "local_image": "/static/images/products/west_bengal_sholapith_decor.png"},
+            {"name": "Kantha Embroidery", "fun_fact": "Recycles old fabrics into masterpieces — an ancient eco-friendly art form.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (800, 5500), "image_query": "Kantha embroidery quilt stitch West Bengal textile", "local_image": "/static/images/products/west_bengal_kantha_embroidery.png"},
+            {"name": "Dokra Metal Art", "fun_fact": "West Bengal's Dokra has a unique 'netting' finish not seen in other states.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (150, 1500), "image_query": "West Bengal Dokra metal craft tribal art netting finish", "local_image": "/static/images/products/west_bengal_dokra_metal_art.png"},
             {"name": "Jute Craft Item", "fun_fact": "Called the 'Golden Fiber' — West Bengal produces enough to wrap the Earth 40 times!", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (299, 4999), "image_query": "West Bengal golden jute craft decorative basket", "local_image": "/static/images/products/west_bengal_jute_craft_item.png"}
         ],
         "stories": {
@@ -487,9 +487,9 @@ HERITAGE_DATA = {
     },
     "Jammu and Kashmir": {
         "items": [
-            {"name": "Pashmina Shawl", "fun_fact": "So fine it can pass through a wedding ring!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (1499, 45000), "image_query": "original Kashmir Pashmina shawl fine embroidery silk wool", "local_image": "/static/images/products/pashmina_shawl.png"},
-            {"name": "Papier Mache Box", "fun_fact": "Made from recycled paper and painted with brushes of just 2 hairs.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (399, 8999), "image_query": "Kashmir Papier Mache box hand painted floral pattern", "local_image": "/static/images/products/jammu_and_kashmir_papier_mache_box.png"},
-            {"name": "Walnut Wood Carving", "fun_fact": "The wood is seasoned for 4 years before a single carve is made.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1499, 45000), "image_query": "Kashmiri walnut wood carving tray intricate leaves design", "local_image": "/static/images/products/jammu_and_kashmir_walnut_wood_carving.png"},
+            {"name": "Pashmina Shawl", "fun_fact": "So fine it can pass through a wedding ring!", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (85000, 350000), "image_query": "original Kashmir Pashmina shawl fine embroidery silk wool", "local_image": "/static/images/products/pashmina_shawl.png"},
+            {"name": "Papier Mache Box", "fun_fact": "Made from recycled paper and painted with brushes of just 2 hairs.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (1500, 45000), "image_query": "Kashmir Papier Mache box hand painted floral pattern", "local_image": "/static/images/products/jammu_and_kashmir_papier_mache_box.png"},
+            {"name": "Walnut Wood Carving", "fun_fact": "The wood is seasoned for 4 years before a single carve is made.", "category": "Handicraft", "production_time": "4-7 Days", "price_range": (8000, 55000), "image_query": "Kashmiri walnut wood carving tray intricate leaves design", "local_image": "/static/images/products/jammu_and_kashmir_walnut_wood_carving.png"},
             {"name": "Kashmir Saffron", "fun_fact": "Takes 75,000 flowers to produce just 200 grams of the final product!", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (1999, 24999), "image_query": "original Kashmir Saffron dried flower stigma red precious spice", "local_image": "/static/images/products/jammu_and_kashmir_kashmir_saffron.png"},
             {"name": "Copperware (Kashmir)", "fun_fact": "Engraved by hand using the 'Naqash' style — look for the master's signature.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (1299, 35000), "image_query": "Kashmiri hand hammered copper Samovar vessel traditional", "local_image": "/static/images/products/jammu_and_kashmir_copperware_(kashmir).png"},
             {"name": "Traditional Pheran", "fun_fact": "Features 'Tilla' embroidery which uses real silver-plated thread.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (2499, 19999), "image_query": "traditional Kashmir Pheran velvet with tilla embroidery dress", "local_image": "/static/images/products/jammu_and_kashmir_traditional_pheran.png"}
@@ -505,10 +505,10 @@ HERITAGE_DATA = {
     },
     "Ladakh": {
         "items": [
-            {"name": "Tibetan Style Jewelry", "fun_fact": "Turquoise stones were often traded for horses in ancient Ladakh!", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (1499, 24999), "image_query": "Tibetan style silver jewelry turquoise coral stone Ladakh Perak", "local_image": "/static/images/products/ladakh_tibetan_style_jewelry.png"},
-            {"name": "Handmade Woolen Rugs", "fun_fact": "Woven with enough tension to last 60 years of use in rocky monasteries.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (4999, 85000), "image_query": "Ladakh handmade woolen rug traditional Tibetan design", "local_image": "/static/images/products/ladakh_handmade_woolen_rugs.png"},
-            {"name": "Prayer Wheels", "fun_fact": "Inside each wheel is a paper with 1000 prayers written on it.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (499, 12999), "image_query": "Buddhist Tibetan prayer wheel brass Ladakh temple", "local_image": "/static/images/products/ladakh_prayer_wheels.png"},
-            {"name": "Apricot Kernel Oil", "fun_fact": "The traditional 'beauty secret' of the high-altitude Ladakhi women.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (499, 2499), "image_query": "Ladakh organic apricot kernel oil natural skin care harvest", "local_image": "/static/images/products/ladakh_apricot_kernel_oil.png"},
+            {"name": "Tibetan Style Jewelry", "fun_fact": "Turquoise stones were often traded for horses in ancient Ladakh!", "category": "Jewellery", "production_time": "1-2 Weeks", "price_range": (15000, 200000), "image_query": "Tibetan style silver jewelry turquoise coral stone Ladakh Perak", "local_image": "/static/images/products/ladakh_tibetan_style_jewelry.png"},
+            {"name": "Handmade Woolen Rugs", "fun_fact": "Woven with enough tension to last 60 years of use in rocky monasteries.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (5000, 65000), "image_query": "Ladakh handmade woolen rug traditional Tibetan design", "local_image": "/static/images/products/ladakh_handmade_woolen_rugs.png"},
+            {"name": "Prayer Wheels", "fun_fact": "Inside each wheel is a paper with 1000 prayers written on it.", "category": "Art", "production_time": "2-3 Weeks", "price_range": (2500, 9500), "image_query": "Buddhist Tibetan prayer wheel brass Ladakh temple", "local_image": "/static/images/products/ladakh_prayer_wheels.png"},
+            {"name": "Apricot Kernel Oil", "fun_fact": "The traditional 'beauty secret' of the high-altitude Ladakhi women.", "category": "Heritage", "production_time": "1-2 Weeks", "price_range": (1500, 12000), "image_query": "Ladakh organic apricot kernel oil natural skin care harvest", "local_image": "/static/images/products/ladakh_apricot_kernel_oil.png"},
             {"name": "Metal Butter Lamps", "fun_fact": "Silver lamps that stay lit for 24 hours in high-altitude freezing temperatures.", "category": "Home Decor", "production_time": "5-7 Days", "price_range": (1999, 14999), "image_query": "Ladakh traditional Tibetan silver butter lamp Chot Me monastery", "local_image": "/static/images/products/ladakh_metal_butter_lamps.png"},
             {"name": "Handwovens", "fun_fact": "Nettle fiber weaving is so strong it was used for mountain climbing ropes.", "category": "Textiles", "production_time": "1-2 Weeks", "price_range": (999, 7999), "image_query": "traditional Ladakh yak wool weaving handloom textile", "local_image": "/static/images/products/ladakh_handwovens.png"}
         ],
@@ -521,4 +521,349 @@ HERITAGE_DATA = {
             "Handwovens": "Ladakh's nomadic 'Changpa' tribe has balanced life and weaving for over a millennium, using portable looms."
         }
     }
+,
+    "Manipur": {
+        "items": [
+            {
+                "name": "Bamboo Decor", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "20 – 45 Hours", 
+                "price_range": (2500, 7500), 
+                "image_query": "Manipur Bamboo Decor traditional craft", 
+                "local_image": "/static/images/products/manipur_bamboo_decor.jpg"
+            },            {
+                "name": "Moirang Phee Saree", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "120 – 200 Hours", 
+                "price_range": (6500, 22000), 
+                "image_query": "Manipur Moirang Phee Saree traditional craft", 
+                "local_image": "/static/images/products/manipur_moirang_phee_saree.jpg"
+            },            {
+                "name": "Bead Jewellery", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "10 – 25 Hours", 
+                "price_range": (1200, 5500), 
+                "image_query": "Manipur Bead Jewellery traditional craft", 
+                "local_image": "/static/images/products/manipur_bead_jewellery.jpg"
+            },            {
+                "name": "Handwoven Textiles", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "80 – 150 Hours", 
+                "price_range": (3200, 8500), 
+                "image_query": "Manipur Handwoven Textiles traditional craft", 
+                "local_image": "/static/images/products/manipur_handwoven_textiles.jpg"
+            },            {
+                "name": "Bamboo Toys", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "5 – 12 Hours", 
+                "price_range": (450, 1500), 
+                "image_query": "Manipur Bamboo Toys traditional craft", 
+                "local_image": "/static/images/products/manipur_bamboo_toys.jpg"
+            },            {
+                "name": "Traditional Patterns", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "N/A", 
+                "price_range": (0, 0), 
+                "image_query": "Manipur Traditional Patterns traditional craft", 
+                "local_image": "/static/images/products/manipur_traditional_patterns.jpg"
+            }
+        ],
+        "stories": {
+            "Bamboo Decor": "Uses indigenous techniques (no nails). Pieces are joined with bamboo pegs (Pungjei) and cane splits, making them modular and highly durable.",            "Moirang Phee Saree": "Features the Pheejin (temple) motif, representing the fangs of the serpent god Pakhangba. Woven on a fly-shuttle or throw-shuttle loom with extreme care.",            "Bead Jewellery": "Tribal beads (Tangkhul/Kabui) indicate lineage and clan. Authentic pieces use glass, shell, and seeds; 2026 prices reflect the rarity of specific 'heirloom' beads.",            "Handwoven Textiles": "Woven on Loin Looms (Backstrap looms) while sitting on the floor. This provides high tension, creating a dense, 'stiff' fabric that lasts for decades.",            "Bamboo Toys": "Includes toy water-pumps (Pishkari) and floating figurines. Natural bamboo is hollow and buoyant, designed specifically for children to use near the valley's many ponds.",            "Traditional Patterns": "Patterns like Hijamayang (boat-like) or Namthang-khut-hut were historically reserved for royalty. Buying these requires a premium for the complex 'extra-weft' work."
+        }
+    },
+    "Delhi": {
+        "items": [
+            {
+                "name": "Meenakari Jewellery", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "30 – 120 Hours", 
+                "price_range": (15000, 250000), 
+                "image_query": "Delhi Meenakari Jewellery traditional craft", 
+                "local_image": "/static/images/products/delhi_meenakari_jewellery.jpeg"
+            },            {
+                "name": "Zardozi Decor/Panels", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "80 – 300 Hours", 
+                "price_range": (12000, 150000), 
+                "image_query": "Delhi Zardozi Decor/Panels traditional craft", 
+                "local_image": "/static/images/products/delhi_zardozi_decor_panels.jpeg"
+            },            {
+                "name": "Mughal Silk Saree", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "150 – 400 Hours", 
+                "price_range": (25000, 180000), 
+                "image_query": "Delhi Mughal Silk Saree traditional craft", 
+                "local_image": "/static/images/products/delhi_mughal_silk_saree.jpeg"
+            },            {
+                "name": "Traditional Wooden Toys", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "10 – 30 Hours", 
+                "price_range": (650, 4500), 
+                "image_query": "Delhi Traditional Wooden Toys traditional craft", 
+                "local_image": "/static/images/products/delhi_traditional_wooden_toys.jpeg"
+            }
+        ],
+        "stories": {
+            "Meenakari Jewellery": "Enamel work on gold or silver. Authentic Delhi Meenakari uses traditional furnaces and natural crushed-stone colors.",            "Zardozi Decor/Panels": "Heavy metallic embroidery (often with real gold-wrapped thread) on velvet or silk. Once only for royalty.",            "Mughal Silk Saree": "Known for dense floral Butis. Every saree is essentially a piece of historical narrative.",            "Traditional Wooden Toys": "Crafted in old city clusters. These are often miniature replicas of historical Mughal monuments or instruments."
+        }
+    },
+    "Chandigarh": {
+        "items": [
+            {
+                "name": "Terracotta Decor", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "12 – 25 Hours", 
+                "price_range": (800, 4200), 
+                "image_query": "Chandigarh Terracotta Decor traditional craft", 
+                "local_image": "/static/images/products/chandigarh_terracotta_decor.webp"
+            },            {
+                "name": "Phulkari Fabric", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "50 – 200 Hours", 
+                "price_range": (2500, 15000), 
+                "image_query": "Chandigarh Phulkari Fabric traditional craft", 
+                "local_image": "/static/images/products/chandigarh_phulkari_fabric.webp"
+            },            {
+                "name": "Minimal Silver Jewellery", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "15 – 35 Hours", 
+                "price_range": (2500, 12000), 
+                "image_query": "Chandigarh Minimal Silver Jewellery traditional craft", 
+                "local_image": "/static/images/products/chandigarh_minimal_silver_jewellery.webp"
+            },            {
+                "name": "Handloom Saree", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "40 – 100 Hours", 
+                "price_range": (4500, 12000), 
+                "image_query": "Chandigarh Handloom Saree traditional craft", 
+                "local_image": "/static/images/products/chandigarh_handloom_saree.jpg"
+            }
+        ],
+        "stories": {
+            "Terracotta Decor": "Modernized Punjabi forms. In 2026, many pieces feature the 'Open Hand' symbol or abstract geometric motifs.",            "Phulkari Fabric": "Authentic hand-embroidery. In Chandigarh, Phulkari is often applied to modern silhouettes like trench coats or stoles.",            "Minimal Silver Jewellery": "Sleek, contemporary designs that use less metal than traditional Punjabi sets but require more precise polishing.",            "Handloom Saree": "Typically blends cotton and silk. The Chandigarh aesthetic favors pastel shades and subtle borders."
+        }
+    },
+    "Andaman and Nicobar Islands": {
+        "items": [
+            {
+                "name": "Shell Decor", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "10 – 30 Hours", 
+                "price_range": (1200, 5500), 
+                "image_query": "Andaman and Nicobar Islands Shell Decor traditional craft", 
+                "local_image": "/static/images/products/andaman_and_nicobar_islands_shell_decor.jpg"
+            },            {
+                "name": "Handloom Cotton Saree", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "40 – 80 Hours", 
+                "price_range": (3500, 8500), 
+                "image_query": "Andaman and Nicobar Islands Handloom Cotton Saree traditional craft", 
+                "local_image": "/static/images/products/andaman_and_nicobar_islands_handloom_cotton_saree.jpg"
+            },            {
+                "name": "Shell Jewellery", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "5 – 15 Hours", 
+                "price_range": (500, 3000), 
+                "image_query": "Andaman and Nicobar Islands Shell Jewellery traditional craft", 
+                "local_image": "/static/images/products/andaman_and_nicobar_islands_shell_jewellery.webp"
+            },            {
+                "name": "Woven Mats", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "15 – 40 Hours", 
+                "price_range": (400, 1800), 
+                "image_query": "Andaman and Nicobar Islands Woven Mats traditional craft", 
+                "local_image": "/static/images/products/andaman_and_nicobar_islands_woven_mats.webp"
+            },            {
+                "name": "Wooden Padauk Toys", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "8 – 20 Hours", 
+                "price_range": (500, 3000), 
+                "image_query": "Andaman and Nicobar Islands Wooden Padauk Toys traditional craft", 
+                "local_image": ""
+            }
+        ],
+        "stories": {
+            "Shell Decor": "Includes mother-of-pearl lamps and wall hangings. Price depends on shell rarity and polishing depth.",            "Handloom Cotton Saree": "Woven specifically for coastal humidity; uses very high thread count for lightness and durability.",            "Shell Jewellery": "Made from naturally washed-up shells. 'Statement' necklaces with rare cone shells command higher prices.",            "Woven Mats": "Hand-braided using local natural fibers. Valued for their cooling properties in tropical heat.",            "Wooden Padauk Toys": "Padauk wood is rare and red-hued. These toys are designed to withstand moisture and sea salt air."
+        }
+    },
+    "Dadra and Nagar Haveli and Daman and Diu": {
+        "items": [
+            {
+                "name": "Warli Art Items", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "12 – 40 Hours", 
+                "price_range": (1500, 8500), 
+                "image_query": "D", 
+                "local_image": "/static/images/products/dadra_and_nagar_haveli_and_daman_and_diu_warli_art_items.jpg"
+            },            {
+                "name": "Bamboo Decor", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "20 – 45 Hours", 
+                "price_range": (850, 4500), 
+                "image_query": "D", 
+                "local_image": "/static/images/products/dadra_and_nagar_haveli_and_daman_and_diu_bamboo_decor.jpg"
+            },            {
+                "name": "Tribal Jewelry", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "10 – 25 Hours", 
+                "price_range": (1200, 5500), 
+                "image_query": "D", 
+                "local_image": "/static/images/products/dadra_and_nagar_haveli_and_daman_and_diu_tribal_jewelry.png"
+            },            {
+                "name": "Handloom Fabric", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "60 – 120 Hours", 
+                "price_range": (1200, 3500), 
+                "image_query": "D", 
+                "local_image": "/static/images/products/dadra_and_nagar_haveli_and_daman_and_diu_handloom_fabric.jpg"
+            },            {
+                "name": "Wooden Toys", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "8 – 20 Hours", 
+                "price_range": (500, 2500), 
+                "image_query": "D", 
+                "local_image": "/static/images/products/dadra_and_nagar_haveli_and_daman_and_diu_wooden_toys.jpg"
+            },            {
+                "name": "Leather Slippers", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "10 – 15 Hours", 
+                "price_range": (800, 2200), 
+                "image_query": "D", 
+                "local_image": ""
+            }
+        ],
+        "stories": {
+            "Warli Art Items": "Authentic Warli is painted with rice paste on mud-plastered walls or cloth. Prices reflect the 'ritual narrative' of the Tarpa dance or wedding circles.",            "Bamboo Decor": "Includes Chhabdi (storage baskets) and lamps. Uses mechanical joinery with bamboo slivers; high-quality pieces have zero visible glue or nails.",            "Tribal Jewelry": "Made by Kokna or Dhodia artisans using glass beads, seeds, and white metal. Authentic pieces are 'weight-heavy' to signify social status.",            "Handloom Fabric": "Tribal weaves are characterized by earthy tones (indigo, ochre) and high-breathability cotton, designed for the humid coastal heat.",            "Wooden Toys": "Often carved from Ardu or teak-wood. In Diu, you may find unique decorative items made from legally sourced tortoise/sea shells.",            "Leather Slippers": "A world-famous export from the region. These are hand-stitched and exceptionally durable, built for forest and rocky terrains."
+        }
+    },
+    "Lakshadweep": {
+        "items": [
+            {
+                "name": "Coir Baskets/Mats", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "15 – 40 Hours", 
+                "price_range": (450, 3500), 
+                "image_query": "Lakshadweep Coir Baskets/Mats traditional craft", 
+                "local_image": "/static/images/products/lakshadweep_coir_baskets_mats.jpeg"
+            },            {
+                "name": "Kachi (Traditional Saree)", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "60 – 120 Hours", 
+                "price_range": (4500, 15000), 
+                "image_query": "Lakshadweep Kachi (Traditional Saree) traditional craft", 
+                "local_image": ""
+            },            {
+                "name": "Shell Jewellery", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "10 – 30 Hours", 
+                "price_range": (500, 5500), 
+                "image_query": "Lakshadweep Shell Jewellery traditional craft", 
+                "local_image": "/static/images/products/lakshadweep_shell_jewellery.jpeg"
+            },            {
+                "name": "Coconut Shell Craft/Toys", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "8 – 20 Hours", 
+                "price_range": (350, 2500), 
+                "image_query": "Lakshadweep Coconut Shell Craft/Toys traditional craft", 
+                "local_image": "/static/images/products/lakshadweep_coconut_shell_craft_toys.jpeg"
+            },            {
+                "name": "Lacquer Work", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "20 – 50 Hours", 
+                "price_range": (1200, 6500), 
+                "image_query": "Lakshadweep Lacquer Work traditional craft", 
+                "local_image": ""
+            },            {
+                "name": "Fishbone Craft", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "40 – 100 Hours", 
+                "price_range": (2000, 12000), 
+                "image_query": "Lakshadweep Fishbone Craft traditional craft", 
+                "local_image": ""
+            }
+        ],
+        "stories": {
+            "Coir Baskets/Mats": "Made from 'Golden Fiber' (coconut husk). The labor involves retting the husk in sea water for months before weaving, making it naturally rot-resistant.",            "Kachi (Traditional Saree)": "A rectangular unstitched wrap (often silk). The red silk Kachi with black borders is the festive standard, valued for its elegant simplicity and Islamic heritage.",            "Shell Jewellery": "Uses conchs and cowries. In 2026, authentic pieces are polished using traditional oils; if it looks like cheap plastic or lacks natural weight, it's a replica.",            "Coconut Shell Craft/Toys": "Shells are hand-carved into ladles, lamps, or toys. The price reflects the 'Mirror Finish'—achieved by sanding with local sand and polishing with coconut oil.",            "Lacquer Work": "Often applied to wooden items or toys. Uses natural resins to create a high-gloss, vibrant finish that is famously durable.",            "Fishbone Craft": "A rare art of transforming fish bones into delicate jewelry or decor. Highly labor-intensive due to the cleaning and fragile nature of the material."
+        }
+    },
+    "Puducherry": {
+        "items": [
+            {
+                "name": "Papier Mâché Decor", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "30 – 100 Hours", 
+                "price_range": (800, 12000), 
+                "image_query": "Puducherry Papier Mâché Decor traditional craft", 
+                "local_image": ""
+            },            {
+                "name": "Handloom Cotton Saree", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "40 – 90 Hours", 
+                "price_range": (2800, 9500), 
+                "image_query": "Puducherry Handloom Cotton Saree traditional craft", 
+                "local_image": "/static/images/products/puducherry_handloom_cotton_saree.jpeg"
+            },            {
+                "name": "Minimalist Jewelry", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "15 – 40 Hours", 
+                "price_range": (1500, 8500), 
+                "image_query": "Puducherry Minimalist Jewelry traditional craft", 
+                "local_image": ""
+            },            {
+                "name": "Indo-French Textiles", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "Varies", 
+                "price_range": (650, 2200), 
+                "image_query": "Puducherry Indo-French Textiles traditional craft", 
+                "local_image": "/static/images/products/puducherry_indo-french_textiles.jpeg"
+            },            {
+                "name": "Handcrafted Wooden Toys", 
+                "fun_fact": "Crafted with traditional techniques passed down for generations.", 
+                "category": "Handicrafts", 
+                "production_time": "12 – 30 Hours", 
+                "price_range": (450, 3200), 
+                "image_query": "Puducherry Handcrafted Wooden Toys traditional craft", 
+                "local_image": "/static/images/products/puducherry_handcrafted_wooden_toys.jpeg"
+            }
+        ],
+        "stories": {
+            "Papier Mâché Decor": "Uses a centuries-old French technique. High-end pieces are finished with a marble-like smoothness and hand-painted in muted pastel or vibrant ritual tones.",            "Handloom Cotton Saree": "Known for their soft, high-thread-count cotton. The 'Auroville' influence has introduced contemporary geometric borders to traditional weaves.",            "Minimalist Jewelry": "Often features matte-finished silver, terra-cotta, or leather. The focus is on clean lines and 'wearability' rather than heavy gold.",            "Indo-French Textiles": "A mix of organic cotton and linen. Often dyed using natural indigo or madder, reflecting the region's history as a French textile export hub.",            "Handcrafted Wooden Toys": "Typically made from Vagai or Teak. They feature a 'buffed' smooth finish rather than the glossy lacquer seen in other states."
+        }
+    },
 }
