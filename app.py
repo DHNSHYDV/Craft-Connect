@@ -27,7 +27,17 @@ SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 # Trigger Reload for Template Update 5
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
+
+# Vercel-specific DB handling (Read-only file system workarounds)
+is_vercel = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
+if is_vercel:
+    # Use /tmp for writable SQLite db (Ephemeral, but works for demo)
+    db_path = "/tmp/site.db"
+    # Optional: copy existing DB if we want pre-populated data (not doing it here to keep it simple/safe)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 from models import db, User, Order, OrderItem
