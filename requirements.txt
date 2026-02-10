@@ -3,7 +3,7 @@ gunicorn
 
 # Core dependencies
 Flask
-dotenv
+python-dotenv
 requests
 gdown
 flask-sqlalchemy
@@ -12,8 +12,5 @@ groq
 google-generativeai
 huggingface_hub
 
-# Heavy dependencies
-torch
-torchvision
-transformers
-accelerate
+# Note: torch, transformers, accelerate are EXCLUDED to fit Vercel 250MB limit.
+# Local AI features (GLM-OCR, Whisper) will be disabled.

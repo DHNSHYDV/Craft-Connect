@@ -287,7 +287,7 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
 
 def generate_image_pollinations(prompt_text):
-    """Generate image via Pollinations.ai (New Gen API). Returns (data_url, error_message)."""
+    """Generate image via Pollinations.ai (Returns Direct URL). Optimized for Vercel."""
     try:
         import urllib.parse
         import random
@@ -296,37 +296,17 @@ def generate_image_pollinations(prompt_text):
         seed = random.randint(0, 999999)
         base_url = "https://gen.pollinations.ai/image"
         
-        # Base url without key
+        # optimized: Return URL directly to client (Client-side rendering)
+        # This prevents Vercel timeout (10s limit) by avoiding server-side download.
         url = f"{base_url}/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
         
         api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
-        
-        # Try with API Key first (Query Param is often more reliable for GET)
         if api_key:
-             print(f"DEBUG v3: Using Pollinations Key ({api_key[:6]}...) via query param")
-             auth_url = url + f"&key={api_key}"
-             try:
-                 response = requests.get(auth_url, timeout=60)
-                 response.raise_for_status()
-                 image_bytes = response.content
-                 if len(image_bytes) >= 100:
-                     b64 = base64.b64encode(image_bytes).decode("utf-8")
-                     return f"data:image/jpeg;base64,{b64}", None
-                 print("DEBUG v3: Pollinations response too small with key.")
-             except Exception as e:
-                 print(f"DEBUG v3: Authenticated Pollinations failed ({e}). Falling back to unauthenticated...")
-        
-        # Fallback to Unauthenticated
-        print("DEBUG v3: Attempting unauthenticated Pollinations...")
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
-        image_bytes = response.content
-        if len(image_bytes) < 100:
-             return None, "Pollinations image too small (v3)"
-        b64 = base64.b64encode(image_bytes).decode("utf-8")
-        return f"data:image/jpeg;base64,{b64}", None
+             url = url + f"&key={api_key}"
+             
+        return url, None
     except Exception as e:
-        print(f"DEBUG v3: ALL Pollinations attempts failed: {e}")
+        print(f"DEBUG v3: URL generation failed: {e}")
         return None, f"Pollinations error (v3): {str(e)}"
 
 
