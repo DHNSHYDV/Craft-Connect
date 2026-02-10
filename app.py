@@ -357,7 +357,7 @@ def generate_image_pollinations(prompt_text):
         # v3 Fix: Aggressive encoding
         encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe='')
         seed = random.randint(0, 999999)
-        base_url = "https://gen.pollinations.ai/image"
+        base_url = "https://image.pollinations.ai/prompt"
         
         # optimized: Return URL directly to client (Client-side rendering)
         # This prevents Vercel timeout (10s limit) by avoiding server-side download.
@@ -757,6 +757,27 @@ def generate_design():
             "error": f"Internal Server Crash: {str(e)}",
             "traceback": error_detail
         }), 500
+
+
+@app.route('/api/proxy-image')
+def proxy_image():
+    """Proxy image requests to bypass CORS/Referer blocks on Render."""
+    url = request.args.get('url')
+    if not url:
+        return "No URL provided", 400
+    
+    try:
+        # User-Agent to look like a real browser (avoids 403 blocks)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        r = requests.get(url, headers=headers, stream=True, timeout=20)
+        
+        # Pass along the content type (e.g., image/jpeg)
+        return make_response(r.content, r.status_code, {'Content-Type': r.headers.get('Content-Type', 'image/jpeg')})
+    except Exception as e:
+        print(f"Proxy error for {url}: {e}")
+        return f"Proxy failed: {e}", 502
 
 
 # --- Whisper speech-to-text (optional, for voice page when browser speech API fails) ---
@@ -1361,7 +1382,7 @@ def products():
                 image_url = item['local_image']
             else:
                 img_query = item.get('image_query', f"{state} {item['name']} Indian handicraft")
-                image_url = f"https://pollinations.ai/p/{urllib.parse.quote(img_query)}?width=800&height=800&nologo=true&seed={len(item['name'])}"
+                image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_query)}?width=800&height=800&nologo=true&seed={len(item['name'])}"
             
             all_products.append({
                 "id": product_id,
@@ -1427,7 +1448,7 @@ def product_detail(product_id):
     if 'local_image' in found_item:
         image_url = found_item['local_image']
     else:
-        image_url = f"https://pollinations.ai/p/{urllib.parse.quote(img_query)}?width=1024&height=1024&nologo=true&seed={len(found_item['name'])}"
+        image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_query)}?width=1024&height=1024&nologo=true&seed={len(found_item['name'])}"
 
     product = {
         "id": product_id,
@@ -1457,7 +1478,7 @@ def product_detail(product_id):
                     r_image_url = i['local_image']
                 else:
                     r_img_query = i.get('image_query', f"{s_name} {i['name']} Indian handicraft")
-                    r_image_url = f"https://pollinations.ai/p/{urllib.parse.quote(r_img_query)}?width=400&height=400&nologo=true&seed={len(i['name'])}"
+                    r_image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(r_img_query)}?width=400&height=400&nologo=true&seed={len(i['name'])}"
                 
                 related.append({
                     "id": r_id,

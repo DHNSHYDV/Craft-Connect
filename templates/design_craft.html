@@ -199,37 +199,54 @@
             console.log('🎨 Generating image directly from browser...');
             const encoded = encodeURIComponent(finalPrompt).replace(/%2F/g, "%252F"); // Double encode slashes
             const seed = Math.floor(Math.random() * 1000000);
-            const imageUrl = `https://gen.pollinations.ai/image/${encoded}?width=1024&height=1024&model=flux&nologo=true&seed=${seed}`;
+            const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&model=flux&nologo=true&seed=${seed}`;
 
-            // Pre-load image to ensure it works before showing
+            // Pre-load image: Direct -> Proxy Fallback
             const imgLoader = new Image();
-            imgLoader.src = imageUrl;
 
-            await new Promise((resolve, reject) => {
-                imgLoader.onload = resolve;
-                imgLoader.onerror = () => reject(new Error("AI service is busy. Please try again in a moment."));
-                // Timeout if it takes longer than 90s (browser limit is much higher than Render)
-                setTimeout(() => reject(new Error("Generation timed out. Please try a simpler description.")), 90000);
+            const loadImagePromise = new Promise((resolve, reject) => {
+                // 1. Try Direct Load
+                imgLoader.onload = () => resolve(imgLoader.src);
+
+                imgLoader.onerror = () => {
+                    console.warn("Direct load failed. Trying backend proxy...");
+                    // 2. Try Proxy Fallback
+                    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
+                    const proxyImg = new Image();
+                    proxyImg.onload = () => resolve(proxyUrl);
+                    proxyImg.onerror = () => reject(new Error("Image generation failed (Proxy also failed)."));
+                    proxyImg.src = proxyUrl;
+                };
+
+                imgLoader.src = imageUrl;
+
+                // Timeout Safety (45s total)
+                setTimeout(() => reject(new Error("Generation timed out. Please try again.")), 45000);
             });
+
+            const finalSrc = await loadImagePromise;
 
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
             resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
             resultDesc.textContent = `A unique AI-generated design based on your vision.`;
-            generatedImage.src = imageUrl;
+            generatedImage.src = finalSrc;
             outputResult.scrollIntoView({ behavior: 'smooth' });
 
         } catch (err) {
             console.error("Generation failed", err);
 
-            // Fallback Image
+            // Fallback Image (Static)
             generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
             resultTitle.textContent = "Design Visualization (Sample)";
-            resultDesc.textContent = "We couldn't generate a custom image right now, but here is a similar concept.";
+            resultDesc.textContent = "We couldn't generate a custom image right now (Server Busy), but here is a similar concept.";
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
 
-            alert("Notice: " + err.message);
+            // Only alert if it's not a timeout (timeouts are self-explanatory)
+            if (!err.message.includes("timed out")) {
+                console.log("Error details:", err.message);
+            }
         } finally {
             generateBtn.disabled = false;
             generateBtn.querySelector('.btn-text').textContent = "Generate design";
