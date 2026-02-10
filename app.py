@@ -40,12 +40,21 @@ else:
 
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import db, User, Order, OrderItem
-
-# Import Data
-from data.products_heritage import HERITAGE_DATA
-
-db.init_app(app)
+# Fail-safe Import Strategy for Vercel Debugging
+try:
+    from models import db, User, Order, OrderItem
+    # Import Data
+    from data.products_heritage import HERITAGE_DATA
+    db.init_app(app)
+    print("✅ Database and Models loaded successfully")
+except Exception as e:
+    print(f"❌ CRITICAL IMPORT ERROR: {e}")
+    # Define dummy objects to prevents NameError later in code
+    db = None
+    User = None
+    Order = None
+    OrderItem = None
+    HERITAGE_DATA = {}
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
