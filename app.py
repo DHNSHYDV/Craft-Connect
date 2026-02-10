@@ -289,33 +289,45 @@ HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
 def generate_image_pollinations(prompt_text):
     """Generate image via Pollinations.ai (New Gen API). Returns (data_url, error_message)."""
     try:
-        # Pollinations uses a simple get URL for generation
         import urllib.parse
-        encoded_prompt = urllib.parse.quote(prompt_text[:1000])
-        # Use a random seed to ensure variety
         import random
+        # v3 Fix: Aggressive encoding
+        encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe='')
         seed = random.randint(0, 999999)
-        
-        # CHANGED: New endpoint gen.pollinations.ai
         base_url = "https://gen.pollinations.ai/image"
+        
+        # Base url without key
         url = f"{base_url}/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
         
-        headers = {}
-        api_key = os.getenv("POLLINATIONS_API_KEY")
+        api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
+        
+        # Try with API Key first (Query Param is often more reliable for GET)
         if api_key:
-             headers["Authorization"] = f"Bearer {api_key}"
-             # Also append key to URL just in case, as some versions prefer it
-             # url += f"&key={api_key}" 
-
-        response = requests.get(url, headers=headers, timeout=60)
+             print(f"DEBUG v3: Using Pollinations Key ({api_key[:6]}...) via query param")
+             auth_url = url + f"&key={api_key}"
+             try:
+                 response = requests.get(auth_url, timeout=60)
+                 response.raise_for_status()
+                 image_bytes = response.content
+                 if len(image_bytes) >= 100:
+                     b64 = base64.b64encode(image_bytes).decode("utf-8")
+                     return f"data:image/jpeg;base64,{b64}", None
+                 print("DEBUG v3: Pollinations response too small with key.")
+             except Exception as e:
+                 print(f"DEBUG v3: Authenticated Pollinations failed ({e}). Falling back to unauthenticated...")
+        
+        # Fallback to Unauthenticated
+        print("DEBUG v3: Attempting unauthenticated Pollinations...")
+        response = requests.get(url, timeout=60)
         response.raise_for_status()
         image_bytes = response.content
         if len(image_bytes) < 100:
-             return None, "Pollinations image too small"
+             return None, "Pollinations image too small (v3)"
         b64 = base64.b64encode(image_bytes).decode("utf-8")
         return f"data:image/jpeg;base64,{b64}", None
     except Exception as e:
-        return None, f"Pollinations error: {str(e)}"
+        print(f"DEBUG v3: ALL Pollinations attempts failed: {e}")
+        return None, f"Pollinations error (v3): {str(e)}"
 
 
 def generate_image_design(prompt_text):
