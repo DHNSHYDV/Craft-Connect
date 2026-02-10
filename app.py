@@ -373,7 +373,7 @@ def generate_image_pollinations(prompt_text):
         encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe="")
         model = POLLINATIONS_IMAGE_MODELS[0]  # first in priority list
         seed = random.randint(0, 999999)
-        base_url = "https://image.pollinations.ai/prompt"
+        base_url = "https://pollinations.ai/p"
 
         url = (
             f"{base_url}/{encoded_prompt}"
