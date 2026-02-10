@@ -5,12 +5,11 @@ gunicorn
 Flask
 python-dotenv
 requests
-gdown
 flask-sqlalchemy
 flask-login
 groq
-google-generativeai
-huggingface_hub
 
-# Note: torch, transformers, accelerate are EXCLUDED to fit Vercel 250MB limit.
-# Local AI features (GLM-OCR, Whisper) will be disabled.
+# Note:
+# - torch, transformers, accelerate EXCLUDED (Size limit)
+# - google-generativeai EXCLUDED (Replaced with internal REST client to save 150MB)
+# - huggingface_hub EXCLUDED (Not needed for simple API calls)

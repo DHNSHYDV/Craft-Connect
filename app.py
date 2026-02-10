@@ -43,10 +43,43 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
 
 # Configure Gemini AI for chatbot
-import google.generativeai as genai
+# Configure Gemini AI for chatbot (Lightweight Vercel Version)
+# import google.generativeai as genai (REMOVED: Too heavy for Vercel)
+class GeminiClient:
+    """Lightweight wrapper for Gemini API to avoid 150MB+ grpc dependencies."""
+    def __init__(self, api_key, model="gemini-1.5-flash"):
+        self.api_key = api_key
+        self.model = model
+        self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    def generate_content(self, prompt):
+        if not self.api_key:
+            return type('obj', (object,), {'text': "Error: AI key missing."})
+        
+        headers = {"Content-Type": "application/json"}
+        data = {
+            "contents": [{"parts": [{"text": str(prompt)}]}]
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.base_url}?key={self.api_key}",
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            # mimic genai response object
+            text_result = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+            return type('obj', (object,), {'text': text_result})
+        except Exception as e:
+            print(f"Gemini API Error: {e}")
+            return type('obj', (object,), {'text': f"AI Error: {e}"})
+
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    chatbot_model = genai.GenerativeModel('gemini-pro')
+    # genai.configure(api_key=GEMINI_API_KEY)
+    chatbot_model = GeminiClient(GEMINI_API_KEY, model='gemini-pro')
 else:
     chatbot_model = None
 
