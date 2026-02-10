@@ -373,23 +373,52 @@ def generate_image_pollinations(prompt_text):
         encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe="")
         model = POLLINATIONS_IMAGE_MODELS[0]  # first in priority list
         seed = random.randint(0, 999999)
-        base_url = "https://pollinations.ai/p"
 
-        url = (
-            f"{base_url}/{encoded_prompt}"
-            f"?width=1024&height=1024&model={urllib.parse.quote(model)}"
-            f"&nologo=true&seed={seed}"
-        )
-
-        api_key = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINATION_API_KEY") or "").strip()
-        if api_key:
-            # Old endpoint still accepts key as query; this matches working browser URL style
-            url += f"&key={urllib.parse.quote(api_key)}"
-
-        return url, None
+        # Use local proxy to hide API key
+        params = {
+            'prompt': prompt_text[:1000],
+            'model': model,
+            'width': 1024,
+            'height': 1024,
+            'nologo': 'true',
+            'seed': seed
+        }
+        query_string = urllib.parse.urlencode(params)
+        return f"/api/image/gen?{query_string}", None
+            
     except Exception as e:
         print(f"Pollinations URL generation error: {e}")
         return None, f"Pollinations error: {str(e)[:200]}"
+
+
+@app.route('/api/image/gen')
+def proxy_pollinations_gen():
+    """Proxy request to gen.pollinations.ai with API Key (hidden from client)."""
+    prompt = request.args.get('prompt')
+    if not prompt:
+        return "Missing prompt", 400
+        
+    try:
+        api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
+        base_url = "https://gen.pollinations.ai/image"
+        
+        # Reconstruct query params regarding visual settings
+        # Note: gen.pollinations.ai expects params in query or path? 
+        # API docs say: /image/{prompt}?key=...
+        
+        encoded_prompt = urllib.parse.quote(prompt)
+        target_url = f"{base_url}/{encoded_prompt}"
+        
+        params = request.args.copy()
+        params.pop('prompt', None) # Remove prompt from query, it's in path
+        params['key'] = api_key
+        
+        resp = requests.get(target_url, params=params, stream=True, timeout=30)
+        return make_response(resp.content, resp.status_code, {'Content-Type': resp.headers.get('Content-Type', 'image/jpeg')})
+        
+    except Exception as e:
+        print(f"Pollinations Proxy Error: {e}")
+        return f"Image generation failed: {e}", 502
 
 
 def generate_image_design(prompt_text):
@@ -1991,7 +2020,10 @@ def get_artists():
         lname = rng.choice(last_names)
         
         # Use Pollinations for image if no real image
-        image_url = f"https://pollinations.ai/p/{urllib.parse.quote('Portrait of Indian artisan ' + gender + ' ' + item['state'] + ' ' + item['craft'])}?width=400&height=400&nologo=true&seed={i}"
+        # Use Pollinations for image if no real image
+        # Use local proxy to hide API key and ensure correct endpoint
+        p_text = 'Portrait of Indian artisan ' + gender + ' ' + item['state'] + ' ' + item['craft']
+        image_url = f"/api/image/gen?prompt={urllib.parse.quote(p_text)}&width=400&height=400&nologo=true&seed={i}"
         
         artists.append({
             'id': i + 1,

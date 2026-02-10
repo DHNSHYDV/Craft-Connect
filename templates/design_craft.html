@@ -195,67 +195,44 @@
         }
 
         generateBtn.disabled = true;
-        generateBtn.querySelector('.btn-text').textContent = "Creating masterpiece... (approx 30s)";
+        generateBtn.querySelector('.btn-text').textContent = "Creating masterpiece... (approx 15s)";
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         try {
-            // STEP 1: AI Prompt Refinement (Fast, safe for backend)
-            console.log('✨ Refining prompt with AI...');
-            let finalPrompt = `${selectedStyle} ${selectedMaterial} Indian handicraft: ${text}`;
-
-            try {
-                const refineRes = await fetch('/api/refine-design-prompt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: text, style: selectedStyle, material: selectedMaterial })
-                });
-                if (refineRes.ok) {
-                    const refineData = await refineRes.json();
-                    if (refineData.prompt) {
-                        finalPrompt = refineData.prompt;
-                        console.log('✅ AI Refinement complete');
-                    }
-                }
-            } catch (rErr) {
-                console.warn("Refinement failed, using original prompt", rErr);
-            }
-
-            // STEP 2: Direct Frontend Generation (Bypasses Render Timeout)
-            console.log('🎨 Generating image directly from browser...');
-            const encoded = encodeURIComponent(finalPrompt).replace(/%2F/g, "%252F"); // Double encode slashes
-            const seed = Math.floor(Math.random() * 1000000);
-            const imageUrl = `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=1024&model=flux&nologo=true&seed=${seed}`;
-
-            // Pre-load image: Direct -> Proxy Fallback
-            const imgLoader = new Image();
-
-            const loadImagePromise = new Promise((resolve, reject) => {
-                // 1. Try Direct Load
-                imgLoader.onload = () => resolve(imgLoader.src);
-
-                imgLoader.onerror = () => {
-                    console.warn("Direct load failed. Trying backend proxy...");
-                    // 2. Try Proxy Fallback
-                    const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(imageUrl)}`;
-                    const proxyImg = new Image();
-                    proxyImg.onload = () => resolve(proxyUrl);
-                    proxyImg.onerror = () => reject(new Error("Image generation failed (Proxy also failed)."));
-                    proxyImg.src = proxyUrl;
-                };
-
-                imgLoader.src = imageUrl;
-
-                // Timeout Safety (45s total)
-                setTimeout(() => reject(new Error("Generation timed out. Please try again.")), 45000);
+            console.log('🎨 Requesting generation via backend...');
+            const response = await fetch('/api/generate-design', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    description: text,
+                    style: selectedStyle,
+                    material: selectedMaterial
+                })
             });
 
-            const finalSrc = await loadImagePromise;
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || "Generation failed");
+            }
+
+            console.log('✅ Generation successful', data);
+
+            // Pre-load image
+            const imgLoader = new Image();
+            await new Promise((resolve, reject) => {
+                imgLoader.onload = resolve;
+                imgLoader.onerror = () => reject(new Error("Failed to load generated image"));
+                imgLoader.src = data.image_url;
+            });
 
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
-            resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
-            resultDesc.textContent = `A unique AI-generated design based on your vision.`;
-            // Update Specs
+
+            generatedImage.src = data.image_url;
+            resultTitle.textContent = data.title || `${selectedStyle} ${selectedMaterial} Artisan Concept`;
+            resultDesc.textContent = data.description || `A unique AI-generated design based on your vision.`;
+
             if (resMaterial) resMaterial.textContent = selectedMaterial;
             if (resStyle) resStyle.textContent = selectedStyle;
 
@@ -264,10 +241,10 @@
                 buyCustomBtn.onclick = () => {
                     if (typeof window.addToCart === 'function') {
                         window.addToCart({
-                            id: 'custom_' + seed,
+                            id: 'custom_' + Math.floor(Math.random() * 1000000),
                             name: `Custom ${selectedStyle} ${selectedMaterial} Design`,
                             price: 2999,
-                            image: finalSrc,
+                            image: data.image_url,
                             state: 'AI Studio',
                             quantity: 1
                         });
@@ -275,23 +252,11 @@
                     }
                 };
             }
-            generatedImage.src = finalSrc;
             outputResult.scrollIntoView({ behavior: 'smooth' });
 
         } catch (err) {
             console.error("Generation failed", err);
-
-            // Fallback Image (Static)
-            generatedImage.src = "https://images.unsplash.com/photo-1582201942988-13e60e4556ee?auto=format&fit=crop&q=80&w=1024";
-            resultTitle.textContent = "Design Visualization (Sample)";
-            resultDesc.textContent = "We couldn't generate a custom image right now (Server Busy), but here is a similar concept.";
-            outputPlaceholder.style.display = 'none';
-            outputResult.style.display = 'block';
-
-            // Only alert if it's not a timeout (timeouts are self-explanatory)
-            if (!err.message.includes("timed out")) {
-                console.log("Error details:", err.message);
-            }
+            alert("Could not generate design: " + err.message);
         } finally {
             generateBtn.disabled = false;
             generateBtn.querySelector('.btn-text').textContent = "Generate design";
