@@ -980,14 +980,31 @@ def build_chatbot_context(user_query=""):
     all_artists = get_artists() 
     found_artist_info = ""
     
+    # Check for specific artisan matches (Name, Craft, State)
+    matched_artisans = []
+    q_lower = user_query.lower()
+
     for artist in all_artists:
-        if artist['name'].lower() in user_query.lower():
-            found_artist_info += f"""
+        # Match by Name (e.g. "Vihaan"), Craft (e.g. "Kondapalli"), or State (e.g. "Andhra")
+        if (artist['name'].lower() in q_lower) or \
+           (artist['style'].lower() in q_lower) or \
+           (artist['state'].lower() in q_lower):
+            matched_artisans.append(artist)
+    
+    # If query is generic about "artists" or "artisans" but no specific match found, show a sample
+    if not matched_artisans and any(k in q_lower for k in ['artist', 'artisan', 'maker', 'who makes', 'creator']):
+        import random
+        matched_artisans = random.sample(all_artists, min(len(all_artists), 5))
+
+    # Limit to top 5 matches to avoid context overflow
+    for artist in matched_artisans[:5]:
+        found_artist_info += f"""
 ### FOUND ARTISAN PROFILE
 - Name: {artist['name']}
 - State: {artist['state']}
 - Craft: {artist['style']}
 - Experience: {artist['experience']} Years
+- Work Hours: {artist['meta']['labor']} (Labor Time)
 - Bio: {artist['description']}
 """
     
@@ -1885,12 +1902,15 @@ def get_artists():
     female_names = ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali", "Kavita", "Deepa", "Bhavna", "Urmila", "Sudha", "Saanvi", "Aadya", "Kiara", "Diya", "Pari", "Ananya"]
     last_names = ["Kumar", "Devi", "Khan", "Sharma", "Prasad", "Patel", "Singh", "Das", "Rao", "Nair", "Joshi", "Mistri", "Khatri", "Thakur", "Behera", "Gupta", "Yadav", "Reddy", "Choudhary", "Varma"]
 
+    last_names = ["Kumar", "Devi", "Khan", "Sharma", "Prasad", "Patel", "Singh", "Das", "Rao", "Nair", "Joshi", "Mistri", "Khatri", "Thakur", "Behera", "Gupta", "Yadav", "Reddy", "Choudhary", "Varma"]
+
     for i, item in enumerate(real_artisans):
-        random.seed(i + 5000) # Stable seed for names
-        is_male = random.random() > 0.4
+        # Use a local Random instance for thread-safety and determinism
+        rng = random.Random(i + 5000)
+        is_male = rng.random() > 0.4
         gender = 'male' if is_male else 'female'
-        fname = random.choice(male_names) if is_male else random.choice(female_names)
-        lname = random.choice(last_names)
+        fname = rng.choice(male_names) if is_male else rng.choice(female_names)
+        lname = rng.choice(last_names)
         
         # Use Pollinations for image if no real image
         image_url = f"https://pollinations.ai/p/{urllib.parse.quote('Portrait of Indian artisan ' + gender + ' ' + item['state'] + ' ' + item['craft'])}?width=400&height=400&nologo=true&seed={i}"
@@ -1903,7 +1923,7 @@ def get_artists():
             'state': item['state'],
             'description': item['description'],
             'image': image_url,
-            'experience': random.randint(10, 45),
+            'experience': rng.randint(10, 45),
             'meta': {
                'labor': item['labor_time'],
                'price': item['price_range']
