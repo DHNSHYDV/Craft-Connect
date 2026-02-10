@@ -107,8 +107,16 @@ login_manager.login_view = 'entry'  # /entry = splash (video + auth)
 login_manager.login_message = 'Please sign in to continue.'
 
 # Configure Upload Folder
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'profiles')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Configure Upload Folder
+if is_vercel:
+    app.config['UPLOAD_FOLDER'] = os.path.join('/tmp', 'uploads', 'profiles')
+else:
+    app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'profiles')
+
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except OSError as e:
+    print(f"⚠️ Warning: Could not create upload folder {app.config['UPLOAD_FOLDER']}: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
