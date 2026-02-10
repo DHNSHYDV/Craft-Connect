@@ -145,8 +145,11 @@ def _migrate_add_missing_columns():
 
 
 with app.app_context():
-    db.create_all()
-    _migrate_add_missing_columns()
+    try:
+        db.create_all()
+        _migrate_add_missing_columns()
+    except Exception as e:
+        print(f"DATABASE ERROR (Non-fatal): {e}")
 
 # --- Core Routes ---
 
