@@ -187,14 +187,20 @@
                 })
             });
 
-            const data = await response.json().catch(() => ({}));
+            let data = {};
+            try {
+                data = await response.json();
+            } catch (pErr) {
+                console.warn("Could not parse JSON response", pErr);
+            }
 
-            if (!response.ok || data.error) {
-                throw new Error(data.error || "Request failed");
+            if (!response.ok) {
+                const msg = data.error || `Server returned ${response.status}`;
+                throw new Error(msg);
             }
 
             if (!data.image_url) {
-                throw new Error("No image returned from server");
+                throw new Error("No image returned (server logic error)");
             }
 
             outputPlaceholder.style.display = 'none';
