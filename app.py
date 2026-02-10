@@ -60,6 +60,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
 # Prompt refinement: use this key first so refine has its own quota; if unset, falls back to GEMINI_API_KEY
 PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
+# Pollinations AI: optional key for prompt refine (text chat completions)
+POLLINATIONS_API_KEY = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINATION_API_KEY") or "").strip()
 
 # Configure Gemini AI for chatbot
 # Configure Gemini AI for chatbot (Lightweight Vercel Version)
@@ -349,28 +351,45 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
 # fal-ai text-to-image model (use one that supports HF token: e.g. zai-org/GLM-Image)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
 
+# Pollinations image models to try in order; first successful response is used. Override with POLLINATIONS_IMAGE_MODEL=flux,kontext,klein
+POLLINATIONS_IMAGE_MODELS = [
+    m.strip() for m in os.getenv("POLLINATIONS_IMAGE_MODEL", "flux,kontext,klein,klein-large,gptimage").split(",") if m.strip()
+]
+if not POLLINATIONS_IMAGE_MODELS:
+    POLLINATIONS_IMAGE_MODELS = ["flux"]
+
+
 def generate_image_pollinations(prompt_text):
-    """Generate image via Pollinations.ai (Returns Direct URL). Optimized for Vercel."""
+    """Generate image via Pollinations.ai legacy image endpoint.
+
+    Uses the same URL pattern that works in your browser:
+    https://image.pollinations.ai/prompt/{prompt}?width=1024&height=1024&model=flux&nologo=true&seed=...
+    Returns that URL directly so the <img> tag can load it.
+    """
     try:
         import urllib.parse
         import random
-        # v3 Fix: Aggressive encoding
-        encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe='')
+
+        encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe="")
+        model = POLLINATIONS_IMAGE_MODELS[0]  # first in priority list
         seed = random.randint(0, 999999)
         base_url = "https://image.pollinations.ai/prompt"
-        
-        # optimized: Return URL directly to client (Client-side rendering)
-        # This prevents Vercel timeout (10s limit) by avoiding server-side download.
-        url = f"{base_url}/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
-        
-        api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
+
+        url = (
+            f"{base_url}/{encoded_prompt}"
+            f"?width=1024&height=1024&model={urllib.parse.quote(model)}"
+            f"&nologo=true&seed={seed}"
+        )
+
+        api_key = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINATION_API_KEY") or "").strip()
         if api_key:
-             url = url + f"&key={api_key}"
-             
+            # Old endpoint still accepts key as query; this matches working browser URL style
+            url += f"&key={urllib.parse.quote(api_key)}"
+
         return url, None
     except Exception as e:
-        print(f"DEBUG v3: URL generation failed: {e}")
-        return None, f"Pollinations error (v3): {str(e)}"
+        print(f"Pollinations URL generation error: {e}")
+        return None, f"Pollinations error: {str(e)[:200]}"
 
 
 def generate_image_design(prompt_text):
@@ -414,8 +433,8 @@ def generate_design_flux():
         
         if image_url is None:
             return jsonify({
-                "error": err_msg or "Image generation phase failed", 
-                "title": title, 
+                "error": err_msg or "Image generation phase failed",
+                "title": title,
                 "description": desc,
                 "debug_step": "image_generation"
             }), 502
@@ -928,7 +947,7 @@ def test_gemini():
 def search_products_heritage(query):
     """Search HERITAGE_DATA for products relevant to the query."""
     from data.products_heritage import HERITAGE_DATA
-    
+
     query = query.lower().strip()
     results = []
     
@@ -1107,7 +1126,7 @@ def call_groq_chat(user_message, context):
     if not groq_client:
         return _fallback_response(user_message)
         
-    orders_ctx = get_user_orders_context()
+        orders_ctx = get_user_orders_context()
     
     system_prompt = f"""{context}
 
@@ -1201,6 +1220,59 @@ Your task: rewrite it as a single, clear image-generation prompt. Rules:
     return None, "Could not refine prompt. Check PROMPT_REFINE_API_KEY or GEMINI_API_KEY in .env (or add HF_TOKEN for HF fallback)."
 
 
+def _refine_design_prompt_pollinations(raw_prompt):
+    """Use Pollinations AI chat completions to refine the prompt when POLLINATIONS_API_KEY is set."""
+    if not POLLINATIONS_API_KEY:
+        return None, "POLLINATIONS_API_KEY not set."
+    raw = (raw_prompt or "").strip()
+    if not raw:
+        return None, "No prompt to refine."
+    instruction = (
+        "Rewrite this as a single, vivid image-generation prompt for an Indian handicraft. "
+        "One short paragraph, under 400 characters. No bullet points, no markdown, no extra text. "
+        "Output ONLY the refined prompt."
+    )
+    user_content = f"User's description: {raw[:600]}"
+    url = "https://gen.pollinations.ai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {POLLINATIONS_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": "openai",
+        "messages": [
+            {"role": "system", "content": instruction},
+            {"role": "user", "content": user_content},
+        ],
+        "max_tokens": 256,
+        "temperature": 0.4,
+    }
+    try:
+        r = requests.post(url, headers=headers, json=payload, timeout=40)
+        if r.status_code in (401, 403):
+            return None, "Pollinations API key invalid or missing permissions."
+        try:
+            data = r.json()
+        except Exception:
+            data = None
+        if not isinstance(data, dict):
+            r.raise_for_status()
+            return None, "Pollinations returned invalid JSON."
+        if data.get("error"):
+            err_obj = data.get("error")
+            err_str = err_obj if isinstance(err_obj, str) else str(err_obj)
+            return None, err_str[:200]
+        choices = (data or {}).get("choices") or []
+        if choices:
+            msg = choices[0].get("message") if isinstance(choices[0], dict) else None
+            text = (msg.get("content") or "") if isinstance(msg, dict) else ""
+            if isinstance(text, str) and text.strip():
+                return text.strip()[:500], None
+        return None, "Pollinations returned no text."
+    except Exception as e:
+        return None, str(e)[:200]
+
+
 def _refine_design_prompt_hf(raw_prompt):
     """Use Hugging Face router chat completions (v1) for prompt refine. Tries multiple models if one is not supported."""
     if not HF_TOKEN or not HF_TOKEN.strip():
@@ -1258,19 +1330,27 @@ def _refine_design_prompt_hf(raw_prompt):
 
 @app.route('/api/refine-design-prompt', methods=['POST'])
 def refine_design_prompt():
-    """Refine design description: try Gemini (if key set), then HF. Works with only HF_TOKEN. Never 502."""
+    """Refine design description: try Pollinations (if key set), then Gemini, then HF. Never 502."""
     data = request.json or {}
     raw = (data.get("prompt") or "").strip()
     if not raw:
         return jsonify({"error": "No prompt provided."}), 400
-    # 1) Try Gemini if key is set
+    err = None
+    # 1) Try Pollinations if key is set
+    if POLLINATIONS_API_KEY:
+        refined_poll, err_poll = _refine_design_prompt_pollinations(raw)
+        if refined_poll:
+            return jsonify({"prompt": refined_poll, "refined": True})
+        err = err_poll or err
+    # 2) Try Gemini if key is set
     if PROMPT_REFINE_API_KEY:
-        refined, err = _refine_design_prompt_gemini(raw)
-        if refined:
-            return jsonify({"prompt": refined, "refined": True})
+        refined_gem, err_gem = _refine_design_prompt_gemini(raw)
+        if refined_gem:
+            return jsonify({"prompt": refined_gem, "refined": True})
+        err = err_gem or err or "No Gemini key set."
     else:
-        err = "No Gemini key set."
-    # 2) Try HF (works with only HF_TOKEN, no Gemini needed)
+        err = err or "No Gemini key set."
+    # 3) Try HF (works with only HF_TOKEN, no Gemini/Pollinations needed)
     if HF_TOKEN and HF_TOKEN.strip():
         refined_hf, err_hf = _refine_design_prompt_hf(raw)
         if refined_hf:
@@ -1393,12 +1473,12 @@ def products():
     sort_by = request.args.get('sort', 'default')
     category_filter = request.args.get('category', 'All')
     state_filter = request.args.get('state', 'all')
-
+    
     all_products = []
     for state, data in HERITAGE_DATA.items():
         if state_filter != 'all' and state != state_filter:
             continue
-
+            
         for item in data['items']:
             if category_filter != 'All' and item['category'] != category_filter:
                 continue
@@ -1411,7 +1491,7 @@ def products():
                     product_text = f"{item['name']} {state} {item['category']} {item.get('fun_fact','')} {item.get('image_query','')}".lower()
                     if not all(k in product_text for k in keywords):
                         continue
-                
+
             product_id = f"{state.replace(' ', '_')}_{item['name'].replace(' ', '_')}"
             price = item['price_range'][0] + (len(item['name']) % 10) * (item['price_range'][1] - item['price_range'][0]) // 10
             
@@ -1900,8 +1980,6 @@ def get_artists():
     artists = []
     male_names = ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram", "Sanjay", "Arjun", "Kishore", "Rajesh", "Aarav", "Vivaan", "Aditya", "Vihaan", "Sai", "Reyansh"]
     female_names = ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali", "Kavita", "Deepa", "Bhavna", "Urmila", "Sudha", "Saanvi", "Aadya", "Kiara", "Diya", "Pari", "Ananya"]
-    last_names = ["Kumar", "Devi", "Khan", "Sharma", "Prasad", "Patel", "Singh", "Das", "Rao", "Nair", "Joshi", "Mistri", "Khatri", "Thakur", "Behera", "Gupta", "Yadav", "Reddy", "Choudhary", "Varma"]
-
     last_names = ["Kumar", "Devi", "Khan", "Sharma", "Prasad", "Patel", "Singh", "Das", "Rao", "Nair", "Joshi", "Mistri", "Khatri", "Thakur", "Behera", "Gupta", "Yadav", "Reddy", "Choudhary", "Varma"]
 
     for i, item in enumerate(real_artisans):
