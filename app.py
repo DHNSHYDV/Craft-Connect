@@ -349,25 +349,45 @@ def generate_image_design(prompt_text):
 
 @app.route('/api/generate-design-flux', methods=['POST'])
 def generate_design_flux():
-    """Generate design image with FLUX (Replicate, Together AI, or HF). Returns image_url or error."""
-    import sys
-    sys.stderr.write("DEBUG: generate_design_flux HIT!\n")
-    sys.stderr.flush()
-    # raise Exception("DEBUG: Forced Crash to verify logging")
-    data = request.json or {}
-    description = data.get('description', '').strip()
-    style = data.get('style', 'Traditional')
-    material = data.get('material', 'Metal/Brass')
-    if not description:
-        return jsonify({"error": "Please describe your design."}), 400
-    prompt_text = f"{style} {material} Indian handicraft, {description}"
-    title = f"{style} {material} Artisan Concept"
-    desc = f"A {style} Indian handicraft in {material}. {description}"
-    image_url, err_msg = generate_image_design(prompt_text)
-    if image_url is None:
-        print(f"Design FLUX failed: {err_msg}")
-        return jsonify({"error": err_msg or "Image generation failed", "title": title, "description": desc}), 502
-    return jsonify({"title": title, "description": desc, "image_url": image_url})
+    """Generate design image with FLUX. Returns image_url or error with debug info."""
+    try:
+        import sys
+        import traceback
+        sys.stderr.write("DEBUG: generate_design_flux HIT!\n")
+        sys.stderr.flush()
+        
+        data = request.json or {}
+        description = data.get('description', '').strip()
+        style = data.get('style', 'Traditional')
+        material = data.get('material', 'Metal/Brass')
+        if not description:
+            return jsonify({"error": "Please describe your design."}), 400
+            
+        prompt_text = f"{style} {material} Indian handicraft, {description}"
+        title = f"{style} {material} Artisan Concept"
+        desc = f"A {style} Indian handicraft in {material}. {description}"
+        
+        image_url, err_msg = generate_image_design(prompt_text)
+        
+        if image_url is None:
+            return jsonify({
+                "error": err_msg or "Image generation phase failed", 
+                "title": title, 
+                "description": desc,
+                "debug_step": "image_generation"
+            }), 502
+            
+        return jsonify({"title": title, "description": desc, "image_url": image_url})
+        
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"CRASH in generate_design_flux: {error_detail}")
+        return jsonify({
+            "error": f"Internal Server Crash: {str(e)}",
+            "traceback": error_detail,
+            "note": "This debug info is provided to help fix the Render 500 error."
+        }), 500
 
 
 def _analyze_craft_gemini(image_data, mime_type="image/jpeg"):
@@ -674,18 +694,26 @@ def generate_design():
 
     # 2. Generate Image (Server-Side Proxy with Key)
     # We use the refined prompt from Gemini for best results
-    image_url, err_msg = generate_image_design(refined_prompt)
-    
-    if not image_url:
-         return jsonify({"error": err_msg or "Image generation failed."}), 502
+    try:
+        image_url, err_msg = generate_image_design(refined_prompt)
+        
+        if not image_url:
+             return jsonify({"error": err_msg or "Image generation failed."}), 502
 
-    return jsonify({
-        "image_url": image_url, # Now a Base64 data URI
-        "title": title,
-        "description": desc,
-        "prompt_used": refined_prompt
-    })
-
+        return jsonify({
+            "image_url": image_url, # Now a Base64 data URI
+            "title": title,
+            "description": desc,
+            "prompt_used": refined_prompt
+        })
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"CRASH in generate_design: {error_detail}")
+        return jsonify({
+            "error": f"Internal Server Crash: {str(e)}",
+            "traceback": error_detail
+        }), 500
 
 
 # --- Whisper speech-to-text (optional, for voice page when browser speech API fails) ---
