@@ -21,24 +21,40 @@ sys.stderr.flush()
 
 # Load environment variables
 load_dotenv()
-# Diffsynth model cache: default to project folder (E:\craft-site\.diffsynth_cache) so downloads stay with the app
-if not os.getenv("DIFFSYNTH_CACHE"):
-    os.environ["DIFFSYNTH_CACHE"] = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".diffsynth_cache")
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
 
 # Trigger Reload for Template Update 5
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
+
+# Vercel-specific DB handling (Read-only file system workarounds)
+is_vercel = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
+if is_vercel:
+    # Use /tmp for writable SQLite db (Ephemeral, but works for demo)
+    db_path = "/tmp/site.db"
+    # Optional: copy existing DB if we want pre-populated data (not doing it here to keep it simple/safe)
+    app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{db_path}"
+else:
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///site.db')
+
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-from models import db, User, Order, OrderItem
-
-# Import Data
-from data.products_heritage import HERITAGE_DATA
-
-db.init_app(app)
+# Fail-safe Import Strategy for Vercel Debugging
+try:
+    from models import db, User, Order, OrderItem
+    # Import Data
+    from data.products_heritage import HERITAGE_DATA
+    db.init_app(app)
+    print("✅ Database and Models loaded successfully")
+except Exception as e:
+    print(f"❌ CRITICAL IMPORT ERROR: {e}")
+    # Define dummy objects to prevents NameError later in code
+    db = None
+    User = None
+    Order = None
+    OrderItem = None
+    HERITAGE_DATA = {}
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
@@ -46,10 +62,43 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
 
 # Configure Gemini AI for chatbot
-import google.generativeai as genai
+# Configure Gemini AI for chatbot (Lightweight Vercel Version)
+# import google.generativeai as genai (REMOVED: Too heavy for Vercel)
+class GeminiClient:
+    """Lightweight wrapper for Gemini API to avoid 150MB+ grpc dependencies."""
+    def __init__(self, api_key, model="gemini-1.5-flash"):
+        self.api_key = api_key
+        self.model = model
+        self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+
+    def generate_content(self, prompt):
+        if not self.api_key:
+            return type('obj', (object,), {'text': "Error: AI key missing."})
+        
+        headers = {"Content-Type": "application/json"}
+        data = {
+            "contents": [{"parts": [{"text": str(prompt)}]}]
+        }
+        
+        try:
+            response = requests.post(
+                f"{self.base_url}?key={self.api_key}",
+                headers=headers,
+                json=data,
+                timeout=30
+            )
+            response.raise_for_status()
+            result = response.json()
+            # mimic genai response object
+            text_result = result.get('candidates', [{}])[0].get('content', {}).get('parts', [{}])[0].get('text', '')
+            return type('obj', (object,), {'text': text_result})
+        except Exception as e:
+            print(f"Gemini API Error: {e}")
+            return type('obj', (object,), {'text': f"AI Error: {e}"})
+
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
-    chatbot_model = genai.GenerativeModel('gemini-pro')
+    # genai.configure(api_key=GEMINI_API_KEY)
+    chatbot_model = GeminiClient(GEMINI_API_KEY, model='gemini-pro')
 else:
     chatbot_model = None
 
@@ -58,8 +107,16 @@ login_manager.login_view = 'entry'  # /entry = splash (video + auth)
 login_manager.login_message = 'Please sign in to continue.'
 
 # Configure Upload Folder
-app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'profiles')
-os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+# Configure Upload Folder
+if is_vercel:
+    app.config['UPLOAD_FOLDER'] = os.path.join('/tmp', 'uploads', 'profiles')
+else:
+    app.config['UPLOAD_FOLDER'] = os.path.join('static', 'uploads', 'profiles')
+
+try:
+    os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
+except OSError as e:
+    print(f"⚠️ Warning: Could not create upload folder {app.config['UPLOAD_FOLDER']}: {e}")
 
 @login_manager.user_loader
 def load_user(user_id):
@@ -105,8 +162,11 @@ def _migrate_add_missing_columns():
 
 
 with app.app_context():
-    db.create_all()
-    _migrate_add_missing_columns()
+    try:
+        db.create_all()
+        _migrate_add_missing_columns()
+    except Exception as e:
+        print(f"DATABASE ERROR (Non-fatal): {e}")
 
 # --- Core Routes ---
 
@@ -285,191 +345,92 @@ def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None)
     except Exception as e:
         raise Exception(f"SambaNova Request Failed: {str(e)}")
 
+
 # fal-ai text-to-image model (use one that supports HF token: e.g. zai-org/GLM-Image)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
-USE_DIFFSYNTH_ENGINE = os.getenv("USE_DIFFSYNTH_ENGINE", "").strip().lower() in ("1", "true", "yes")
 
-_diffsynth_pipe = None
-
-
-def generate_image_diffsynth(image_prompt):
-    """Generate image locally with Diffsynth-Engine (Qwen-Image-2512). Returns (data_url, error_message). Optional: set USE_DIFFSYNTH_ENGINE=1 in .env."""
-    global _diffsynth_pipe
-    if not USE_DIFFSYNTH_ENGINE:
-        return None, None
+def generate_image_pollinations(prompt_text):
+    """Generate image via Pollinations.ai (Returns Direct URL). Optimized for Vercel."""
     try:
-        import math
-        import sys
-        import types
-        # PyTorch 2.10+ removed torch.distributed.tensor.parallel._utils; shim for diffsynth_engine
-        import torch.distributed.tensor.parallel  # noqa: F401
-        if not hasattr(torch.distributed.tensor.parallel, "_utils"):
-            _utils_mod = types.ModuleType("torch.distributed.tensor.parallel._utils")
-            def _validate_tp_mesh_dim(device_mesh):
-                pass
-            _utils_mod._validate_tp_mesh_dim = _validate_tp_mesh_dim
-            torch.distributed.tensor.parallel._utils = _utils_mod
-            sys.modules["torch.distributed.tensor.parallel._utils"] = _utils_mod
-        from diffsynth_engine import fetch_model, QwenImagePipeline, QwenImagePipelineConfig
-        import io
-    except ImportError as e:
-        msg = str(e)
-        if "diffsynth" in msg.lower() or "No module named 'diffsynth" in msg:
-            return None, "Diffsynth not installed. Run: pip install diffsynth-engine"
-        return None, f"Diffsynth dependency error: {msg}. Try: pip install -U torch"
-    try:
-        if _diffsynth_pipe is None:
-            print("Loading Diffsynth-Engine (Qwen-Image-2512)...")
-            config = QwenImagePipelineConfig.basic_config(
-                model_path=fetch_model("Qwen/Qwen-Image-2512", path="transformer/*.safetensors"),
-                encoder_path=fetch_model("Qwen/Qwen-Image-2512", path="text_encoder/*.safetensors"),
-                vae_path=fetch_model("Qwen/Qwen-Image-2512", path="vae/*.safetensors"),
-                offload_mode="cpu_offload",
-            )
-            _diffsynth_pipe = QwenImagePipeline.from_pretrained(config)
-            try:
-                _diffsynth_pipe.load_lora(
-                    path=fetch_model("Wuli-art/Qwen-Image-2512-Turbo-LoRA-2-Steps", path="Wuli-Qwen-Image-2512-Turbo-LoRA-2steps-V1.0-bf16.safetensors"),
-                    scale=1.0,
-                    fused=True,
-                )
-            except Exception as e:
-                print(f"Diffsynth LoRA load skipped: {e}")
-            scheduler_config = {
-                "exponential_shift_mu": math.log(2.5),
-                "use_dynamic_shifting": True,
-                "shift_terminal": 0.7155,
-            }
-            _diffsynth_pipe.apply_scheduler_config(scheduler_config)
+        import urllib.parse
         import random
-        output = _diffsynth_pipe(
-            prompt=image_prompt[:1000],
-            cfg_scale=1,
-            num_inference_steps=2,
-            seed=random.randint(0, 2**31 - 1),
-            width=1024,
-            height=1024,
-        )
-        buf = io.BytesIO()
-        output.save(buf, format="PNG")
-        buf.seek(0)
-        raw = buf.read()
-        if len(raw) < 100:
-            return None, "Diffsynth image too small"
-        b64 = base64.b64encode(raw).decode("utf-8")
-        return f"data:image/png;base64,{b64}", None
+        # v3 Fix: Aggressive encoding
+        encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe='')
+        seed = random.randint(0, 999999)
+        base_url = "https://image.pollinations.ai/prompt"
+        
+        # optimized: Return URL directly to client (Client-side rendering)
+        # This prevents Vercel timeout (10s limit) by avoiding server-side download.
+        url = f"{base_url}/{encoded_prompt}?width=1024&height=1024&model=flux&nologo=true&seed={seed}"
+        
+        api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
+        if api_key:
+             url = url + f"&key={api_key}"
+             
+        return url, None
     except Exception as e:
-        print(f"Diffsynth-Engine failed: {e}")
-        import traceback
-        traceback.print_exc()
-        return None, str(e)
-
-
-def generate_image_hf(image_prompt):
-    """Generate image via Hugging Face. Uses free Inference API first (no fal-ai credits needed). Returns (data_url, error_message)."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None, "HF_TOKEN is not set in .env"
-    token = HF_TOKEN.strip()
-    err_msg = "Hugging Face inference is busy (503). Wait a minute and try again, or set USE_DIFFSYNTH_ENGINE=1 in .env for local generation."
-    # 1) Free HF Inference API first (no 402 / pre-paid credits); retry once on 503
-    for model_id in ["stabilityai/stable-diffusion-xl-base-1.0", "runwayml/stable-diffusion-v1-5", "CompVis/stable-diffusion-v1-4"]:
-        for attempt in range(2):
-            try:
-                url = f"https://router.huggingface.co/models/{model_id}"
-                r = requests.post(
-                    url,
-                    headers={"Authorization": f"Bearer {token}"},
-                    json={"inputs": image_prompt[:1000]},
-                    timeout=90,
-                )
-                if r.status_code == 200 and len(r.content) >= 100:
-                    b64 = base64.b64encode(r.content).decode("utf-8")
-                    return f"data:image/png;base64,{b64}", None
-                if r.status_code == 401 or r.status_code == 403:
-                    return None, "HF token invalid or no permission. Use a token with 'Inference' at huggingface.co/settings/tokens."
-                if r.status_code == 503:
-                    if attempt == 0:
-                        time.sleep(5)
-                        continue
-                    break
-            except Exception as e:
-                print(f"HF Inference API {model_id} failed: {e}")
-                err_msg = str(e)
-                break
-    # 2) Optional: fal-ai (requires pre-paid credits; skip if you hit 402)
-    try:
-        from huggingface_hub import InferenceClient
-        import io
-        client = InferenceClient(provider="fal-ai", api_key=token)
-        image = client.text_to_image(image_prompt, model=HF_IMAGE_MODEL)
-        if image is not None and hasattr(image, "save"):
-            buf = io.BytesIO()
-            image.save(buf, format="PNG")
-            buf.seek(0)
-            raw = buf.read()
-            if len(raw) >= 100:
-                b64 = base64.b64encode(raw).decode("utf-8")
-                return f"data:image/png;base64,{b64}", None
-    except Exception as e:
-        if "402" not in str(e):
-            err_msg = str(e)
-        print(f"HF image (fal-ai) failed: {e}")
-    return None, err_msg or "Image generation failed. Free HF models may be loading (503). Try again in a minute."
-
-
-# Design image: Hugging Face Inference (Stable Diffusion XL)
-HF_DESIGN_API_URL = "https://router.huggingface.co/hf-inference/models/stabilityai/stable-diffusion-xl-base-1.0"
+        print(f"DEBUG v3: URL generation failed: {e}")
+        return None, f"Pollinations error (v3): {str(e)}"
 
 
 def generate_image_design(prompt_text):
-    """Generate design image via Hugging Face Inference (Stable Diffusion XL). Returns (data_url, error_message)."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None, "HF_TOKEN is not set in .env. Get a token at hf.co/settings/tokens"
-    headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}"}
-    payload = {"inputs": prompt_text[:1000]}
-    try:
-        response = requests.post(HF_DESIGN_API_URL, headers=headers, json=payload, timeout=90)
-        if response.status_code == 401 or response.status_code == 403:
-            return None, "HF token invalid or no permission. Use a token with Inference at hf.co/settings/tokens."
-        if response.status_code == 503:
-            return None, "Model is loading (503). Try again in a minute."
-        response.raise_for_status()
-        image_bytes = response.content
-        if not image_bytes or len(image_bytes) < 100:
-            return None, "No image returned from Hugging Face."
-        b64 = base64.b64encode(image_bytes).decode("utf-8")
-        return f"data:image/png;base64,{b64}", None
-    except requests.RequestException as e:
-        err = str(e)
-        if hasattr(e, "response") and e.response is not None:
-            try:
-                err = e.response.text or err
-            except Exception:
-                pass
-        print(f"HF design image error: {err}")
-        return None, err[:500]
-    except Exception as e:
-        print(f"HF design image error: {e}")
-        return None, str(e)[:500]
+    """Generate image. Primary: Pollinations (Unlimited/Free)."""
+    
+    # 1. PRIMARY: POLLINATIONS (UNLIMITED, FREE)
+    print("Attempting Pollinations.ai (Unlimited)...")
+    url, err = generate_image_pollinations(prompt_text)
+    if url:
+        print("✓ Pollinations succeeded")
+        return url, None
+    
+    print(f"Pollinations failed ({err}).")
+    return None, f"Image generation failed: {err}"
+
+
+
 
 
 @app.route('/api/generate-design-flux', methods=['POST'])
 def generate_design_flux():
-    """Generate design image via Hugging Face (Stable Diffusion XL). Returns image_url or error."""
-    data = request.json or {}
-    description = data.get('description', '').strip()
-    style = data.get('style', 'Traditional')
-    material = data.get('material', 'Metal/Brass')
-    if not description:
-        return jsonify({"error": "Please describe your design."}), 400
-    prompt_text = f"{style} {material} Indian handicraft, {description}"
-    title = f"{style} {material} Artisan Concept"
-    desc = f"A {style} Indian handicraft in {material}. {description}"
-    image_url, err_msg = generate_image_design(prompt_text)
-    if image_url is None:
-        print(f"Design FLUX failed: {err_msg}")
-        return jsonify({"error": err_msg or "Image generation failed", "title": title, "description": desc}), 502
-    return jsonify({"title": title, "description": desc, "image_url": image_url})
+    """Generate design image with FLUX. Returns image_url or error with debug info."""
+    try:
+        import sys
+        import traceback
+        sys.stderr.write("DEBUG: generate_design_flux HIT!\n")
+        sys.stderr.flush()
+        
+        data = request.json or {}
+        description = data.get('description', '').strip()
+        style = data.get('style', 'Traditional')
+        material = data.get('material', 'Metal/Brass')
+        if not description:
+            return jsonify({"error": "Please describe your design."}), 400
+            
+        prompt_text = f"{style} {material} Indian handicraft, {description}"
+        title = f"{style} {material} Artisan Concept"
+        desc = f"A {style} Indian handicraft in {material}. {description}"
+        
+        image_url, err_msg = generate_image_design(prompt_text)
+        
+        if image_url is None:
+            return jsonify({
+                "error": err_msg or "Image generation phase failed", 
+                "title": title, 
+                "description": desc,
+                "debug_step": "image_generation"
+            }), 502
+            
+        return jsonify({"title": title, "description": desc, "image_url": image_url})
+        
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"CRASH in generate_design_flux: {error_detail}")
+        return jsonify({
+            "error": f"Internal Server Crash: {str(e)}",
+            "traceback": error_detail,
+            "note": "This debug info is provided to help fix the Render 500 error."
+        }), 500
 
 
 def _analyze_craft_gemini(image_data, mime_type="image/jpeg"):
@@ -774,23 +735,49 @@ def generate_design():
         except Exception as e:
             print(f"Gemini prompt refinement failed: {e}")
 
-    # 2. Generate Image URL using Pollinations.ai (Free, High Quality)
-    # Adding 'nologo=true' and 'enhance=true'
+    # 2. Generate Image (Server-Side Proxy with Key)
     # We use the refined prompt from Gemini for best results
-    base_url = "https://pollinations.ai/p/"
+    try:
+        image_url, err_msg = generate_image_design(refined_prompt)
+        
+        if not image_url:
+             return jsonify({"error": err_msg or "Image generation failed."}), 502
+
+        return jsonify({
+            "image_url": image_url, # Now a Base64 data URI
+            "title": title,
+            "description": desc,
+            "prompt_used": refined_prompt
+        })
+    except Exception as e:
+        import traceback
+        error_detail = traceback.format_exc()
+        print(f"CRASH in generate_design: {error_detail}")
+        return jsonify({
+            "error": f"Internal Server Crash: {str(e)}",
+            "traceback": error_detail
+        }), 500
+
+
+@app.route('/api/proxy-image')
+def proxy_image():
+    """Proxy image requests to bypass CORS/Referer blocks on Render."""
+    url = request.args.get('url')
+    if not url:
+        return "No URL provided", 400
     
-    # Encode the prompt
-    encoded_prompt = urllib.parse.quote(refined_prompt)
-    seed = random.randint(1, 99999)
-    image_url = f"{base_url}{encoded_prompt}?width=1024&height=1024&nologo=true&seed={seed}&model=flux"
-
-    return jsonify({
-        "image_url": image_url,
-        "title": title,
-        "description": desc,
-        "prompt_used": refined_prompt
-    })
-
+    try:
+        # User-Agent to look like a real browser (avoids 403 blocks)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
+        }
+        r = requests.get(url, headers=headers, stream=True, timeout=20)
+        
+        # Pass along the content type (e.g., image/jpeg)
+        return make_response(r.content, r.status_code, {'Content-Type': r.headers.get('Content-Type', 'image/jpeg')})
+    except Exception as e:
+        print(f"Proxy error for {url}: {e}")
+        return f"Proxy failed: {e}", 502
 
 
 # --- Whisper speech-to-text (optional, for voice page when browser speech API fails) ---
@@ -936,51 +923,100 @@ def test_gemini():
 
 
 # --- Craft Assistant Chatbot (Gemini-powered) ---
-def build_chatbot_context():
-    """Build context for the Craft Assistant from site data."""
-    from data.products_heritage import HERITAGE_DATA
+# --- Craft Assistant Chatbot (Gemini-powered with RAG) ---
 
-    # Full product list with details for semantic matching
-    all_items = []
+def search_products_heritage(query):
+    """Search HERITAGE_DATA for products relevant to the query."""
+    from data.products_heritage import HERITAGE_DATA
+    
+    query = query.lower().strip()
+    results = []
+    
+    # Flatten and score
     for state, data in HERITAGE_DATA.items():
         for item in data["items"]:
-            # Correcting index lookup for price range based on item name length
-            idx = 0 if len(item["name"]) % 2 == 0 else 1
-            price = item["price_range"][idx]
-            rating = 4.0 + (len(item["name"]) % 10) / 10
-            all_items.append({
-                "name": item["name"], "state": state, "category": item["category"],
-                "price": price, "rating": rating, "fun_fact": item.get("fun_fact", "")
-            })
-    all_items.sort(key=lambda x: x["rating"], reverse=True)
-    pottery_products = [
-        {"name": "Jhajjar Pottery", "state": "Haryana", "desc": "Clay water pots that keep water cool naturally", "price": "₹199-1499"},
-        {"name": "Blue Pottery Vase", "state": "Rajasthan", "desc": "Jaipur blue pottery, made from quartz not clay", "price": "₹399-14999"},
-        {"name": "Black Pottery", "state": "Meghalaya", "desc": "Fire-proof pots from Sung Valley", "price": "₹299-3499"},
-        {"name": "Bell Metal Crafts", "state": "Assam", "desc": "Utensils, bowls that last generations", "price": "₹999-9999"},
-        {"name": "Brass Utensils", "state": "Haryana", "desc": "Traditional brass cooking utensils", "price": "₹999-14999"},
-        {"name": "Terracotta Horse", "state": "West Bengal", "desc": "Bankura terracotta art icon", "price": "₹199-8999"},
-        {"name": "Clay Diyas", "state": "Jharkhand", "desc": "Handmade festival lamps", "price": "₹49-499"},
-        {"name": "Mud Clay Toys", "state": "Bihar", "desc": "Eco-friendly clay toys", "price": "₹149-999"},
-    ]
+            score = 0
+            # Search fields
+            text_corpus = f"{item['name']} {item['category']} {state} {item.get('fun_fact', '')}".lower()
+            
+            # Simple keyword matching
+            if query in text_corpus:
+                score += 10 # Exact phrase match
+            
+            query_words = query.split()
+            for word in query_words:
+                if len(word) > 2 and word in text_corpus:
+                    score += 3
+                if word in item['name'].lower():
+                    score += 5 # Bonus for name match
+            
+            if score > 0:
+                # Add price logic for display
+                idx = 0 if len(item["name"]) % 2 == 0 else 1
+                price = item["price_range"][idx]
+                
+                results.append({
+                    "name": item["name"],
+                    "state": state,
+                    "category": item["category"],
+                    "price_range": f"₹{item['price_range'][0]}-{item['price_range'][1]}",
+                    "fun_fact": item.get("fun_fact", ""),
+                    "score": score
+                })
+    
+    # Sort by score descending
+    results.sort(key=lambda x: x["score"], reverse=True)
+    return results[:15] # Return top 15 most relevant
+
+
+def build_chatbot_context(user_query=""):
+    """Build dynamic context based on user query (RAG-lite)."""
+    
+    # 1. Search for relevant products
+    relevant_products = search_products_heritage(user_query)
+    
+    # 2. If no specific results, provide a diverse mix (fallback to 'featured')
+    if not relevant_products:
+        # Fallback: Get 1 item from each valid state to show diversity
+        from data.products_heritage import HERITAGE_DATA
+        for state, data in list(HERITAGE_DATA.items())[:8]:
+             if data["items"]:
+                 item = data["items"][0]
+                 relevant_products.append({
+                    "name": item["name"],
+                    "state": state,
+                    "category": item["category"],
+                    "price_range": f"₹{item['price_range'][0]}-{item['price_range'][1]}",
+                    "fun_fact": item.get("fun_fact", "")
+                 })
+
+    # 3. Format product list for LLM
+    products_json = json.dumps(relevant_products, indent=2)
 
     context = f"""
-You are the Craft Assistant for Desh Ke Haath, an Indian heritage craft e-commerce site.
-Answer ONLY from the data below. Be helpful and cite specific products when relevant.
+You are the Craft Assistant for Desh Ke Haath, India's premier heritage craft platform.
+Your goal is to be a knowledgeable, warm, and culturally rich guide to Indian handicrafts and culture.
 
-ABOUT / MISSION (from our website—use when user asks "mission", "about", "who are you"):
-Desh Ke Haath: "Connecting India's Soul to the Digital World." We empower Indian artisans by bridging traditional craftsmanship and modern technology. "States Alag, Jazba Ek" (Different States, One Spirit) reflects our commitment to unifying India's diverse artistic heritage.
+### CORE IDENTITY
+- Name: Craft Assistant (Desh Ke Haath)
+- Mission: "States Alag, Jazba Ek" (Different States, One Spirit).
+- Tone: Warm, respectful (use "Namaste"), informative.
 
-SITE: deshkehaath.in | Pages: Home, Products, Artists, About, AI Craft (Computer Vision, Voice, Data Insights, AR/VR, Design Your Own)
+### CONTEXT: RELEVANT PRODUCTS
+Based on the user's interest in "{user_query}", here are the most relevant products:
+{products_json}
 
-POTTERY / POTS / CLAY / VASES / UTENSILS (when user asks about pots, pottery, clay, vases, utensils):
-{json.dumps(pottery_products, indent=2)}
+### GENERAL SITE INFO
+- Pages: Home, Map (Explore by State), Products, Artists, AI Craft.
+- Shipping: India-wide (5-7 days), Free > ₹2000.
+- Payment: UPI, Cards, COD.
 
-ALL PRODUCTS (use for "what do you have", "best selling", or specific queries):
-{json.dumps([{"name": p["name"], "state": p["state"], "category": p["category"], "price": f"₹{p['price']}", "fun_fact": p["fun_fact"][:80]} for p in all_items[:80]], indent=2)}
+### GUIDELINES
+1. **Product Queries**: Use the "Relevant Products" list. Be specific.
+2. **General Knowledge**: You **ARE** allowed to answer general questions about India, its states, geography, history, and culture (e.g., "Capital of India", "History of Silk").
+3. **Unknowns**: If asked about something completely unrelated to India or Crafts (e.g., "Quantum Physics"), politely steer back to Indian heritage.
+4. **Style**: Keep it concise (2-3 sentences).
 
-SHIPPING: India-wide, 5-7 business days. RETURN: 7 days for damaged items. CONTACT: support@deshkehaath.in
-PAYMENT: UPI, Card, Net Banking, COD. GST 3%.
 """
     return context
 
@@ -988,74 +1024,95 @@ PAYMENT: UPI, Card, Net Banking, COD. GST 3%.
 def get_user_orders_context():
     """Get user's orders for chatbot context (if logged in)."""
     if not current_user.is_authenticated:
-        return "User is NOT logged in. For order tracking, user must sign in."
-    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(10).all()
+        return "User is NOT logged in. For order tracking, ask them to sign in via the profile api."
+    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(5).all()
+    if not orders:
+        return "User is logged in but has NO orders yet."
+    
     lines = []
     for o in orders:
         order_label = o.order_number or f"#{o.id}"
-        items_str = ", ".join([f"{i.product_name} x{i.quantity}" for i in o.items])
-        lines.append(f"- Order {order_label}: ₹{o.total_amount:.0f}, Status: {o.status}, Items: {items_str}, Date: {o.created_at.strftime('%Y-%m-%d')}")
-    return "User's recent orders:\n" + "\n".join(lines)
+        items_str = ", ".join([f"{i.product_name} (x{i.quantity})" for i in o.items])
+        lines.append(f"- Order {order_label}: ₹{o.total_amount:.0f} | Status: {o.status} | Items: {items_str} | Date: {o.created_at.strftime('%d %b %Y')}")
+    return "USER'S RECENT ORDERS:\n" + "\n".join(lines)
 
 
 def _fallback_response(msg):
     """Rule-based fallback when Gemini fails."""
     m = msg.lower()
     if any(x in m for x in ["hello", "hi", "namaste"]):
-        return "Namaste! Welcome to Desh Ke Haath. How can I help you explore Indian crafts today?"
-    if any(x in m for x in ["mission", "about", "who are you", "what do you do"]):
-        return "Desh Ke Haath bridges traditional Indian craftsmanship with modern technology. 'States Alag, Jazba Ek'—Different States, One Spirit. We connect India's artisans to the digital world."
-    if any(x in m for x in ["pot", "pottery", "clay", "vase", "utensils"]):
-        return "We have Jhajjar clay pots (Haryana), Blue Pottery vases (Rajasthan), Black Pottery (Meghalaya), Bell Metal utensils (Assam), Brass utensils (Haryana), Terracotta horses (West Bengal), Clay diyas (Jharkhand), Mud clay toys (Bihar) & more. Check the Products page!"
-    if any(x in m for x in ["saree", "sari"]):
-        return "We stock Patola, Banarasi, Kanjeevaram, Bandhani & other sarees from Gujarat, UP, Tamil Nadu & more. Browse the Products page to explore."
-    if any(x in m for x in ["track", "order"]):
-        orders_ctx = get_user_orders_context()
-        if "NOT logged in" in orders_ctx:
-            return "To track your order, please sign in first. Go to the profile icon and log in. Then I can show your order history."
-        if "no orders yet" in orders_ctx:
-            return "You don't have any orders yet. Start shopping on our Products page—we'd love to send you something beautiful!"
-        # Has orders: show them
-        return "Here are your recent orders:\n\n" + orders_ctx.replace("User's recent orders:\n", "") + "\n\nYou can view full details anytime from the profile menu → My Orders."
-    if any(x in m for x in ["return", "refund"]):
-        return "We accept returns within 7 days of delivery for damaged items. Contact support@deshkehaath.in to initiate a return."
-    if any(x in m for x in ["shipping", "delivery"]):
-        return "We ship across India! Delivery usually takes 5-7 business days. Free shipping on orders over ₹2000."
-    if any(x in m for x in ["contact", "support"]):
-        return "Email us at support@deshkehaath.in for any queries. We typically respond within 24 hours."
-    if any(x in m for x in ["best", "selling", "popular", "top"]):
-        return "Check our Products page—we have Madhubani paintings, Patola sarees, Kutch embroidery, Dhokra crafts & more from across India!"
-    if any(x in m for x in ["price", "cost"]):
-        return "Prices vary by craft and artisan. Filter by price on the Products page. Most items range from ₹299 to ₹50,000+."
-    return "You can browse Products, track orders (when logged in), or email support@deshkehaath.in. How else can I help?"
+        return "Namaste! Welcome to Desh Ke Haath. I can help you discover unique handicrafts from across India. What are you looking for today?"
+    if "track" in m or "order" in m:
+         return "You can view your order status in your Profile > My Orders section. If you need help, our support team at support@deshkehaath.in is happy to assist!"
+    return "I'm having a little trouble connecting to my creative brain right now, but I'd love to help! You can browse our Products page or ask me about specific crafts like 'Blue Pottery' or 'Pashmina'."
 
 
-def call_gemini_chat(user_message, context):
-    """Call Gemini API for chat response. Falls back to rule-based only when API fails."""
-    if not GEMINI_API_KEY:
+
+# Initialize Groq client
+import os
+from groq import Groq
+
+# Use the key from env
+GROQ_API_KEY = os.getenv('GROQ_API_KEY')
+
+try:
+    if GROQ_API_KEY:
+        groq_client = Groq(api_key=GROQ_API_KEY)
+    else:
+        groq_client = None
+except Exception as e:
+    print(f"Groq Init Warning: {e}")
+    groq_client = None
+
+def call_groq_chat(user_message, context):
+    """Call Groq API (Llama 3) for chat response."""
+    if not groq_client:
         return _fallback_response(user_message)
+        
     orders_ctx = get_user_orders_context()
-    # Use system instruction + user message so Gemini reliably uses the data
-    system_instruction = """You are the Craft Assistant for Desh Ke Haath. NEVER give generic replies when the user asks about specific products or their orders. When the user asks to "track my order" or "track order", you MUST list their orders from "User's recent orders" above (order ID, amount, status, items, date). If they have no orders or are not logged in, say so. For products, cite actual names and details from the data below."""
-    user_content = context + "\n\n" + orders_ctx + "\n\nUser asks: " + user_message + "\n\nReply using the data above. If they asked to track their order and orders are listed above, list each order clearly with order ID, total, status, items, and date. Otherwise list products when asked. Keep it concise but informative."
+    
+    system_prompt = f"""{context}
 
-    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY}"
-        payload = {
-            "systemInstruction": {"parts": [{"text": system_instruction}]},
-            "contents": [{"parts": [{"text": user_content}]}],
-            "generationConfig": {"maxOutputTokens": 512, "temperature": 0.5}
-        }
-        try:
-            r = requests.post(url, json=payload, timeout=15)
-            if r.status_code == 200:
-                data = r.json()
-                text = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                if text and text.strip():
-                    return text.strip()
-        except Exception:
-            continue
-    return _fallback_response(user_message)
+### USER INFO
+{orders_ctx}
+
+### INSTRUCTIONS
+You are the Craft Assistant for Desh Ke Haath.
+- Answer queries about products using the provided context.
+- Answer general questions about India/Culture using your own knowledge.
+- If asked about orders, use the Order Context.
+- Keep responses concise (2-3 sentences).
+- Tone: Warm, respectful ("Namaste").
+"""
+
+    try:
+        chat_completion = groq_client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt
+                },
+                {
+                    "role": "user",
+                    "content": user_message
+                }
+            ],
+            model="llama-3.3-70b-versatile", # High performance, fast
+            temperature=0.6,
+            max_tokens=300,
+            top_p=1,
+            stop=None,
+            stream=False,
+        )
+        return chat_completion.choices[0].message.content
+    except Exception as e:
+        print(f"Groq Chat Error: {e}")
+        # Fallback to Gemini if Groq fails (or just fallback response)
+        return _fallback_response(user_message)
+
+# Alias for backward compatibility if needed, but we will use this
+call_gemini_chat = call_groq_chat 
+
 
 
 # Prompt refine via HF: use router chat completions. Try these in order (first supported by your account wins).
@@ -1200,7 +1257,9 @@ def chat():
     message = (data.get("message") or "").strip()
     if not message:
         return jsonify({"reply": "Please type a message."})
-    context = build_chatbot_context()
+        
+    # Build context specific to this message
+    context = build_chatbot_context(message)
     reply = call_gemini_chat(message, context)
     return jsonify({"reply": reply})
 
@@ -1323,7 +1382,7 @@ def products():
                 image_url = item['local_image']
             else:
                 img_query = item.get('image_query', f"{state} {item['name']} Indian handicraft")
-                image_url = f"https://pollinations.ai/p/{urllib.parse.quote(img_query)}?width=800&height=800&nologo=true&seed={len(item['name'])}"
+                image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_query)}?width=800&height=800&nologo=true&seed={len(item['name'])}"
             
             all_products.append({
                 "id": product_id,
@@ -1389,7 +1448,7 @@ def product_detail(product_id):
     if 'local_image' in found_item:
         image_url = found_item['local_image']
     else:
-        image_url = f"https://pollinations.ai/p/{urllib.parse.quote(img_query)}?width=1024&height=1024&nologo=true&seed={len(found_item['name'])}"
+        image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_query)}?width=1024&height=1024&nologo=true&seed={len(found_item['name'])}"
 
     product = {
         "id": product_id,
@@ -1419,7 +1478,7 @@ def product_detail(product_id):
                     r_image_url = i['local_image']
                 else:
                     r_img_query = i.get('image_query', f"{s_name} {i['name']} Indian handicraft")
-                    r_image_url = f"https://pollinations.ai/p/{urllib.parse.quote(r_img_query)}?width=400&height=400&nologo=true&seed={len(i['name'])}"
+                    r_image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(r_img_query)}?width=400&height=400&nologo=true&seed={len(i['name'])}"
                 
                 related.append({
                     "id": r_id,
@@ -1859,7 +1918,7 @@ def design_craft():
 def data():
     return render_template('data.html')
 
-@app.route('/api/chat', methods=['POST'])
+@app.route('/api/chat_unused', methods=['POST'])
 @login_required
 def ai_chat():
     """AI-powered chatbot endpoint using Gemini"""

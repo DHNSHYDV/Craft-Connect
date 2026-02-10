@@ -1,0 +1,13 @@
+.diffsynth_cache/
+venv/
+.venv/
+__pycache__/
+.git/
+.DS_Store
+*.log
+*.sqlite3
+*.db
+instance/
+local_models/
+*.onnx
+*.tflite

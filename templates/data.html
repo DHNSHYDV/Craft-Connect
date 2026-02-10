@@ -227,5 +227,37 @@
     .insight-item .text {
         line-height: 1.5;
     }
+
+    @media (max-width: 768px) {
+        .ai-hero {
+            padding: 100px 1.5rem 2rem;
+        }
+
+        .charts-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .stats-overview {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+
+        .stat-card,
+        .card {
+            padding: 1.5rem;
+        }
+
+        .mock-chart {
+            gap: 10px;
+        }
+
+        .bar::after {
+            font-size: 0.7rem;
+        }
+
+        .ai-hero h1 {
+            font-size: 2rem;
+        }
+    }
 </style>
 {% endblock %}

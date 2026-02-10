@@ -3,15 +3,13 @@ gunicorn
 
 # Core dependencies
 Flask
-dotenv
+python-dotenv
 requests
-gdown
 flask-sqlalchemy
 flask-login
-google-generativeai
-huggingface_hub
+groq
 
-# Optional: Heavy ML libraries (Commented out for free tier deployment to save space/build time)
-# torch
-# transformers
-# accelerate
+# Note:
+# - torch, transformers, accelerate EXCLUDED (Size limit)
+# - google-generativeai EXCLUDED (Replaced with internal REST client to save 150MB)
+# - huggingface_hub EXCLUDED (Not needed for simple API calls)
