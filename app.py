@@ -465,30 +465,51 @@ if not POLLINATIONS_IMAGE_MODELS:
 
 
 def generate_image_pollinations(prompt_text):
-    """Generate image via Pollinations.ai (Free Tier) using official library.
+    """Generate image via Pollinations.ai (Free Tier) using REST API with model fallback.
     
     Returns a Base64 Data URI so the image is embedded directly in the response.
     """
-    try:
-        import pollinations
-        import io
-        import base64
+    # Use the configured models or fallback to flux
+    models = POLLINATIONS_IMAGE_MODELS if POLLINATIONS_IMAGE_MODELS else ["flux"]
+    
+    base_url = "https://image.pollinations.ai/prompt"
+    encoded_prompt = urllib.parse.quote(prompt_text)
+    
+    headers = {}
+    if POLLINATIONS_API_KEY:
+        headers['Authorization'] = f"Bearer {POLLINATIONS_API_KEY}"
 
-        print("Generating Pollinations image via library...")
-        # Use the official library which handles the API complexity
-        model = pollinations.Image(model='flux', width=1024, height=1024, seed=random.randint(0, 999999), nologo=True)
-        image = model(prompt_text[:1000])
-        
-        # Convert PIL Image to Base64
-        buffer = io.BytesIO()
-        image.save(buffer, format="JPEG")
-        b64_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
-        
-        return f"data:image/jpeg;base64,{b64_str}", None
+    last_error = "Unknown error"
+    
+    for model_name in models:
+        try:
+            target_url = f"{base_url}/{encoded_prompt}"
+            params = {
+                'model': model_name,
+                'width': '1024',
+                'height': '1024',
+                'nologo': 'true',
+                'seed': str(random.randint(0, 999999))
+            }
             
-    except Exception as e:
-        print(f"Pollinations library error: {e}")
-        return None, f"Pollinations error: {str(e)[:200]}"
+            print(f"Attempting Pollinations REST API with model '{model_name}'...")
+            resp = requests.get(target_url, params=params, headers=headers, stream=True, timeout=30)
+            
+            if resp.status_code == 200:
+                print(f"✓ Pollinations model '{model_name}' succeeded")
+                b64_str = base64.b64encode(resp.content).decode("utf-8")
+                return f"data:image/jpeg;base64,{b64_str}", None
+            else:
+                last_error = f"Model '{model_name}' failed with status {resp.status_code}: {resp.text[:100]}"
+                print(f"Pollinations model '{model_name}' error: {last_error}")
+                continue
+                
+        except Exception as e:
+            last_error = f"Model '{model_name}' exception: {str(e)}"
+            print(f"Pollinations model '{model_name}' exception: {last_error}")
+            continue
+            
+    return None, f"All Pollinations models failed. Last error: {last_error}"
 
 @app.route('/api/image/gen')
 def proxy_pollinations_gen():
@@ -602,15 +623,22 @@ def find_artisan_match(material, style):
         score = 0
         artist_text = (artist.get("style", "") + " " + artist.get("state", "") + " " + artist.get("description", "")).lower()
         
+        # Heavy weighting for Material and Style keywords
         for term in query_terms:
             if term in artist_text:
-                score += 1
+                score += 2 if term in artist.get("style", "").lower() else 1
         
-        # Boost score slightly for exact craft match if possible
-        if str(style).lower() in artist.get("style", "").lower():
-            score += 2
+        # Precise Material check
+        mat_lower = str(material).lower()
+        if mat_lower in artist_text:
+            score += 3
+        
+        # Exact style check
+        style_lower = str(style).lower()
+        if style_lower in artist.get("style", "").lower():
+            score += 5
             
-        # Add a tiny random factor to break ties and vary results for same prompts
+        # Add a tiny random factor to break ties
         score += random.random() * 0.5
         
         if score > best_score:
@@ -619,25 +647,14 @@ def find_artisan_match(material, style):
 
     # 4. Format the output to match what generate_design_flux expects
     if best_match:
-        # Extract price numerical value if possible, else default
-        # existing price_range string comes like "₹499 – ₹2,999"
-        # We'll just pick a random plausible price
-        price = 2500
-        try:
-            p_str = best_match.get("price_range", "").replace("₹", "").replace(",", "").split("–")[0].strip()
-            if p_str.isdigit():
-                price = int(p_str)
-        except:
-            pass
-            
         return {
-            "name": best_match.get("style", "Handicraft"), # Using craft name as product name
+            "name": best_match.get("style", "Handicraft"), 
             "state": best_match.get("state", "India"),
-            "fact": best_match.get("why_price", "Handcrafted excellence."),
+            "fact": best_match.get("description", "Handcrafted excellence.").split('.')[0] + '.',
             "category": best_match.get("style", "Handicraft"),
-            "production_time": best_match.get("labor_time", "1-2 Weeks"),
-            "price": price,
-            "artist_name": best_match.get("name") # The REAL artist name from the list
+            "production_time": best_match.get("meta", {}).get("labor", "1-2 Weeks"),
+            "price_range": best_match.get("meta", {}).get("price", "₹2,000 – ₹5,000"),
+            "artist_name": best_match.get("name")
         }
         
     # Fallback (very unlikely with loose matching)
@@ -645,12 +662,41 @@ def find_artisan_match(material, style):
     return {
         "name": fallback.get("style"),
         "state": fallback.get("state"),
-        "fact": fallback.get("why_price"),
+        "fact": fallback.get("description", "Handcrafted with tradition."),
         "category": fallback.get("style"),
-        "production_time": fallback.get("labor_time"),
-        "price": 2500,
+        "production_time": fallback.get("meta", {}).get("labor", "1-2 Weeks"),
+        "price_range": "₹2,000 – ₹5,000",
         "artist_name": fallback.get("name")
     }
+
+def get_authentic_price(description, material, style, artisan_range):
+    """Uses Gemini to suggest an authentic price based on craft complexity."""
+    if not GEMINI_API_KEY:
+        return 2999 # Static fallback if no key
+        
+    client = GeminiClient(GEMINI_API_KEY)
+    prompt = f"""You are an Indian Handicraft Appraiser. 
+Item Description: {description}
+Material: {material}
+Style: {style}
+Typical Artisan Price Range: {artisan_range}
+
+Suggest a realistic 'Fair Trade' price in INR (integer only) for an authentic, hand-made version of this specific design.
+Take into account the complexity described (intricate work costs more).
+Ensure the price is a multiple of 100.
+Reply with ONLY the number. No currency, no text."""
+    
+    try:
+        response = client.generate_content(prompt)
+        price_text = response.text.strip()
+        # Extract digits
+        digits = "".join([c for c in price_text if c.isdigit()])
+        if digits:
+            return int(digits)
+    except Exception as e:
+        sys.stderr.write(f"Price AI Error: {e}\n")
+        
+    return 2500 # Fallback
 
 @app.route('/api/generate-design-flux', methods=['POST'])
 def generate_design_flux():
@@ -682,6 +728,10 @@ def generate_design_flux():
             
         # Add Artisan Match
         artisan_match = find_artisan_match(material, style)
+        
+        # Get Authentic Price via AI
+        final_price = get_authentic_price(description, material, style, artisan_match.get("price_range"))
+        artisan_match["price"] = final_price
             
         return jsonify({
             "title": title, 
@@ -2220,19 +2270,67 @@ def get_artists():
     ]
     
     artists = []
-    male_names = ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram", "Sanjay", "Arjun", "Kishore", "Rajesh", "Aarav", "Vivaan", "Aditya", "Vihaan", "Sai", "Reyansh"]
-    female_names = ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali", "Kavita", "Deepa", "Bhavna", "Urmila", "Sudha", "Saanvi", "Aadya", "Kiara", "Diya", "Pari", "Ananya"]
-    last_names = ["Kumar", "Devi", "Khan", "Sharma", "Prasad", "Patel", "Singh", "Das", "Rao", "Nair", "Joshi", "Mistri", "Khatri", "Thakur", "Behera", "Gupta", "Yadav", "Reddy", "Choudhary", "Varma"]
+    
+    # State-Specific Naming Database (For Cultural Accuracy)
+    STATE_NAMING = {
+        "Andhra Pradesh": {
+            "male": ["Ramesh", "Suresh", "Venkatesh", "Srinivas", "Nagarjuna", "Chandra", "Kishore"],
+            "female": ["Lakshmi", "Padma", "Sunita", "Anjali", "Swathi", "Deepa", "Sravani"],
+            "last": ["Reddy", "Rao", "Naidu", "Chowdary", "Gupta", "Murthy", "Goud"]
+        },
+        "Arunachal Pradesh": {
+            "male": ["Tashi", "Dorjee", "Karsang", "Passang", "Jampa", "Sangey", "Wangchu"],
+            "female": ["Pema", "Sonam", "Tsering", "Diki", "Yangchen", "Rinchin", "Dechen"],
+            "last": ["Lama", "Dorjee", "Tsering", "Khandu", "Wangsa", "Libang", "Perme"]
+        },
+        "Assam": {
+            "male": ["Manas", "Pranjal", "Dipankar", "Bishal", "Utpal", "Gautam", "Rahul"],
+            "female": ["Barsha", "Priyanka", "Mousumi", "Pompy", "Nayanmoni", "Gayatri", "Daisy"],
+            "last": ["Baruah", "Gogoi", "Saikia", "Bora", "Kalita", "Sarma", "Das"]
+        },
+        "Bihar": {
+            "male": ["Mukesh", "Rajesh", "Sanjay", "Amit", "Alok", "Prakash", "Ravi"],
+            "female": ["Pooja", "Neha", "Suman", "Kiran", "Rekha", "Rani", "Shila"],
+            "last": ["Kumar", "Singh", "Yadav", "Mishra", "Jha", "Prasad", "Gupta"]
+        },
+        "Chhattisgarh": {
+            "male": ["Rakesh", "Vijay", "Anil", "Dinesh", "Suresh", "Manish", "Pawan"],
+            "female": ["Meena", "Geeta", "Sita", "Lalita", "Kavita", "Anita", "Radha"],
+            "last": ["Baghel", "Sahu", "Patel", "Verma", "Dewangan", "Netam", "Kashyap"]
+        },
+        "Goa": {
+            "male": ["Mario", "Pedro", "Anthony", "Francisco", "Joao", "Caitan", "Savio"],
+            "female": ["Maria", "Fatima", "Isabella", "Rosie", "Ana", "Josephine", "Carmina"],
+            "last": ["Fernandes", "D'Souza", "Rodrigues", "Pereira", "Gomes", "Dias", "Costa"]
+        },
+        "Gujarat": {
+            "male": ["Hitesh", "Jignesh", "Viral", "Chirag", "Hardik", "Mayur", "Pratik"],
+            "female": ["Bhumika", "Dhara", "Kinjal", "Peral", "Falguni", "Jigisha", "Mittal"],
+            "last": ["Patel", "Shah", "Mehta", "Dave", "Joshi", "Bhatt", "Ammani"]
+        }
+    }
+
+    # Fallback for unknown states
+    GENERIC_NAMING = {
+        "male": ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram"],
+        "female": ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali"],
+        "last": ["Kumar", "Devi", "Khan", "Sharma", "Singh", "Das"]
+    }
 
     for i, item in enumerate(real_artisans):
         # Use a local Random instance for thread-safety and determinism
         rng = random.Random(i + 5000)
+        
+        state = item.get('state', '')
+        naming_pool = STATE_NAMING.get(state, GENERIC_NAMING)
+        
         is_male = rng.random() > 0.4
         gender = 'male' if is_male else 'female'
-        fname = rng.choice(male_names) if is_male else rng.choice(female_names)
-        lname = rng.choice(last_names)
         
-        # Use Pollinations for image if no real image
+        # Pick names from the specific state pool
+        fname = rng.choice(naming_pool["male"]) if is_male else rng.choice(naming_pool["female"])
+        lname = rng.choice(naming_pool["last"])
+        
         # Use Pollinations for image if no real image
         # Use local proxy to hide API key and ensure correct endpoint
         p_text = 'Portrait of Indian artisan ' + gender + ' ' + item['state'] + ' ' + item['craft']
