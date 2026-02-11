@@ -505,20 +505,38 @@ def proxy_pollinations_gen():
         
     try:
         api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
-        base_url = "https://gen.pollinations.ai/image"
-        
-        # Reconstruct query params regarding visual settings
-        # Note: gen.pollinations.ai expects params in query or path? 
-        # API docs say: /image/{prompt}?key=...
+        # Use the standard image endpoint
+        base_url = "https://image.pollinations.ai/prompt"
         
         encoded_prompt = urllib.parse.quote(prompt)
         target_url = f"{base_url}/{encoded_prompt}"
         
         params = request.args.copy()
-        params.pop('prompt', None) # Remove prompt from query, it's in path
-        params['key'] = api_key
+        params.pop('prompt', None)
         
-        resp = requests.get(target_url, params=params, stream=True, timeout=30)
+        print(f"DEBUG: API Key loaded? {'Yes' if api_key else 'No'} (Len: {len(api_key)})")
+        headers = {}
+        if api_key:
+            print(f"DEBUG: Key starts with: {api_key[:4]}...")
+            headers['Authorization'] = f"Bearer {api_key}"
+            # Remove key from params if it was there to avoid duplication/confusion
+            params.pop('key', None)
+        
+        print(f"Proxying to Pollinations: {target_url}")
+        print(f"DEBUG: Headers: {headers}")
+        print(f"DEBUG: Params: {params}")
+        
+        # Explicitly set User-Agent to mimic browser or curl to rule out blocking
+        headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        
+        resp = requests.get(target_url, params=params, headers=headers, stream=True, timeout=60)
+        
+        print(f"DEBUG: Response Status: {resp.status_code}")
+        print(f"DEBUG: Response Headers: {resp.headers}")
+        
+        if resp.status_code != 200:
+            print(f"Pollinations Proxy Error {resp.status_code}: {resp.text[:200]}")
+            
         return make_response(resp.content, resp.status_code, {'Content-Type': resp.headers.get('Content-Type', 'image/jpeg')})
         
     except Exception as e:
@@ -530,7 +548,16 @@ def generate_image_design(prompt_text):
     """Generate image. Primary: Gemini Imagen 3. Fallback: Pollinations."""
     
     # 1. PRIMARY: GEMINI IMAGEN 3 (Free Tier, Higher Quality)
-    # 1. PRIMARY: Hugging Face (Requested by user)
+    # 1. PRIMARY: POLLINATIONS (If Key Provided)
+    if POLLINATIONS_API_KEY:
+        print("Attempting Pollinations.ai (Paid/Key)...")
+        url, err = generate_image_pollinations(prompt_text)
+        if url:
+            print("✓ Pollinations succeeded")
+            return url, None
+        print(f"Pollinations failed ({err}).")
+
+    # 2. SECONDARY: Hugging Face (Requested by user)
     if HF_TOKEN:
         img_url, err = hf_img_client.generate_image(prompt_text)
         if img_url:
@@ -538,7 +565,7 @@ def generate_image_design(prompt_text):
             return img_url, None
         print(f"Hugging Face failed: {err}")
 
-    # 2. FALLBACK: GEMINI IMAGEN
+    # 3. FALLBACK: GEMINI IMAGEN
     if GEMINI_API_KEY:
         print("Attempting Gemini Imagen...")
         img_url, err = gemini_img_client.generate_image(prompt_text)
@@ -547,15 +574,15 @@ def generate_image_design(prompt_text):
             return img_url, None
         print(f"Gemini Imagen failed: {err}")
     
-    # 3. FINAL FALLBACK: POLLINATIONS
-    print("Attempting Pollinations.ai (Fallback)...")
-    url, err = generate_image_pollinations(prompt_text)
-    if url:
-        print("✓ Pollinations succeeded")
-        return url, None
+    # 4. FINAL FALLBACK: POLLINATIONS (Free Tier)
+    if not POLLINATIONS_API_KEY:
+        print("Attempting Pollinations.ai (Free Tier Fallback)...")
+        url, err = generate_image_pollinations(prompt_text)
+        if url:
+            print("✓ Pollinations succeeded")
+            return url, None
     
-    print(f"Pollinations failed ({err}).")
-    return None, f"Image generation failed: {err}"
+    return None, "Image generation failed using all available providers."
 
 
 
@@ -575,7 +602,27 @@ def find_artisan_match(material, style):
         "Gemstone/Jewelry": ["Jewellery", "Jewelry", "Bead", "Lac", "Shell"]
     }
     
+    # Common artisan names by region for realism
+    ARTISAN_NAMES = {
+        "North": ["Ram Lal", "Sita Devi", "Mukesh Kumar", "Geeta", "Harish Chandra", "Sunita"],
+        "South": ["Lakshmi", "Murugan", "Anitha", "Ramesh", "Padma", "Krishna"],
+        "East": ["Amit", "Aditi", "Rahul", "Priya", "Suresh", "Mina"],
+        "West": ["Rajesh", "Meena", "Suresh", "Bhavna", "Vijay", "Anita"],
+        "NorthEast": ["Tashi", "Pema", "Dorjee", "Maya", "Kunzang", "Sonam"]
+    }
+
+    state_regions = {
+        "Jammu and Kashmir": "North", "Himachal Pradesh": "North", "Punjab": "North", "Haryana": "North", 
+        "Uttarakhand": "North", "Delhi": "North", "Uttar Pradesh": "North", "Rajasthan": "West", "Gujarat": "West",
+        "Maharashtra": "West", "Goa": "West", "Madhya Pradesh": "North", "Chhattisgarh": "East", "Bihar": "East",
+        "Jharkhand": "East", "West Bengal": "East", "Odisha": "East", "Sikkim": "NorthEast", "Assam": "NorthEast",
+        "Meghalaya": "NorthEast", "Arunachal Pradesh": "NorthEast", "Nagaland": "NorthEast", "Manipur": "NorthEast",
+        "Mizoram": "NorthEast", "Tripura": "NorthEast", "Andhra Pradesh": "South", "Telangana": "South",
+        "Karnataka": "South", "Kerala": "South", "Tamil Nadu": "South"
+    }
+    
     keywords = mat_map.get(material, [material])
+    import random
     
     for state, data in HERITAGE_DATA.items():
         for item in data.get("items", []):
@@ -584,18 +631,38 @@ def find_artisan_match(material, style):
             
             # Match based on keywords in name or category
             if any(kw.lower() in item_name or kw.lower() in item_cat for kw in keywords):
+                # Calculate dynamic price
+                min_p, max_p = item.get("price_range", (1500, 5000))
+                price = random.randint(min_p, max_p)
+                
+                # Generate artist name
+                region = state_regions.get(state, "North")
+                name_list = ARTISAN_NAMES.get(region, ARTISAN_NAMES["North"])
+                artist_name = f"{random.choice(name_list)}"
+
                 matches.append({
                     "name": item.get("name"),
                     "state": state,
                     "fact": item.get("fun_fact"),
                     "category": item.get("category"),
-                    "production_time": item.get("production_time")
+                    "production_time": item.get("production_time"),
+                    "price": price,
+                    "artist_name": artist_name
                 })
                 
     if matches:
-        import random
         return random.choice(matches)
-    return None
+    
+    # Fallback if no match found
+    return {
+        "name": "Traditional Artisan",
+        "state": "India",
+        "fact": "Handcrafted with love and tradition.",
+        "category": "Handicraft",
+        "production_time": "1-2 Weeks",
+        "price": 2999,
+        "artist_name": "Master Craftsman"
+    }
 
 @app.route('/api/generate-design-flux', methods=['POST'])
 def generate_design_flux():
@@ -2238,7 +2305,7 @@ def design_craft():
 def data():
     return render_template('data.html')
 
-@app.route('/api/chat_unused', methods=['POST'])
+@app.route('/api/chat', methods=['POST'])
 @login_required
 def ai_chat():
     """AI-powered chatbot endpoint using Gemini"""
