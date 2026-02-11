@@ -465,48 +465,41 @@ if not POLLINATIONS_IMAGE_MODELS:
 
 
 def generate_image_pollinations(prompt_text):
-    """Generate image via Pollinations.ai legacy image endpoint.
-
-    Uses the same URL pattern that works in your browser:
-    https://image.pollinations.ai/prompt/{prompt}?width=1024&height=1024&model=flux&nologo=true&seed=...
-    Returns that URL directly so the <img> tag can load it.
+    """Generate image via Pollinations.ai (Free Tier) using official library.
+    
+    Returns a Base64 Data URI so the image is embedded directly in the response.
     """
     try:
-        import urllib.parse
-        import random
+        import pollinations
+        import io
+        import base64
 
-        encoded_prompt = urllib.parse.quote(prompt_text[:1000], safe="")
-        model = POLLINATIONS_IMAGE_MODELS[0]  # first in priority list
-        seed = random.randint(0, 999999)
-
-        # Use local proxy to hide API key
-        params = {
-            'prompt': prompt_text[:1000],
-            'model': model,
-            'width': 1024,
-            'height': 1024,
-            'nologo': 'true',
-            'seed': seed
-        }
-        query_string = urllib.parse.urlencode(params)
-        return f"/api/image/gen?{query_string}", None
+        print("Generating Pollinations image via library...")
+        # Use the official library which handles the API complexity
+        model = pollinations.Image(model='flux', width=1024, height=1024, seed=random.randint(0, 999999), nologo=True)
+        image = model(prompt_text[:1000])
+        
+        # Convert PIL Image to Base64
+        buffer = io.BytesIO()
+        image.save(buffer, format="JPEG")
+        b64_str = base64.b64encode(buffer.getvalue()).decode("utf-8")
+        
+        return f"data:image/jpeg;base64,{b64_str}", None
             
     except Exception as e:
-        print(f"Pollinations URL generation error: {e}")
+        print(f"Pollinations library error: {e}")
         return None, f"Pollinations error: {str(e)[:200]}"
-
 
 @app.route('/api/image/gen')
 def proxy_pollinations_gen():
-    """Proxy request to gen.pollinations.ai with API Key (hidden from client)."""
+    """Proxy request to gen.pollinations.ai (No API Key needed for free tier)."""
     prompt = request.args.get('prompt')
     if not prompt:
         return "Missing prompt", 400
         
     try:
-        api_key = (os.getenv("POLLINATIONS_API_KEY") or "").strip()
-        # Use the standard image endpoint
-        base_url = "https://image.pollinations.ai/prompt"
+        # Use the working legacy endpoint structure: https://pollinations.ai/p/{encoded_prompt}
+        base_url = "https://pollinations.ai/p"
         
         encoded_prompt = urllib.parse.quote(prompt)
         target_url = f"{base_url}/{encoded_prompt}"
@@ -514,30 +507,27 @@ def proxy_pollinations_gen():
         params = request.args.copy()
         params.pop('prompt', None)
         
-        print(f"DEBUG: API Key loaded? {'Yes' if api_key else 'No'} (Len: {len(api_key)})")
-        headers = {}
-        if api_key:
-            print(f"DEBUG: Key starts with: {api_key[:4]}...")
-            headers['Authorization'] = f"Bearer {api_key}"
-            # Remove key from params if it was there to avoid duplication/confusion
-            params.pop('key', None)
+        # DEBUG: Pollinations is free, keys sometimes cause "text/html" errors on this endpoint
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'image/jpeg, image/png, */*'
+        }
         
         print(f"Proxying to Pollinations: {target_url}")
-        print(f"DEBUG: Headers: {headers}")
         print(f"DEBUG: Params: {params}")
-        
-        # Explicitly set User-Agent to mimic browser or curl to rule out blocking
-        headers['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
         
         resp = requests.get(target_url, params=params, headers=headers, stream=True, timeout=60)
         
         print(f"DEBUG: Response Status: {resp.status_code}")
         print(f"DEBUG: Response Headers: {resp.headers}")
         
-        if resp.status_code != 200:
-            print(f"Pollinations Proxy Error {resp.status_code}: {resp.text[:200]}")
+        content_type = resp.headers.get('Content-Type', '')
+        if resp.status_code != 200 or 'image' not in content_type:
+            # If it's HTML/text, print it to see the error message
+            error_text = resp.text[:500]
+            print(f"Pollinations Proxy Error {resp.status_code} ({content_type}): {error_text}")
             
-        return make_response(resp.content, resp.status_code, {'Content-Type': resp.headers.get('Content-Type', 'image/jpeg')})
+        return make_response(resp.content, resp.status_code, {'Content-Type': content_type or 'image/jpeg'})
         
     except Exception as e:
         print(f"Pollinations Proxy Error: {e}")
@@ -545,42 +535,35 @@ def proxy_pollinations_gen():
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Primary: Gemini Imagen 3. Fallback: Pollinations."""
+    """Generate image. Primary: Gemini Imagen 3 (if billed). Fallback: Pollinations (Direct URL)."""
     
-    # 1. PRIMARY: GEMINI IMAGEN 3 (Free Tier, Higher Quality)
-    # 1. PRIMARY: POLLINATIONS (If Key Provided)
-    if POLLINATIONS_API_KEY:
-        print("Attempting Pollinations.ai (Paid/Key)...")
-        url, err = generate_image_pollinations(prompt_text)
-        if url:
-            print("✓ Pollinations succeeded")
-            return url, None
-        print(f"Pollinations failed ({err}).")
+    # 1. PRIMARY: GEMINI IMAGEN 3 (Requires Billing)
+    if GEMINI_API_KEY:
+        print("Attempting Gemini Imagen...")
+        # Note: This will fail with 400 if the account is free tier.
+        # We catch that inside generate_image() and it returns error message, so we fall through.
+        img_url, err = gemini_img_client.generate_image(prompt_text)
+        if img_url:
+            print("✓ Gemini Imagen succeeded")
+            return img_url, None
+        print(f"Gemini Imagen failed: {err}")
 
-    # 2. SECONDARY: Hugging Face (Requested by user)
+    # 2. FALLBACK: POLLINATIONS (Free Tier, Direct URL)
+    # We always attempt this if Gemini fails, as it's the only free reliable option.
+    print("Attempting Pollinations.ai (Direct URL Fallback)...")
+    url, err = generate_image_pollinations(prompt_text)
+    if url:
+         print("✓ Pollinations URL generated")
+         return url, None
+    print(f"Pollinations failed ({err}).")
+
+    # 3. LEGACY FALLBACK: Hugging Face (Starts broken, user might fix token)
     if HF_TOKEN:
         img_url, err = hf_img_client.generate_image(prompt_text)
         if img_url:
             print("✓ Hugging Face succeeded")
             return img_url, None
         print(f"Hugging Face failed: {err}")
-
-    # 3. FALLBACK: GEMINI IMAGEN
-    if GEMINI_API_KEY:
-        print("Attempting Gemini Imagen...")
-        img_url, err = gemini_img_client.generate_image(prompt_text)
-        if img_url:
-            print("✓ Gemini Imagen succeeded")
-            return img_url, None
-        print(f"Gemini Imagen failed: {err}")
-    
-    # 4. FINAL FALLBACK: POLLINATIONS (Free Tier)
-    if not POLLINATIONS_API_KEY:
-        print("Attempting Pollinations.ai (Free Tier Fallback)...")
-        url, err = generate_image_pollinations(prompt_text)
-        if url:
-            print("✓ Pollinations succeeded")
-            return url, None
     
     return None, "Image generation failed using all available providers."
 
@@ -589,79 +572,84 @@ def generate_image_design(prompt_text):
 
 
 def find_artisan_match(material, style):
-    """Matches a material and style to a specific handicraft in HERITAGE_DATA."""
-    matches = []
+    """Matches a material and style to a specific artisan from get_artists()."""
     
-    # Material mapping (Normalizing input to database categories/keywords)
-    mat_map = {
-        "Metal/Brass": ["Metal", "Brass", "Bell Metal", "Dhokra", "Wrought Iron"],
-        "Silk/Textile": ["Silk", "Textile", "Saree", "Mekhela", "Embroidery", "Weaving"],
-        "Clay/Pottery": ["Clay", "Pottery", "Terracotta", "Ceramic"],
-        "Wood": ["Wood", "Wooden", "Carving", "Bamboo", "Cane"],
-        "Stone/Marble": ["Stone", "Marble", "Inlay"],
-        "Gemstone/Jewelry": ["Jewellery", "Jewelry", "Bead", "Lac", "Shell"]
-    }
-    
-    # Common artisan names by region for realism
-    ARTISAN_NAMES = {
-        "North": ["Ram Lal", "Sita Devi", "Mukesh Kumar", "Geeta", "Harish Chandra", "Sunita"],
-        "South": ["Lakshmi", "Murugan", "Anitha", "Ramesh", "Padma", "Krishna"],
-        "East": ["Amit", "Aditi", "Rahul", "Priya", "Suresh", "Mina"],
-        "West": ["Rajesh", "Meena", "Suresh", "Bhavna", "Vijay", "Anita"],
-        "NorthEast": ["Tashi", "Pema", "Dorjee", "Maya", "Kunzang", "Sonam"]
-    }
+    # 1. Get real artists from the same source as the frontend
+    all_artists = get_artists()
+    if not all_artists:
+        # Fallback if list is empty (shouldn't happen given the hardcoded list in get_artists)
+        return {
+            "name": "Traditional Artisan",
+            "state": "India",
+            "fact": "Handcrafted with love and tradition.",
+            "category": "Handicraft",
+            "production_time": "1-2 Weeks",
+            "price": 2999,
+            "artist_name": "Master Craftsman"
+        }
 
-    state_regions = {
-        "Jammu and Kashmir": "North", "Himachal Pradesh": "North", "Punjab": "North", "Haryana": "North", 
-        "Uttarakhand": "North", "Delhi": "North", "Uttar Pradesh": "North", "Rajasthan": "West", "Gujarat": "West",
-        "Maharashtra": "West", "Goa": "West", "Madhya Pradesh": "North", "Chhattisgarh": "East", "Bihar": "East",
-        "Jharkhand": "East", "West Bengal": "East", "Odisha": "East", "Sikkim": "NorthEast", "Assam": "NorthEast",
-        "Meghalaya": "NorthEast", "Arunachal Pradesh": "NorthEast", "Nagaland": "NorthEast", "Manipur": "NorthEast",
-        "Mizoram": "NorthEast", "Tripura": "NorthEast", "Andhra Pradesh": "South", "Telangana": "South",
-        "Karnataka": "South", "Kerala": "South", "Tamil Nadu": "South"
-    }
+    # 2. Normalize inputs
+    query_terms = (str(material) + " " + str(style)).lower().split()
     
-    keywords = mat_map.get(material, [material])
+    # 3. Scoring system
+    best_match = None
+    best_score = -1
+    
     import random
     
-    for state, data in HERITAGE_DATA.items():
-        for item in data.get("items", []):
-            item_name = item.get("name", "").lower()
-            item_cat = item.get("category", "").lower()
+    # We want to match based on craft, state, or description
+    for artist in all_artists:
+        score = 0
+        artist_text = (artist.get("style", "") + " " + artist.get("state", "") + " " + artist.get("description", "")).lower()
+        
+        for term in query_terms:
+            if term in artist_text:
+                score += 1
+        
+        # Boost score slightly for exact craft match if possible
+        if str(style).lower() in artist.get("style", "").lower():
+            score += 2
             
-            # Match based on keywords in name or category
-            if any(kw.lower() in item_name or kw.lower() in item_cat for kw in keywords):
-                # Calculate dynamic price
-                min_p, max_p = item.get("price_range", (1500, 5000))
-                price = random.randint(min_p, max_p)
-                
-                # Generate artist name
-                region = state_regions.get(state, "North")
-                name_list = ARTISAN_NAMES.get(region, ARTISAN_NAMES["North"])
-                artist_name = f"{random.choice(name_list)}"
+        # Add a tiny random factor to break ties and vary results for same prompts
+        score += random.random() * 0.5
+        
+        if score > best_score:
+            best_score = score
+            best_match = artist
 
-                matches.append({
-                    "name": item.get("name"),
-                    "state": state,
-                    "fact": item.get("fun_fact"),
-                    "category": item.get("category"),
-                    "production_time": item.get("production_time"),
-                    "price": price,
-                    "artist_name": artist_name
-                })
-                
-    if matches:
-        return random.choice(matches)
-    
-    # Fallback if no match found
+    # 4. Format the output to match what generate_design_flux expects
+    if best_match:
+        # Extract price numerical value if possible, else default
+        # existing price_range string comes like "₹499 – ₹2,999"
+        # We'll just pick a random plausible price
+        price = 2500
+        try:
+            p_str = best_match.get("price_range", "").replace("₹", "").replace(",", "").split("–")[0].strip()
+            if p_str.isdigit():
+                price = int(p_str)
+        except:
+            pass
+            
+        return {
+            "name": best_match.get("style", "Handicraft"), # Using craft name as product name
+            "state": best_match.get("state", "India"),
+            "fact": best_match.get("why_price", "Handcrafted excellence."),
+            "category": best_match.get("style", "Handicraft"),
+            "production_time": best_match.get("labor_time", "1-2 Weeks"),
+            "price": price,
+            "artist_name": best_match.get("name") # The REAL artist name from the list
+        }
+        
+    # Fallback (very unlikely with loose matching)
+    fallback = random.choice(all_artists)
     return {
-        "name": "Traditional Artisan",
-        "state": "India",
-        "fact": "Handcrafted with love and tradition.",
-        "category": "Handicraft",
-        "production_time": "1-2 Weeks",
-        "price": 2999,
-        "artist_name": "Master Craftsman"
+        "name": fallback.get("style"),
+        "state": fallback.get("state"),
+        "fact": fallback.get("why_price"),
+        "category": fallback.get("style"),
+        "production_time": fallback.get("labor_time"),
+        "price": 2500,
+        "artist_name": fallback.get("name")
     }
 
 @app.route('/api/generate-design-flux', methods=['POST'])
@@ -1391,7 +1379,7 @@ def call_groq_chat(user_message, context):
     if not groq_client:
         return _fallback_response(user_message)
         
-        orders_ctx = get_user_orders_context()
+    orders_ctx = get_user_orders_context()
     
     system_prompt = f"""{context}
 
@@ -1428,6 +1416,8 @@ You are the Craft Assistant for Desh Ke Haath.
         )
         return chat_completion.choices[0].message.content
     except Exception as e:
+        print(f"Groq Error: {e}")
+        return _fallback_response(user_message)
         print(f"Groq Chat Error: {e}")
         # Fallback to Gemini if Groq fails (or just fallback response)
         return _fallback_response(user_message)
@@ -1631,20 +1621,7 @@ def refine_design_prompt():
     return jsonify({"prompt": raw, "refined": False, "message": msg})
 
 
-@app.route('/api/chat', methods=['GET', 'POST'])
-def chat():
-    """Craft Assistant chat endpoint - Gemini-powered."""
-    if request.method == 'GET':
-        return jsonify({"status": "ok", "message": "Craft Assistant API"})
-    data = request.json or {}
-    message = (data.get("message") or "").strip()
-    if not message:
-        return jsonify({"reply": "Please type a message."})
-        
-    # Build context specific to this message
-    context = build_chatbot_context(message)
-    reply = call_gemini_chat(message, context)
-    return jsonify({"reply": reply})
+
 
 
 @app.route('/')
@@ -2307,8 +2284,8 @@ def data():
 
 @app.route('/api/chat', methods=['POST'])
 @login_required
-def ai_chat():
-    """AI-powered chatbot endpoint using Gemini"""
+def chat():
+    """AI-powered chatbot endpoint using Groq (Llama-3)"""
     try:
         data = request.get_json()
         user_message = data.get('message', '').strip()
@@ -2316,38 +2293,15 @@ def ai_chat():
         if not user_message:
             return jsonify({'error': 'Message is required'}), 400
         
-        if not chatbot_model:
-            return jsonify({'error': 'AI chatbot is not configured'}), 500
+        if not chatbot_model and not groq_client:
+             return jsonify({'error': 'AI chatbot is not configured'}), 500
         
-        # System context for CraftBuddy
-        system_context = """You are CraftBuddy, an AI assistant for "Desh Ke Haath" (देश के हाथ) - a platform celebrating Indian handicrafts and artisans.
-
-Your role is to help users learn about:
-- Indian handicrafts from all 36 states and union territories
-- Cultural significance and history of traditional crafts
-- Artisan stories, techniques, and traditions
-- Product recommendations from our collection
-- Traditional art forms and their regional origins
-- Craft-making processes and materials used
-
-Be friendly, knowledgeable, and passionate about preserving Indian heritage. Keep responses concise (2-3 paragraphs max) and engaging.
-
-When users ask about specific crafts, provide:
-1. Brief history and origin
-2. Cultural significance
-3. Key characteristics
-4. Where to find them on our platform (if applicable)
-
-If users want to see products, suggest they visit the Products page or use search.
-If they ask about artisans, direct them to the Artists page.
-If they want to design custom crafts, mention the AI Craft feature."""
-
-        # Create conversation with context
-        full_prompt = f"{system_context}\n\nUser: {user_message}\n\nCraftBuddy:"
+        # Build context specific to this message
+        context = build_chatbot_context(user_message)
         
-        # Generate response
-        response = chatbot_model.generate_content(full_prompt)
-        ai_response = response.text
+        # Use Groq (Llama-3) as primary, Gemini as backup (if implemented later)
+        # For now, switching strictly to Groq as requested
+        ai_response = call_groq_chat(user_message, context)
         
         return jsonify({
             'reply': ai_response,

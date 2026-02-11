@@ -99,7 +99,7 @@
                                 <span style="font-size: 1.2rem;">✨</span> Craftsman Connection
                             </div>
                             <div style="font-size: 0.85rem; line-height: 1.4;">
-                                <div style="margin-bottom: 4px;"><strong>Historical Match:</strong> <span id="matchName"
+                                <div style="margin-bottom: 4px;"><strong>Artist Name:</strong> <span id="matchName"
                                         style="color: var(--accent-color);"></span></div>
                                 <div style="margin-bottom: 4px;"><strong>Heritage Origin:</strong> <span
                                         id="matchState"></span></div>
@@ -263,13 +263,24 @@
             if (resMaterial) resMaterial.textContent = selectedMaterial;
             if (resStyle) resStyle.textContent = selectedStyle;
 
-            // Handle Artisan Match
+            // Handle Artisan Match and Dynamic Price
             const matchCard = document.getElementById('artisanMatchCard');
-            if (matchCard && data.artisan_match) {
-                document.getElementById('matchName').textContent = data.artisan_match.name;
+            let finalPrice = 2999; // Fallback
+            let artistName = "Master Craftsman";
+
+            if (data.artisan_match) {
+                artistName = data.artisan_match.artist_name || "Traditional Artisan";
+                document.getElementById('matchName').textContent = artistName;
                 document.getElementById('matchState').textContent = data.artisan_match.state;
                 document.getElementById('matchFact').textContent = data.artisan_match.fact;
-                matchCard.style.display = 'block';
+                
+                // Update Price Display
+                if (data.artisan_match.price) {
+                    finalPrice = data.artisan_match.price;
+                    document.querySelector('.spec-value.price').textContent = '₹' + finalPrice.toLocaleString('en-IN');
+                }
+                
+                if (matchCard) matchCard.style.display = 'block';
             } else if (matchCard) {
                 matchCard.style.display = 'none';
             }
@@ -282,8 +293,8 @@
                         const customId = 'custom_' + Date.now();
                         window.addToCart({
                             id: customId,
-                            name: `Custom ${selectedStyle} ${selectedMaterial} Design`,
-                            price: 2999,
+                            name: `Custom ${selectedStyle} ${selectedMaterial} by ${artistName}`,
+                            price: finalPrice,
                             image: data.image_url,
                             state: 'AI Studio',
                             quantity: 1
