@@ -256,6 +256,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const currentTheme = localStorage.getItem('theme');
     if (currentTheme === 'dark' || !currentTheme) {
         body.classList.add('dark-mode');
+        document.documentElement.classList.add('dark-mode');
         sunIcon.style.display = 'none';
         moonIcon.style.display = 'block';
     }
@@ -263,6 +264,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (themeToggle) {
         themeToggle.addEventListener('click', () => {
             body.classList.toggle('dark-mode');
+            document.documentElement.classList.toggle('dark-mode');
 
             if (body.classList.contains('dark-mode')) {
                 localStorage.setItem('theme', 'dark');

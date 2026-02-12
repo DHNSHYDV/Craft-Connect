@@ -14,7 +14,8 @@
     --transition-speed: 0.4s;
 }
 
-body.dark-mode {
+body.dark-mode,
+html.dark-mode {
     --primary-color: #000000;
     --accent-color: #80cbc4;
     /* Lighter teal for dark mode */
@@ -750,6 +751,9 @@ body:not(.dark-mode) .about-title::after {
     justify-content: center;
     align-items: center;
     animation: fadeIn 1.2s ease-out;
+    max-width: 1200px;
+    /* Increased from default */
+    margin: 0 auto;
 }
 
 /* Mobile Map Layout */
@@ -778,7 +782,8 @@ body:not(.dark-mode) .about-title::after {
 #india-map-wrapper svg {
     width: 100%;
     height: auto;
-    max-height: 70vh;
+    max-height: 85vh;
+    /* Increased from 70vh */
     /* filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2)); */
 }
 

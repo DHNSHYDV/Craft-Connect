@@ -28,10 +28,10 @@
         <nav class="main-nav">
             <ul>
                 <li><a href="{{ url_for('home') }}">Home</a></li>
+                <li><a href="{{ url_for('about') }}">About</a></li>
                 <li><a href="{{ url_for('map_page') }}">Map</a></li>
                 <li><a href="{{ url_for('products') }}">Products</a></li>
                 <li><a href="{{ url_for('artisans') }}">Artists</a></li>
-                <li><a href="{{ url_for('about') }}">About</a></li>
                 <li class="nav-item-has-dropdown">
                     <a href="#">AI Craft <span style="font-size: 0.8em; margin-left: 4px;">▼</span></a>
                     <ul class="nav-dropdown">
@@ -91,12 +91,18 @@
                     {% endif %}
                 </button>
                 <div class="profile-dropdown">
+                    {% if current_user.is_authenticated %}
                     <span class="dropdown-user">Hello, {{ current_user.name }}</span>
                     <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
                     <a href="{{ url_for('profile') }}" class="dropdown-item">My Profile</a>
                     <a href="{{ url_for('orders') }}" class="dropdown-item">My Orders</a>
                     <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
                     <a href="{{ url_for('logout') }}" class="dropdown-item">Log Out</a>
+                    {% else %}
+                    <span class="dropdown-user">Welcome, Guest</span>
+                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
+                    <a href="{{ url_for('entry') }}" class="dropdown-item">Sign In / Sign Up</a>
+                    {% endif %}
                 </div>
             </div>
         </div>

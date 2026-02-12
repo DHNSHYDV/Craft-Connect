@@ -39,17 +39,14 @@
 
 <script>
     document.body.classList.add('map-page-body');
-    // Force transparency on direct parents just in case
-    document.documentElement.style.background = 'transparent';
 </script>
 
 <style>
     /*
-     * FORCE GRID VISIBILITY
-     * Injected directly to bypass cache issues
+     * MAP VISUAL UPDATES
+     * Increased size and theme-adaptive background
      */
 
-    /* Ensure HTML/Body stack is transparent so our background shows */
     html,
     body.map-page-body {
         height: 100%;
@@ -57,47 +54,18 @@
         overflow-x: hidden;
     }
 
-    /* Apply Grid to Body */
+    /* Use Theme Background - Remove Grid */
     body.map-page-body {
-        /* Grid Variables */
-        --gap-size: 25px;
-        --line-thickness: 1px;
-
-        /* Light Mode Colors - High Contrast */
-        --grid-bg: #f8f9fa;
-        --grid-line: #ccc;
-
-        background-color: var(--grid-bg) !important;
-        background-image:
-            repeating-linear-gradient(var(--grid-line) 0 var(--line-thickness), transparent var(--line-thickness) var(--gap-size)),
-            repeating-linear-gradient(90deg, var(--grid-line) 0 var(--line-thickness), transparent var(--line-thickness) var(--gap-size)) !important;
-        background-size: 100% var(--gap-size), var(--gap-size) 100% !important;
-        animation: scroll 3s linear infinite;
+        background-color: var(--bg-color) !important;
+        background-image: none !important;
+        transition: background-color 0.3s ease, color 0.3s ease;
     }
 
-    /* Dark Mode Colors - High Contrast */
-    body.dark-mode.map-page-body {
-        --grid-bg: #000000;
-        --grid-line: #333333;
-    }
-
-    /* Animation */
-    @keyframes scroll {
-        0% {
-            background-position: 0 0, 0 0;
-        }
-
-        100% {
-            background-position: 0 var(--gap-size), var(--gap-size) 0;
-        }
-    }
-
-    /* Aggressive Transparency Overrides */
+    /* Ensure content containers are transparent so body bg shows */
+    /* Ensure content containers are transparent so body bg shows */
     body.map-page-body main,
-    body.map-page-body .map-page-section,
-    html {
+    body.map-page-body .map-page-section {
         background: transparent !important;
-        background-color: transparent !important;
     }
 
     /* Existing Map Styles - Critical for layout */
@@ -112,7 +80,6 @@
         background: transparent !important;
         transition: background 0.3s ease;
         z-index: 5;
-        /* Ensure content is above stars */
     }
 
     main {
@@ -144,13 +111,16 @@
     .map-page-container {
         position: relative;
         width: 100%;
-        max-width: 900px;
+        max-width: 1200px;
+        /* Increased from 900px */
         margin: 0 auto;
         display: flex;
         justify-content: center;
         align-items: center;
         gap: 1.5rem;
-        filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.15));
+        gap: 1.5rem;
+        /* filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.15)); */
+        z-index: 10;
         z-index: 10;
     }
 
@@ -170,27 +140,60 @@
     }
 
     body.dark-mode #india-map-wrapper {
-        background: transparent;
+        background: transparent !important;
     }
 
     body:not(.dark-mode) #india-map-wrapper {
-        background: transparent;
+        background: transparent !important;
     }
 
     #india-map-wrapper {
-        flex: 0 1 55%;
+        flex: 0 1 70%;
+        /* Increased flex basis */
         display: flex;
         justify-content: center;
-        /* Background handled by theme selector above */
-        padding: 2rem;
+        padding: 1rem;
+        /* Reduced padding */
         border-radius: 20px;
+        background: transparent !important;
+    }
+
+    /* Force all parents to be transparent */
+    /* Force all parents to be transparent */
+    .map-page-section,
+    .map-page-container,
+    .map-page-container *,
+    #india-map-wrapper,
+    main {
+        background-color: transparent !important;
+    }
+
+    /* Nuclear option for map section children */
+    .map-page-section * {
+        background-color: transparent !important;
+    }
+
+    /* Re-apply background to tooltips and specific UI elements if needed */
+    .map-tooltip {
+        background: var(--card-bg) !important;
+    }
+
+    /* Ensure content containers are transparent so body bg shows */
+    html {
+        background: transparent !important;
+    }
+
+    /* Ensure Body and HTML carry the color */
+    html,
+    body.map-page-body {
+        background-color: var(--bg-color) !important;
     }
 
     #india-map-wrapper svg {
         width: 100%;
         height: auto;
-        max-height: 70vh;
-        /* filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.1)); */
+        max-height: 85vh;
+        /* Increased from 70vh */
         transition: transform 0.3s ease, filter 0.3s ease;
     }
 </style>

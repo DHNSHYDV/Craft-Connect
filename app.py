@@ -1676,15 +1676,15 @@ def refine_design_prompt():
 
 @app.route('/')
 def index():
-    # Redirect to /entry to bypass browser cache - splash is the gate
-    resp = redirect(url_for('entry'))
-    resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
-    return resp
+    """Home page - Public Access."""
+    return render_template('index.html')
 
 
 @app.route('/entry')
 def entry():
     """Splash gate: Grok video + login/signup. Always shown first."""
+    if current_user.is_authenticated:
+        return redirect(url_for('index'))
     resp = make_response(render_template('splash.html'))
     resp.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, max-age=0'
     resp.headers['Pragma'] = 'no-cache'
@@ -1695,26 +1695,26 @@ def entry():
 @app.route('/splash')
 def splash():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     return render_template('splash.html')
 
 
 @app.route('/home')
-@login_required
 def home():
-    return render_template('index.html')
+    """Alias for index"""
+    return redirect(url_for('index'))
 
 
 @app.route('/login', methods=['POST'])
 def login():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     email = request.form.get('email', '').strip().lower()
     password = request.form.get('password', '')
     user = User.query.filter_by(email=email).first()
     if user and user.check_password(password):
         login_user(user)
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     flash('Invalid email or password.', 'error')
     return redirect(url_for('entry'))
 
@@ -1722,7 +1722,7 @@ def login():
 @app.route('/signup', methods=['POST'])
 def signup():
     if current_user.is_authenticated:
-        return redirect(url_for('home'))
+        return redirect(url_for('index'))
     email = request.form.get('email', '').strip().lower()
     name = request.form.get('name', '').strip()
     password = request.form.get('password', '')

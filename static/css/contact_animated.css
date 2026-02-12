@@ -1,7 +1,7 @@
 /* Animated Contact Cards */
 .contact-container {
     display: flex;
-    align-items: center;
+    align-items: stretch !important;
     justify-content: center;
     gap: 3rem;
     flex-wrap: wrap;
