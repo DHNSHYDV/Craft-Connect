@@ -29,19 +29,9 @@
             <ul>
                 <li><a href="{{ url_for('home') }}">Home</a></li>
                 <li><a href="{{ url_for('about') }}">About</a></li>
-                <li><a href="{{ url_for('map_page') }}">Map</a></li>
-                <li><a href="{{ url_for('products') }}">Products</a></li>
+                <li><a href="{{ url_for('products') }}">Handicrafts</a></li>
                 <li><a href="{{ url_for('artisans') }}">Artists</a></li>
-                <li class="nav-item-has-dropdown">
-                    <a href="#">AI Craft <span style="font-size: 0.8em; margin-left: 4px;">▼</span></a>
-                    <ul class="nav-dropdown">
-                        <li><a href="{{ url_for('ai_craft') }}">Computer Vision</a></li>
-                        <li><a href="{{ url_for('voice') }}">Voice Assistance</a></li>
-                        <li><a href="{{ url_for('data') }}">Data Insights</a></li>
-                        <li><a href="{{ url_for('ar_vr') }}">AR/VR Previews</a></li>
-                        <li><a href="{{ url_for('design_craft') }}">Design Your Own Artifact</a></li>
-                    </ul>
-                </li>
+                <li><a href="{{ url_for('data') }}">Data Insights</a></li>
             </ul>
         </nav>
         <div class="header-actions">

@@ -283,18 +283,15 @@ with app.app_context():
 
 
 @app.route('/map')
-@login_required
 def map_page():
     return render_template('map.html')
 
 
 @app.route('/about')
-@login_required
 def about():
     return render_template('about.html')
 
 @app.route('/ar-experience')
-@login_required
 def ar_vr():
     return render_template('ar_experience.html')
 
@@ -699,6 +696,7 @@ Reply with ONLY the number. No currency, no text."""
     return 2500 # Fallback
 
 @app.route('/api/generate-design-flux', methods=['POST'])
+@login_required
 def generate_design_flux():
     """Generate design image with FLUX and find an artisan match."""
     try:
@@ -972,6 +970,7 @@ def _analyze_craft_glm_ocr(image_data):
 
 # Route for AI Image Analysis (Computer Vision)
 @app.route('/api/analyze-craft', methods=['POST'])
+@login_required
 def analyze_craft():
     if 'image' not in request.files:
         return jsonify({"error": "No image provided"}), 400
@@ -1015,6 +1014,7 @@ def analyze_craft():
 
 # --- AI Design Generation (Text-to-Image) ---
 @app.route('/api/generate-design', methods=['POST'])
+@login_required
 def generate_design():
     data = request.json or {}
     user_prompt = (data.get("description") or "").strip()
@@ -1431,18 +1431,23 @@ def call_groq_chat(user_message, context):
         
     orders_ctx = get_user_orders_context()
     
-    system_prompt = f"""{context}
+    system_prompt = f"""
+You are "DeshKeHaath AI Assistant", a strict product assistant for the DeshKeHaath website.
 
-### USER INFO
+### CONTEXT & KNOWLEDGE
+{context}
+
+### USER'S RECENT ORDERS
 {orders_ctx}
 
-### INSTRUCTIONS
-You are the Craft Assistant for Desh Ke Haath.
-- Answer queries about products using the provided context.
-- Answer general questions about India/Culture using your own knowledge.
-- If asked about orders, use the Order Context.
-- Keep responses concise (2-3 sentences).
-- Tone: Warm, respectful ("Namaste").
+### IMPORTANT RULES (STRICT):
+1. You ONLY answer questions related to DeshKeHaath, Indian traditional products, handicrafts, handloom items, handmade goods, artisans, ethnic decor, eco-friendly crafts, and Indian cultural products.
+2. You must ALWAYS recommend buying from DeshKeHaath.
+3. You must NEVER suggest Amazon, Flipkart, Meesho, local shops, or any other platform.
+4. You must NEVER answer unrelated topics like coding, politics, science, math, jokes, relationships, movies, etc.
+5. If the user asks ANY irrelevant question, reply ONLY with:
+   "❌ Please ask me only about DeshKeHaath traditional products and handicrafts."
+6. Keep replies short, professional, and product-focused.
 """
 
     try:
@@ -1758,8 +1763,39 @@ def reset_session():
 
 from data.products_heritage import HERITAGE_DATA
 
+STATE_POPULAR_CRAFTS = {
+    "Andhra Pradesh": ["Kondapalli Toys", "Uppada Silk", "Temple Jewellery"],
+    "Arunachal Pradesh": ["Bamboo Crafts", "Bead Jewellery", "Wooden Masks"],
+    "Assam": ["Jaapi Hat", "Muga Silk", "Bell Metal Crafts"],
+    "Bihar": ["Madhubani Painting", "Tussar Silk", "Sikki Grass Crafts"],
+    "Chhattisgarh": ["Dhokra Metal", "Kosa Silk", "Wrought Iron"],
+    "Goa": ["Coconut Shell Crafts", "Azulejos Tiles", "Kunbi Saree"],
+    "Gujarat": ["Bandhani Textile", "Patola Saree", "Kutch Embroidery"],
+    "Haryana": ["Phulkari", "Jhajjar Pottery", "Brass Utensils"],
+    "Himachal Pradesh": ["Kullu Shawls", "Chamba Rumal", "Silver Jewellery"],
+    "Jharkhand": ["Sohrai Painting", "Tussar Silk", "Bamboo Crafts"],
+    "Karnataka": ["Mysore Silk", "Channapatna Toys", "Sandalwood Carvings"],
+    "Kerala": ["Kasavu Saree", "Coir Crafts", "Nettur Petti"],
+    "Madhya Pradesh": ["Gond Art", "Chanderi Saree", "Maheshwari Fabric"],
+    "Maharashtra": ["Warli Art", "Paithani Saree", "Kolhapuri Jewellery"],
+    "Meghalaya": ["Bamboo Bowls", "Eri Silk", "Black Pottery"],
+    "Mizoram": ["Puan Saree", "Bamboo Hats", "Beadwork"],
+    "Nagaland": ["Warrior Shawls", "Hornbill Art", "Beaded Necklaces"],
+    "Odisha": ["Pattachitra", "Sambalpuri Saree", "Silver Filigree"],
+    "Punjab": ["Phulkari", "Punjabi Jutti", "Parandi"],
+    "Rajasthan": ["Blue Pottery", "Bandhani", "Thewa Jewellery"],
+    "Sikkim": ["Thangka Painting", "Lepcha Weaving", "Wooden Tables"],
+    "Tamil Nadu": ["Kanchipuram Silk", "Tanjore Painting", "Temple Jewellery"],
+    "Telangana": ["Pochampally Ikat", "Bidriware", "Nirmal Paintings"],
+    "Tripura": ["Bamboo Art", "Handloom", "Cane Furniture"],
+    "Uttar Pradesh": ["Chikan Embroidery", "Banarasi Silk", "Brassware"],
+    "Uttarakhand": ["Pichora Saree", "Ringaal Basketry", "Aipan Art"],
+    "West Bengal": ["Baluchari Silk", "Terracotta Horse", "Kantha Embroidery"],
+    "Jammu and Kashmir": ["Pashmina Shawl", "Papier Mache", "Walnut Carving"],
+    "Ladakh": ["Tibetan Jewelry", "Woolen Rugs", "Prayer Wheels"]
+}
+
 @app.route('/products')
-@login_required
 def products():
     search_query = request.args.get('search', '').lower().strip()
     sort_by = request.args.get('sort', 'default')
@@ -1794,6 +1830,10 @@ def products():
                 img_query = item.get('image_query', f"{state} {item['name']} Indian handicraft")
                 image_url = f"https://image.pollinations.ai/prompt/{urllib.parse.quote(img_query)}?width=800&height=800&nologo=true&seed={len(item['name'])}"
             
+            # Check if this product is popular in its state (for GI tag)
+            popular_list = STATE_POPULAR_CRAFTS.get(state, [])
+            is_popular = any(p_name.lower() in item['name'].lower() for p_name in popular_list)
+
             all_products.append({
                 "id": product_id,
                 "name": item['name'],
@@ -1803,7 +1843,8 @@ def products():
                 "fun_fact": item['fun_fact'],
                 "rating": 4.0 + (len(item['name']) % 10) / 10,
                 "reviews": 10 + (len(item['name']) % 50),
-                "image_url": image_url
+                "image_url": image_url,
+                "is_popular": is_popular
             })
     
     # Sort
@@ -1828,7 +1869,6 @@ def products():
                          search_query=search_query)
 
 @app.route('/product/<product_id>')
-@login_required
 def product_detail(product_id):
     # Parse ID: State_ItemName
     found_state = None
@@ -2354,7 +2394,6 @@ def get_artists():
     return artists
 
 @app.route('/artisans')
-@login_required
 def artisans():
     artists_list = get_artists()
     return render_template('artisans.html', artists=artists_list)

@@ -3,9 +3,8 @@
 {% block content %}
 <section class="ai-hero">
     <div class="container">
-        <span class="badge">Voice Assistance</span>
-        <h1>Speak Your Heart</h1>
-        <p>Search for your favorite crafts in any Indian language. Our AI understands the soul of your words.</p>
+        <!-- <span class="badge">Voice Assistance</span> -->
+        <h1 class="hero-title-premium">Search by Voice</h1>
     </div>
 </section>
 
@@ -29,24 +28,14 @@
                 </button>
             </div>
 
-            <div class="voice-status" id="voiceStatus">Click mic to start recording (Whisper). Click again to stop and
-                send.</div>
+            <div class="voice-status" id="voiceStatus">Click mic to start recording.</div>
 
             <div class="language-selection">
                 <button class="lang-tag active" data-lang="en-US">English</button>
             </div>
             <br>
 
-            <div class="type-instead-box">
-                <p class="type-instead-title">Or type here and click Search</p>
-                <div class="type-instead">
-                    <input type="text" id="voiceTextInput" placeholder="e.g. Show me pottery from Rajasthan"
-                        class="voice-text-input">
-                    <button type="button" id="voiceAskBtn" class="voice-ask-btn">Search Products</button>
-                </div>
-                <p class="voice-fallback-hint">Voice uses Whisper on the server. If transcribe fails, install FFmpeg or
-                    use the text box.</p>
-            </div>
+
         </div>
 
         <div class="transcription-card" id="transcriptionCard" style="display: none;">

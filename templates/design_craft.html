@@ -8,9 +8,10 @@
 {% block content %}
 <section class="ai-hero">
     <div class="container">
-        <span class="badge">Design Your Artifact</span>
-        <h1>Dream. Describe. Design.</h1>
-        <p>Your imagination, curated by heritage. Describe the artifact you want to build.</p>
+        <!-- <span class="badge">Design Your Artifact</span> -->
+        <h1 class="hero-title-premium">Create Your Own Design</h1>
+        <p class="hero-subtitle-premium">Your imagination, curated by heritage. Describe the artifact you want to build.
+        </p>
     </div>
 </section>
 
@@ -273,13 +274,13 @@
                 document.getElementById('matchName').textContent = artistName;
                 document.getElementById('matchState').textContent = data.artisan_match.state;
                 document.getElementById('matchFact').textContent = data.artisan_match.fact;
-                
+
                 // Update Price Display
                 if (data.artisan_match.price) {
                     finalPrice = data.artisan_match.price;
                     document.querySelector('.spec-value.price').textContent = '₹' + finalPrice.toLocaleString('en-IN');
                 }
-                
+
                 if (matchCard) matchCard.style.display = 'block';
             } else if (matchCard) {
                 matchCard.style.display = 'none';
