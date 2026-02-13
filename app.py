@@ -10,7 +10,7 @@ import urllib.parse
 import urllib.parse
 import random
 import time
-from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response
+from flask import Flask, render_template, request, jsonify, redirect, url_for, flash, make_response, session
 from flask_login import LoginManager, login_user, logout_user, login_required, current_user
 from dotenv import load_dotenv
 from sqlalchemy import text
@@ -24,9 +24,18 @@ load_dotenv()
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 
 
+from datetime import timedelta
+
 # Trigger Reload for Template Update 5
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')
+
+# Session Configuration for Better Persistence
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # Remember me for 30 days
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(days=7)  # Regular sessions last 7 days
+app.config['SESSION_COOKIE_SECURE'] = False  # Set to True in production with HTTPS
+app.config['SESSION_COOKIE_HTTPONLY'] = True  # Prevent XSS attacks
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # CSRF protection
 
 # Vercel-specific DB handling (Read-only file system workarounds)
 is_vercel = os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')
@@ -1771,7 +1780,8 @@ def login():
     password = request.form.get('password', '')
     user = User.query.filter_by(email=email).first()
     if user and user.check_password(password):
-        login_user(user)
+        login_user(user, remember=True)  # Enable remember me for 30 days
+        session.permanent = True  # Make session persistent
         return redirect(url_for('index'))
     flash('Invalid email or password.', 'error')
     return redirect(url_for('entry'))
@@ -1795,8 +1805,10 @@ def signup():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        flash('Account created successfully! Please log in.', 'success')
-        return redirect(url_for('entry'))
+        login_user(user, remember=True)  # Auto-login after signup
+        session.permanent = True  # Make session persistent
+        flash('Account created successfully! Welcome!', 'success')
+        return redirect(url_for('index'))
     return redirect(url_for('entry'))
 
 

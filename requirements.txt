@@ -8,6 +8,7 @@ requests
 flask-sqlalchemy
 flask-login
 groq
+psycopg2-binary
 
 # Note:
 # - torch, transformers, accelerate EXCLUDED (Size limit)
