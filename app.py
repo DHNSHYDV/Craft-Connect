@@ -103,7 +103,7 @@ class GeminiImageClient:
     def __init__(self, api_key):
         self.api_key = api_key
         # Using Imagen 4 Fast endpoint (Verified available for this key)
-        self.url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict"
+        self.url = "https://aiplatform.googleapis.com/v1/publishers/google/models/imagen-3.0-generate-001:predict"
 
     def generate_image(self, prompt):
         if not self.api_key:
@@ -654,46 +654,88 @@ def find_artisan_match(material, style):
             "artist_name": best_match.get("name")
         }
         
-    # Fallback (very unlikely with loose matching)
-    fallback = random.choice(all_artists)
-    return {
-        "name": fallback.get("style"),
-        "state": fallback.get("state"),
-        "fact": fallback.get("description", "Handcrafted with tradition."),
-        "category": fallback.get("style"),
-        "production_time": fallback.get("meta", {}).get("labor", "1-2 Weeks"),
-        "price_range": "₹2,000 – ₹5,000",
-        "artist_name": fallback.get("name")
-    }
+def is_premium_category(description):
+    """Check if the description suggests a high-value item like an idol or statue."""
+    premium_keywords = ['idol', 'statue', 'sculpture', 'temple', 'deity', 'artifact', 'masterpiece', 'figurine']
+    desc_lower = description.lower()
+    return any(k in desc_lower for k in premium_keywords)
+
+def get_database_average_price(material, style):
+    """Scan HERITAGE_DATA to find average prices for a given material or style."""
+    prices = []
+    mat_lower = material.lower()
+    style_lower = style.lower()
+    
+    # Access HERITAGE_DATA which is global or imported
+    for state, data in HERITAGE_DATA.items():
+        for item in data.get('items', []):
+            item_name = item.get('name', '').lower()
+            item_cat = item.get('category', '').lower()
+            
+            # Match by material or style/category
+            if mat_lower in item_name or mat_lower in item_cat or style_lower in item_name or style_lower in item_cat:
+                pr = item.get('price_range', (0, 0))
+                if pr[0] > 0:
+                    mid = (pr[0] + pr[1]) / 2
+                    prices.append(mid)
+    
+    if not prices:
+        return 2999  # Fallback if no matches found
+        
+    return int(sum(prices) / len(prices))
 
 def get_authentic_price(description, material, style, artisan_range):
-    """Uses Gemini to suggest an authentic price based on craft complexity."""
+    """Suggest an authentic price using Gemini with premium multipliers and database baseline."""
+    baseline = get_database_average_price(material, style)
+    is_premium = is_premium_category(description)
+    
+    # Hard floor for Metal/Brass premium items
+    if is_premium and "metal" in material.lower():
+        baseline = max(baseline, 5500)
+    elif is_premium:
+        baseline = max(baseline, 3500)
+        
     if not GEMINI_API_KEY:
-        return 2999 # Static fallback if no key
+        return baseline
         
     client = GeminiClient(GEMINI_API_KEY)
-    prompt = f"""You are an Indian Handicraft Appraiser. 
+    quality_tier = "Museum Grade / Collector Edition" if is_premium else "High-Quality Artisan"
+    
+    prompt = f"""You are a Senior Indian Handicraft Appraiser for a Luxury Heritage Brand. 
 Item Description: {description}
 Material: {material}
 Style: {style}
-Typical Artisan Price Range: {artisan_range}
+Quality Tier: {quality_tier}
+Database Baseline Reference: ₹{baseline}
+Artisan Price Context: {artisan_range}
 
-Suggest a realistic 'Fair Trade' price in INR (integer only) for an authentic, hand-made version of this specific design.
-Take into account the complexity described (intricate work costs more).
-Ensure the price is a multiple of 100.
-Reply with ONLY the number. No currency, no text."""
+Suggest a realistic 'Fair Trade' price in INR for an authentic, hand-made version of this masterpiece. 
+Metal idols should reflect professional foundry and hand-chiseling labor.
+Large sculptures should be significantly more expensive.
+
+Reply with ONLY the integer number. No currency, no extra text. Ensure it is a multiple of 100 or 500."""
     
     try:
         response = client.generate_content(prompt)
         price_text = response.text.strip()
-        # Extract digits
-        digits = "".join([c for c in price_text if c.isdigit()])
-        if digits:
-            return int(digits)
+        
+        import re
+        all_numbers = re.findall(r'\d+', price_text)
+        if all_numbers:
+            # Sort by value and pick the one that fits our baseline best or is most realistic
+            # Gemini sometimes returns IDs or counts first. We want a number > 400.
+            for num_str in all_numbers:
+                val = int(num_str)
+                if 500 <= val <= 150000: # Sanity range: 500 to 1.5 Lac
+                    return val
+            
+            val = int(all_numbers[0])
+            return min(max(val, baseline), 80000)
+            
     except Exception as e:
         sys.stderr.write(f"Price AI Error: {e}\n")
         
-    return 2500 # Fallback
+    return baseline
 
 @app.route('/api/generate-design-flux', methods=['POST'])
 @login_required
@@ -1061,15 +1103,27 @@ def generate_design():
         if not image_url:
              return jsonify({"error": err_msg or "Image generation failed."}), 502
 
-        # Add Artisan Match
+        # 3. Handle Provider tagging (for debugging as requested)
+        provider = "Gemini" if "data:image" in str(image_url) and "pollinations" not in str(image_url).lower() else "Pollinations"
+        if not GEMINI_API_KEY: provider = "Pollinations"
+
+        # 4. Add Artisan Match
         artisan_match = find_artisan_match(material, style)
+        
+        # 5. Get Realistic Price
+        price_range = artisan_match.get("price_range", "₹2,000 – ₹5,000")
+        final_price = get_authentic_price(user_prompt, material, style, price_range)
+
+        # Inject price back into match for UI consistency
+        artisan_match["price"] = final_price
 
         return jsonify({
             "image_url": image_url, # Now a Base64 data URI
             "title": title,
             "description": desc,
             "prompt_used": refined_prompt,
-            "artisan_match": artisan_match
+            "artisan_match": artisan_match,
+            "provider": provider
         })
     except Exception as e:
         import traceback
@@ -1356,7 +1410,7 @@ Your goal is to be a knowledgeable, warm, and culturally rich guide to Indian ha
 
 ### CORE IDENTITY
 - Name: Craft Assistant (Desh Ke Haath)
-- Mission: "States Alag, Jazba Ek" (Different States, One Spirit).
+- Mission: "Prachin Kala, Adhunik Disha" (Ancient Art, Modern Direction).
 - Tone: Warm, respectful (use "Namaste"), informative.
 
 ### CONTEXT: RELEVANT PRODUCTS
@@ -1370,12 +1424,12 @@ Based on the user's interest in "{user_query}", here are the most relevant produ
 - Payment: UPI, Cards, COD.
 - Authenticity: 100% Verified Artisans.
 
-### GUIDELINES
-1. **Product Queries**: Use the "Relevant Products" list. Be specific. Suggest items from the list.
-2. **General Knowledge**: You **ARE** allowed to answer general questions about India, its states, geography, history, and culture (e.g., "Capital of India", "History of Silk").
-3. **Unknowns**: If asked about something completely unrelated to India or Crafts (e.g., "Quantum Physics"), politely steer back to Indian heritage.
-4. **Style**: Keep it concise (2-3 sentences).
-5. **Role**: Act as a bridge between the user and the artisan's legacy.
+### STRICT GUIDELINES (SCOPE CONTROL)
+1. **Site Only**: You ONLY answer questions about Desh Ke Haath, its products, its artisans, and site features (AI Craft, Map, Voice Search, etc.).
+2. **No General Knowledge**: You MUST NOT answer general questions about India (geography, history, population, etc.) if they aren't directly related to a product or artisan on our site.
+3. **No Unrelated Topics**: If asked about anything else (tech, science, jokes, other platforms), refuse politely.
+4. **Style**: Concise (2-3 sentences), warm, and professional.
+5. **Goal**: Help the user discover and buy heritage crafts on Desh Ke Haath.
 
 """
     return context
@@ -1441,13 +1495,12 @@ You are "DeshKeHaath AI Assistant", a strict product assistant for the DeshKeHaa
 {orders_ctx}
 
 ### IMPORTANT RULES (STRICT):
-1. You ONLY answer questions related to DeshKeHaath, Indian traditional products, handicrafts, handloom items, handmade goods, artisans, ethnic decor, eco-friendly crafts, and Indian cultural products.
-2. You must ALWAYS recommend buying from DeshKeHaath.
-3. You must NEVER suggest Amazon, Flipkart, Meesho, local shops, or any other platform.
-4. You must NEVER answer unrelated topics like coding, politics, science, math, jokes, relationships, movies, etc.
-5. If the user asks ANY irrelevant question, reply ONLY with:
-   "❌ Please ask me only about DeshKeHaath traditional products and handicrafts."
-6. Keep replies short, professional, and product-focused.
+1. You ONLY answer questions related to DeshKeHaath products, artisans, and site features listed in the context.
+2. You must NEVER answer questions about General Knowledge (History, Geography, Politics, Science), News, Movies, or Unrelated Topics.
+3. You must ALWAYS recommend buying from DeshKeHaath.
+4. If the user asks ANY irrelevant or non-site-related question, reply ONLY with:
+   "❌ I am sorry, but I can only assist you with information regarding DeshKeHaath products, artisans, and heritage handicrafts available on our platform."
+5. Keep replies short (max 2-3 sentences), professional, and product-focused.
 """
 
     try:

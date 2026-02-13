@@ -142,9 +142,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chatInput) chatInput.disabled = false;
         if (sendBtn) sendBtn.disabled = false;
 
+        const STORAGE_KEY_STATE = 'chat_is_open';
+        const STORAGE_KEY_HISTORY = 'chat_history';
+
+        function saveChatState(isOpen) {
+            localStorage.setItem(STORAGE_KEY_STATE, isOpen);
+        }
+
+        function saveMessage(type, data) {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '[]');
+            history.push({ type, data });
+            localStorage.setItem(STORAGE_KEY_HISTORY, JSON.stringify(history));
+        }
+
         function toggleChat() {
             chatWindow.classList.toggle('active');
-            if (chatWindow.classList.contains('active') && chatInput) {
+            const isOpen = chatWindow.classList.contains('active');
+            saveChatState(isOpen);
+            if (isOpen && chatInput) {
                 chatInput.focus();
             }
         }
@@ -153,7 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
         closeChat.addEventListener('click', toggleChat);
 
         // Chat Logic
-        function addMessage(text, isUser = false) {
+        function addMessage(text, isUser = false, save = true) {
             const msgDiv = document.createElement('div');
             msgDiv.classList.add('message');
             msgDiv.classList.add(isUser ? 'user-message' : 'bot-message');
@@ -162,9 +177,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (opts) chatBody.insertBefore(msgDiv, opts);
             else chatBody.appendChild(msgDiv);
             chatBody.scrollTop = chatBody.scrollHeight;
+            if (save) saveMessage('text', { text, isUser });
         }
 
-        function addSearchProductsLink(userQuery) {
+        function addSearchProductsLink(userQuery, save = true) {
             if (!userQuery || !chatBody) return;
             const wrap = document.createElement('div');
             wrap.classList.add('message', 'bot-message', 'chat-search-link-wrap');
@@ -177,7 +193,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (opts) chatBody.insertBefore(wrap, opts);
             else chatBody.appendChild(wrap);
             chatBody.scrollTop = chatBody.scrollHeight;
+            if (save) saveMessage('link', { userQuery });
         }
+
+        // Load Persisted State
+        const savedState = localStorage.getItem(STORAGE_KEY_STATE) === 'true';
+        if (savedState) {
+            chatWindow.classList.add('active');
+        }
+
+        const savedHistory = JSON.parse(localStorage.getItem(STORAGE_KEY_HISTORY) || '[]');
+        savedHistory.forEach(item => {
+            if (item.type === 'text') {
+                addMessage(item.data.text, item.data.isUser, false);
+            } else if (item.type === 'link') {
+                addSearchProductsLink(item.data.userQuery, false);
+            }
+        });
 
         async function getBotResponse(input) {
             const url = (typeof window.CHAT_API_URL !== 'undefined' && window.CHAT_API_URL) || '/api/chat';
@@ -244,6 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 addSearchProductsLink(text);
             });
         });
+
     }
 
     // Dark Mode Toggle
@@ -402,7 +435,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const crafts = stateHandicrafts[stateName] || ["Traditional Handicrafts", "Heritage Textiles"];
 
                 tooltipState.textContent = stateName;
-                tooltipItems.innerHTML = crafts.map(item => `<li>• ${item}</li>`).join('');
+                tooltipItems.innerHTML = crafts.map(item => `
+                    <li>
+                        <div class="tooltip-item-content">
+                            <span>• ${item}</span>
+                            <img src="/static/images/gi_tag.png" class="gi-badge-mini" title="Geographical Indication Tag">
+                        </div>
+                    </li>`).join('');
 
                 mapTooltip.classList.add('active');
 

@@ -1,8 +1,8 @@
 # Desh Ke Haath: Indian Heritage Craft E-commerce
 
-**"Connecting India's Soul to the Digital World"**
+**"Prachin Kala, Adhunik Disha"**
 
-Desh Ke Haath is a premium e-commerce platform dedicated to showcasing and selling authentic Indian handicrafts. We bridge the gap between traditional Indian artisans and the modern digital market, celebrating the mantra *"States Alag, Jazba Ek"* (Different States, One Spirit).
+Desh Ke Haath is a premium e-commerce platform dedicated to showcasing and selling authentic Indian handicrafts. We bridge the gap between traditional Indian artisans and the modern digital market, celebrating the mantra *"Prachin Kala, Adhunik Disha"* (Ancient Art, Modern Direction).
 
 ## 🚀 Key Features
 
