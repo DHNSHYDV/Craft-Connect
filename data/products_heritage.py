@@ -699,7 +699,7 @@ HERITAGE_DATA = {
                 "production_time": "8 – 20 Hours", 
                 "price_range": (500, 3000), 
                 "image_query": "Andaman and Nicobar Islands Wooden Padauk Toys traditional craft", 
-                "local_image": ""
+                "local_image": "/static/images/products/andaman_and_nicobar_islands_wooden_padauk_toys.webp"
             }
         ],
         "stories": {
@@ -779,7 +779,7 @@ HERITAGE_DATA = {
                 "production_time": "60 – 120 Hours", 
                 "price_range": (4500, 15000), 
                 "image_query": "Lakshadweep Kachi (Traditional Saree) traditional craft", 
-                "local_image": ""
+                "local_image": "/static/images/products/lakshadweep_kachi_traditional_saree.webp"
             },            {
                 "name": "Shell Jewellery", 
                 "fun_fact": "Crafted with traditional techniques passed down for generations.", 
@@ -803,7 +803,7 @@ HERITAGE_DATA = {
                 "production_time": "20 – 50 Hours", 
                 "price_range": (1200, 6500), 
                 "image_query": "Lakshadweep Lacquer Work traditional craft", 
-                "local_image": ""
+                "local_image": "/static/images/products/lakshadweep_lacquer_work.webp"
             },            {
                 "name": "Fishbone Craft", 
                 "fun_fact": "Crafted with traditional techniques passed down for generations.", 
@@ -811,7 +811,7 @@ HERITAGE_DATA = {
                 "production_time": "40 – 100 Hours", 
                 "price_range": (2000, 12000), 
                 "image_query": "Lakshadweep Fishbone Craft traditional craft", 
-                "local_image": ""
+                "local_image": "/static/images/products/lakshadweep_fishbone_craft.webp"
             }
         ],
         "stories": {

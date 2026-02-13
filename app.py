@@ -1857,7 +1857,7 @@ def products():
     
     all_products = []
     for state, data in HERITAGE_DATA.items():
-        if state_filter != 'all' and state != state_filter:
+        if state_filter != 'all' and state.lower() != state_filter.lower():
             continue
             
         for item in data['items']:
