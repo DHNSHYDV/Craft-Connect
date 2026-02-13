@@ -84,18 +84,33 @@
                     <input type="number" value="1" min="1" max="10" readonly id="pdpQty" class="qty-display">
                     <button type="button" class="qty-trigger" id="qtyPlus">+</button>
                 </div>
-                <button class="btn-pdp-add-minimal" data-id="{{ product.id }}" data-name="{{ product.name }}"
-                    data-price="{{ product.price }}" data-image="{{ product.image_url }}"
-                    data-state="{{ product.state }}" onclick="event.stopPropagation(); if(typeof window.addToCart === 'function') window.addToCart({
-                            id: this.dataset.id, 
-                            name: this.dataset.name, 
-                            price: parseFloat(this.dataset.price), 
-                            image: this.dataset.image, 
-                            state: this.dataset.state,
-                            quantity: parseInt(document.getElementById('pdpQty').value || 1)
-                        })">
-                    Add to Cart
-                </button>
+                <div class="pdp-actions-group">
+                    <button class="btn-pdp-add-minimal" data-id="{{ product.id }}" data-name="{{ product.name }}"
+                        data-price="{{ product.price }}" data-image="{{ product.image_url }}"
+                        data-state="{{ product.state }}" onclick="event.stopPropagation(); if(typeof window.addToCart === 'function') window.addToCart({
+                                id: this.dataset.id, 
+                                name: this.dataset.name, 
+                                price: parseFloat(this.dataset.price), 
+                                image: this.dataset.image, 
+                                state: this.dataset.state,
+                                quantity: parseInt(document.getElementById('pdpQty').value || 1)
+                            })">
+                        Add to Cart
+                    </button>
+                    {% if product.model_3d %}
+                    <button class="btn-pdp-view-3d"
+                        onclick="open3DViewer('{{ url_for('static', filename='models/' + product.model_3d) }}', '{{ product.name }}')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 16.5l-9 5.5-9-5.5V7.5L12 2l9 5.5v9z" />
+                            <path d="M12 22v-9l-9-5.5" />
+                            <path d="M21 7.5L12 13l-9-5.5" />
+                            <path d="M12 13l9-5.5" />
+                        </svg>
+                        View in 3D
+                    </button>
+                    {% endif %}
+                </div>
             </div>
 
             <div class="pdp-curator-notes">
@@ -136,61 +151,208 @@
 </section>
 {% endif %}
 
-<section class="reviews-section">
-    <div class="reviews-container">
-        <div class="reviews-curation-header">
-            <h2 class="curation-title">Voice of the Collection</h2>
-            <p class="curation-subtitle">Reviews from global connoisseurs of Indian heritage</p>
-        </div>
-
-        <div class="review-intelligence-grid">
-            <div class="intelligence-summary">
-                <div class="overall-master-score">
-                    <span class="score-val">{{ product.rating }}</span>
-                    <div class="score-stars">★★★★★</div>
-                    <span class="score-count">{{ product.reviews }} Authenticated Reviews</span>
-                </div>
-                <div class="rating-distribution">
-                    {% for i in range(5, 0, -1) %}
-                    <div class="dist-row">
-                        <span class="dist-label">{{ i }}★</span>
-                        <div class="dist-bar">
-                            <div class="dist-fill" style="width: {{ [70, 20, 5, 3, 2][5-i] }}%;"></div>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <div class="connoisseur-reviews">
-                <div class="review-bubble">
-                    <div class="bubble-header">
-                        <div class="connoisseur-avatar">RS</div>
-                        <div class="connoisseur-id">
-                            <span class="name">Rahul Sharma</span>
-                            <span class="status">Verified Collector</span>
-                        </div>
-                        <span class="date">Oct 2025</span>
-                    </div>
-                    <p class="bubble-text">"The texture and historical accuracy are breathtaking. A true tribute to our
-                        ancestors."</p>
-                </div>
-                <div class="review-bubble">
-                    <div class="bubble-header">
-                        <div class="connoisseur-avatar">PK</div>
-                        <div class="connoisseur-id">
-                            <span class="name">Priya Kapoor</span>
-                            <span class="status">Heritage Enthusiast</span>
-                        </div>
-                        <span class="date">Sep 2025</span>
-                    </div>
-                    <p class="bubble-text">"Exquisite detailing. The digital experience doesn't even do justice to how
-                        premium it feels in hand."</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
 
 <!-- Redundant local script removed to prefer main.js -->
+
+<!-- 3D Viewer Modal -->
+<div id="pdp3DModal" class="pdp-3d-modal">
+    <div class="modal-overlay" onclick="close3DViewer()"></div>
+    <div class="modal-content">
+        <button class="modal-close" onclick="close3DViewer()">×</button>
+        <div class="modal-header">
+            <h3 id="modalProductName">Product Name</h3>
+            <span class="ar-badge">AR Ready</span>
+        </div>
+        <div class="modal-body">
+            <model-viewer id="pdpModelViewer" src="" alt="A 3D model" shadow-intensity="1" camera-controls auto-rotate
+                ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral" exposure="1" loading="eager"
+                style="width: 100%; height: 60vh;">
+                <button slot="ar-button" id="ar-button">
+                    View in your space
+                </button>
+            </model-viewer>
+        </div>
+        <div class="modal-footer">
+            <p>Use your camera to place this artifact in your room (Mobile only)</p>
+        </div>
+    </div>
+</div>
+
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+
+<script>
+    function open3DViewer(modelSrc, productName) {
+        const modal = document.getElementById('pdp3DModal');
+        const viewer = document.getElementById('pdpModelViewer');
+        const nameEl = document.getElementById('modalProductName');
+
+        nameEl.innerText = productName;
+        viewer.src = modelSrc;
+        modal.classList.add('active');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function close3DViewer() {
+        const modal = document.getElementById('pdp3DModal');
+        modal.classList.remove('active');
+        document.body.style.overflow = '';
+    }
+</script>
+
+<style>
+    .pdp-actions-group {
+        display: flex;
+        gap: 1rem;
+        flex: 1;
+    }
+
+    .btn-pdp-view-3d {
+        flex: 1;
+        background: #f0f0f0;
+        color: #333;
+        border: 1px solid #ddd;
+        padding: 1rem;
+        border-radius: 8px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .btn-pdp-view-3d:hover {
+        background: #e0e0e0;
+        border-color: #ccc;
+    }
+
+    .pdp-3d-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .pdp-3d-modal.active {
+        opacity: 1;
+        visibility: visible;
+    }
+
+    .modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+        position: relative;
+        background: #fff;
+        width: 90%;
+        max-width: 800px;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+    }
+
+    .pdp-3d-modal.active .modal-content {
+        transform: translateY(0);
+    }
+
+    .modal-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .modal-header h3 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+
+    .ar-badge {
+        background: #e6f7ff;
+        color: #1890ff;
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+    }
+
+    .modal-close {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: #eee;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        font-size: 1.5rem;
+        line-height: 1;
+        cursor: pointer;
+        z-index: 10;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-body {
+        background: #fdfdfd;
+    }
+
+    .modal-footer {
+        padding: 1rem;
+        text-align: center;
+        background: #f9f9f9;
+        border-top: 1px solid #eee;
+        font-size: 0.85rem;
+        color: #666;
+    }
+
+    #ar-button {
+        background-color: #fff;
+        background-image: url(https://modelviewer.dev/shared-assets/icons/ic_view_in_ar_new_googblue_48dp.png);
+        background-repeat: no-repeat;
+        background-size: 20px 20px;
+        background-position: 12px 50%;
+        position: absolute;
+        bottom: 16px;
+        right: 16px;
+        padding: 0 16px 0 40px;
+        height: 36px;
+        line-height: 36px;
+        border-radius: 18px;
+        border: 1px solid #DADCE0;
+        color: #4285f4;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    @media (max-width: 600px) {
+        .pdp-actions-group {
+            flex-direction: column;
+        }
+
+        .modal-content {
+            width: 95%;
+        }
+    }
+</style>
 {% endblock %}

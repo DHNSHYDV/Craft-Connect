@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INTERACTIVE INDIA MAP LOGIC ---
     const mapTooltip = document.getElementById('map-tooltip');
-    const statePaths = document.querySelectorAll('#india-map-wrapper path');
+    const statePaths = document.querySelectorAll('#india-map-wrapper path, #india-map-wrapper circle[name]');
     const connectorSvg = document.getElementById('map-connector-svg');
     const connectorLine = document.getElementById('map-connector-line');
     const connectorDot = document.getElementById('map-connector-dot');

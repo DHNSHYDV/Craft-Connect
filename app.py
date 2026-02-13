@@ -1909,7 +1909,8 @@ def products():
                 "rating": 4.0 + (len(item['name']) % 10) / 10,
                 "reviews": 10 + (len(item['name']) % 50),
                 "image_url": image_url,
-                "is_popular": is_popular
+                "is_popular": is_popular,
+                "model_3d": item.get('model_3d')
             })
     
     # Sort
@@ -1920,7 +1921,8 @@ def products():
     elif sort_by == 'rating':
         all_products.sort(key=lambda x: x['rating'], reverse=True)
     else:
-        all_products.sort(key=lambda x: x['name'])
+        # Default sort: Name, but prioritize 3D models at the very top
+        all_products.sort(key=lambda x: (not x.get('model_3d'), x['name']))
         
     all_states = sorted(list(HERITAGE_DATA.keys()))
     all_categories = sorted(list(set(i['category'] for d in HERITAGE_DATA.values() for i in d['items'])))
@@ -1976,7 +1978,8 @@ def product_detail(product_id):
         "rating": 4.0 + (len(found_item['name']) % 10) / 10,
         "reviews": 10 + (len(found_item['name']) % 50),
         "image_url": image_url,
-        "image_query": img_query # Added for debugging/transparency
+        "image_query": img_query,
+        "model_3d": found_item.get('model_3d')
     }
     
     # Related Products: Find 4 products from the same state or category
