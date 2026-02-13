@@ -239,20 +239,29 @@
         color: white;
     }
 
-    @keyframes premiumPulse {
-        0% {
-            transform: translateX(-50%) scale(1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    @media (max-width: 768px) {
+        .artists-header {
+            padding: 80px 1.5rem 2rem;
         }
 
-        50% {
-            transform: translateX(-50%) scale(1.08);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        .artists-header h1 {
+            font-size: 2rem;
         }
 
-        100% {
-            transform: translateX(-50%) scale(1);
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        .artists-grid-section {
+            padding: 0 1rem 3rem;
+        }
+
+        .artists-grid {
+            gap: 1.5rem;
+        }
+
+        .premium-avatar {
+            height: 180px;
+        }
+
+        .artist-info {
+            padding: 1.5rem 1rem;
         }
     }
 </style>
