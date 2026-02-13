@@ -159,14 +159,15 @@
                         <span class="currency">₹</span>
                         <span class="price-amount">{{ product.price }}</span>
                     </div>
-                    <a href="{{ url_for('product_detail', product_id=product.id) }}" class="explore-detail-btn">
+                    <button class="explore-detail-btn story-trigger-btn" data-name="{{ product.name }}"
+                        data-story="{{ product.story }}">
                         <span>The Story</span>
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="5" y1="12" x2="19" y2="12"></line>
                             <polyline points="12 5 19 12 12 19"></polyline>
                         </svg>
-                    </a>
+                    </button>
                 </div>
             </div>
         </div>
@@ -174,5 +175,192 @@
     </div>
 </section>
 
-<!-- Redundant script removed -->
+
+<!-- Heritage Story Modal -->
+<div id="story-modal" class="modal-overlay">
+    <div class="modal-content animate-modal">
+        <button class="close-modal" id="close-story-modal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="modal-header">
+            <span class="heritage-label">Indian Heritage</span>
+            <h2 id="modal-product-name">Craft Story</h2>
+        </div>
+        <div class="modal-body">
+            <p id="modal-product-story"></p>
+        </div>
+        <div class="modal-footer">
+            <p>Preserving India's Craft Heritage for Generations.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Story Modal Styles */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+    }
+
+    .modal-content {
+        background: white;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 20px;
+        padding: 2.5rem;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border-left: 6px solid #d4a373;
+        /* Heritage Gold/Brown */
+    }
+
+    .animate-modal {
+        animation: modal-slide-up 0.4s ease-out;
+    }
+
+    @keyframes modal-slide-up {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .close-modal {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .close-modal:hover {
+        background: #f5f5f5;
+        color: #000;
+    }
+
+    .modal-header .heritage-label {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #d4a373;
+        letter-spacing: 2px;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-header h2 {
+        font-size: 2rem;
+        margin: 0;
+        color: #1a1a1a;
+        font-family: 'Playfair Display', serif;
+    }
+
+    .modal-body {
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .modal-body p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #444;
+        text-align: justify;
+    }
+
+    .modal-footer {
+        border-top: 1px solid #eee;
+        padding-top: 1.5rem;
+        font-size: 0.9rem;
+        color: #888;
+        font-style: italic;
+    }
+
+    .explore-detail-btn.story-trigger-btn {
+        appearance: none;
+        border: none;
+        background: #eee;
+        color: #333;
+        padding: 8px 16px;
+        border-radius: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .explore-detail-btn.story-trigger-btn:hover {
+        background: #d4a373;
+        color: white;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('story-modal');
+        const modalName = document.getElementById('modal-product-name');
+        const modalStory = document.getElementById('modal-product-story');
+        const closeBtn = document.getElementById('close-story-modal');
+
+        // Handle Open
+        document.querySelectorAll('.story-trigger-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const name = this.getAttribute('data-name');
+                const story = this.getAttribute('data-story');
+
+                modalName.innerText = "Story of " + name;
+                modalStory.innerText = story;
+
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden'; // Prevent scrolling
+            });
+        });
+
+        // Handle Close
+        const closeModalFunc = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        closeBtn.addEventListener('click', closeModalFunc);
+
+        // Close on outside click
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                closeModalFunc();
+            }
+        });
+
+        // ESC key close
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModalFunc();
+            }
+        });
+    });
+</script>
 {% endblock %}

@@ -1899,6 +1899,9 @@ def products():
             popular_list = STATE_POPULAR_CRAFTS.get(state, [])
             is_popular = any(p_name.lower() in item['name'].lower() for p_name in popular_list)
 
+            # Get story from state data
+            story = data.get('stories', {}).get(item['name'], "Deeply rooted in Indian heritage, this craft represents centuries of tradition.")
+
             all_products.append({
                 "id": product_id,
                 "name": item['name'],
@@ -1906,6 +1909,7 @@ def products():
                 "category": item['category'],
                 "price": price,
                 "fun_fact": item['fun_fact'],
+                "story": story,
                 "rating": 4.0 + (len(item['name']) % 10) / 10,
                 "reviews": 10 + (len(item['name']) % 50),
                 "image_url": image_url,
@@ -2521,4 +2525,4 @@ def chat():
         }), 500
 
 if __name__ == '__main__':
-    app.run(debug=False, port=5001, host='0.0.0.0', threaded=True)
+    app.run(debug=True, port=5001, host='0.0.0.0', threaded=True)

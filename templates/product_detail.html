@@ -47,8 +47,27 @@
             </div>
 
             <div class="pdp-storytelling-block">
-                <h3 class="block-title">The Legacy</h3>
-                <p class="story-narrative">{{ product.story }}</p>
+                <div
+                    style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; background: #fafafa; padding: 1rem; border-radius: 12px; border-left: 4px solid #d4a373;">
+                    <div>
+                        <h3 class="block-title" style="margin: 0; color: #1a1a1a;">The Legacy</h3>
+                        <p
+                            style="margin: 4px 0 0 0; font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px;">
+                            Heritage Discovery</p>
+                    </div>
+                    <button class="explore-detail-btn story-trigger-btn" data-name="{{ product.name }}"
+                        data-story="{{ product.story }}"
+                        style="appearance: none; border: none; background: #d4a373; color: white; padding: 10px 20px; border-radius: 8px; display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 12px rgba(212, 163, 115, 0.3); font-size: 0.9rem;">
+                        <span>The Story</span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="5" y1="12" x2="19" y2="12"></line>
+                            <polyline points="12 5 19 12 12 19"></polyline>
+                        </svg>
+                    </button>
+                </div>
+                <p class="story-narrative" style="font-style: italic; color: #555; line-height: 1.6;">{{
+                    product.description }}</p>
 
                 <div class="artisan-discovery-hint">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -99,7 +118,9 @@
                     </button>
                     {% if product.model_3d %}
                     <button class="btn-pdp-view-3d"
-                        onclick="open3DViewer('{{ url_for('static', filename='models/' + product.model_3d) }}', '{{ product.name }}')">
+                        data-model="{{ url_for('static', filename='models/' + product.model_3d) }}"
+                        data-name="{{ product.name }}"
+                        onclick="if(typeof open3DViewer === 'function') open3DViewer(this.dataset.model, this.dataset.name)">
                         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 16.5l-9 5.5-9-5.5V7.5L12 2l9 5.5v9z" />
@@ -150,6 +171,180 @@
     </div>
 </section>
 {% endif %}
+
+
+<!-- Heritage Story Modal -->
+<div id="story-modal" class="modal-overlay-heritage">
+    <div class="modal-content-heritage animate-modal-heritage">
+        <button class="close-modal-heritage" id="close-story-modal">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+        </button>
+        <div class="modal-header-heritage">
+            <span class="heritage-label-heritage">Indian Heritage</span>
+            <h2 id="modal-product-name-heritage">Craft Story</h2>
+        </div>
+        <div class="modal-body-heritage">
+            <p id="modal-product-story-heritage"></p>
+        </div>
+        <div class="modal-footer-heritage">
+            <p>Preserving India's Craft Heritage for Generations.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Heritage Modal Styles - Prefixing to avoid conflicts with 3D modal */
+    .modal-overlay-heritage {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(8px);
+        display: none;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+        /* Higher than 3D modal overlay */
+    }
+
+    .modal-content-heritage {
+        background: white;
+        width: 90%;
+        max-width: 600px;
+        border-radius: 20px;
+        padding: 2.5rem;
+        position: relative;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        border-left: 6px solid #d4a373;
+    }
+
+    .animate-modal-heritage {
+        animation: modal-slide-up-heritage 0.4s ease-out;
+    }
+
+    @keyframes modal-slide-up-heritage {
+        from {
+            transform: translateY(30px);
+            opacity: 0;
+        }
+
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+
+    .close-modal-heritage {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: #666;
+        cursor: pointer;
+        padding: 8px;
+        border-radius: 50%;
+        transition: all 0.2s;
+    }
+
+    .close-modal-heritage:hover {
+        background: #f5f5f5;
+        color: #000;
+    }
+
+    .modal-header-heritage .heritage-label-heritage {
+        display: block;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        color: #d4a373;
+        letter-spacing: 2px;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+
+    .modal-header-heritage h2 {
+        font-size: 2rem;
+        margin: 0;
+        color: #1a1a1a;
+        font-family: 'Playfair Display', serif !important;
+    }
+
+    .modal-body-heritage {
+        margin-top: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .modal-body-heritage p {
+        font-size: 1.1rem;
+        line-height: 1.8;
+        color: #444;
+        text-align: justify;
+    }
+
+    .modal-footer-heritage {
+        border-top: 1px solid #eee;
+        padding-top: 1.5rem;
+        font-size: 0.9rem;
+        color: #888;
+        font-style: italic;
+    }
+
+    .story-trigger-btn:hover {
+        background: #d4a373 !important;
+        color: white !important;
+    }
+</style>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const modal = document.getElementById('story-modal');
+        const modalName = document.getElementById('modal-product-name-heritage');
+        const modalStory = document.getElementById('modal-product-story-heritage');
+        const closeBtn = document.getElementById('close-story-modal');
+
+        // Handle Open
+        document.querySelectorAll('.story-trigger-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const name = this.getAttribute('data-name');
+                const story = this.getAttribute('data-story');
+
+                modalName.innerText = "Story of " + name;
+                modalStory.innerText = story;
+
+                modal.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            });
+        });
+
+        // Handle Close
+        const closeModalFunc = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModalFunc);
+
+        // Close on outside click
+        modal.addEventListener('click', function (e) {
+            if (e.target === modal) {
+                closeModalFunc();
+            }
+        });
+
+        // ESC key close
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModalFunc();
+            }
+        });
+    });
+</script>
 
 
 <!-- Redundant local script removed to prefer main.js -->
