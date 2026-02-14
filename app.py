@@ -520,19 +520,18 @@ if not POLLINATIONS_IMAGE_MODELS:
 
 
 def generate_image_pollinations(prompt_text):
-    """Generate image via Pollinations.ai (Free Tier) using REST API with model fallback.
+    """Generate image via Pollinations.ai FREE tier (no API key needed).
     
     Returns a Base64 Data URI so the image is embedded directly in the response.
     """
-    # Use the configured models or fallback to flux
-    models = POLLINATIONS_IMAGE_MODELS if POLLINATIONS_IMAGE_MODELS else ["flux"]
+    # Use flux model (most reliable on free tier)
+    models = ["flux", "flux-realism", "flux-anime", "flux-3d"]
     
     base_url = "https://image.pollinations.ai/prompt"
     encoded_prompt = urllib.parse.quote(prompt_text)
     
+    # NO API KEY - Free tier is unlimited and works better
     headers = {}
-    if POLLINATIONS_API_KEY:
-        headers['Authorization'] = f"Bearer {POLLINATIONS_API_KEY}"
 
     last_error = "Unknown error"
     
@@ -554,7 +553,7 @@ def generate_image_pollinations(prompt_text):
                 'seed': str(random.randint(0, 999999))
             }
             
-            print(f"Attempting Pollinations REST API with model '{model_name}'...")
+            print(f"Attempting Pollinations FREE API with model '{model_name}'...")
             # Tight 10s timeout per model
             resp = requests.get(target_url, params=params, headers=headers, stream=True, timeout=10)
             
