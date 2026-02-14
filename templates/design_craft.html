@@ -284,6 +284,17 @@
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
 
+            // Set image with error handling
+            generatedImage.onerror = function () {
+                console.error('❌ Image failed to load from Pollinations');
+                generatedImage.alt = 'Image generation failed. The model "' + modelToUse + '" may not be supported.';
+                generatedImage.style.background = '#f0f0f0';
+                generatedImage.style.padding = '20px';
+                generatedImage.style.textAlign = 'center';
+            };
+            generatedImage.onload = function () {
+                console.log('✅ Image loaded successfully!');
+            };
             generatedImage.src = imageUrl;
             resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
             resultDesc.textContent = `A unique AI-generated design based on your vision: "${text}"`;
