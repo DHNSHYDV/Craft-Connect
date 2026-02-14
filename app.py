@@ -128,7 +128,7 @@ class GeminiClient:
         self.model = model
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
 
-    def generate_content(self, prompt):
+    def generate_content(self, prompt, timeout=12):
         if not self.api_key:
             return type('obj', (object,), {'text': "Error: AI key missing."})
         
@@ -142,7 +142,7 @@ class GeminiClient:
                 f"{self.base_url}?key={self.api_key}",
                 headers=headers,
                 json=data,
-                timeout=30
+                timeout=timeout
             )
             response.raise_for_status()
             result = response.json()
@@ -182,7 +182,7 @@ class GeminiImageClient:
                 f"{self.url}?key={self.api_key}",
                 headers=headers,
                 json=payload,
-                timeout=30
+                timeout=15
             )
             
             if resp.status_code != 200:
@@ -647,7 +647,7 @@ def generate_image_design(prompt_text):
 def find_artisan_match(material, style, description=""):
     """
     Enhanced matching logic using user description and HERITAGE_DATA.
-    Uses Gemini for intelligent matching if available.
+    Optimized for speed: Uses keyword scoring first, Gemini only as fallback.
     """
     import random
     from data.products_heritage import HERITAGE_DATA
@@ -665,53 +665,7 @@ def find_artisan_match(material, style, description=""):
     # 2. Get the hardcoded list of artisans
     all_artists = get_artists()
     
-    # 3. LLM-Based Matching (Gemini)
-    if GEMINI_API_KEY and (description or style or material):
-        try:
-            # Use 1.5-flash-latest which is highly available
-            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
-            
-            # Create a list of craft options for Gemini to pick from
-            options = []
-            for i, item in enumerate(heritage_items):
-                options.append(f"{i}: {item['name']} ({item['state']})")
-            
-            # We only send the first 80 items to stay within context/token reasonable limits for a quick search
-            options_text = "\n".join(options[:80]) 
-            
-            prompt = f"""You are a Heritage Matching Expert. A user wants to create:
-Description: {description}
-Selected Style: {style}
-Selected Material: {material}
-
-From the following list of Indian heritage crafts, pick the index of the one that is the BEST match.
-PRIORITIZE specific art styles (like 'Madhubani', 'Warli', 'Blue Pottery') found in the description even if the 'Selected Material' is different. 
-For example, if the description says 'Madhubani style' but material is 'Metal', you should still pick 'Madhubani Painting' because the artist can apply the style to that material.
-
-List:
-{options_text}
-
-Reply with ONLY the index number (integer). If no good match, reply with 'NONE'."""
-            
-            payload = {
-                "contents": [{"parts": [{"text": prompt}]}]
-            }
-            r = requests.post(model_url, json=payload, timeout=10)
-            if r.status_code == 200:
-                gemini_resp = r.json()
-                res_text = (gemini_resp.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
-                
-                # Extract number
-                import re
-                match = re.search(r'\d+', res_text)
-                if match:
-                    idx = int(match.group())
-                    if 0 <= idx < len(heritage_items):
-                        return _realize_artisan_from_heritage(heritage_items[idx], all_artists)
-        except Exception as e:
-            print(f"Gemini artisan matching failed: {e}")
-
-    # 4. Fallback: Keyword Scoring
+    # 3. Optimized Keyword Scoring (FAST)
     best_match = None
     best_score = -1
     
@@ -756,6 +710,56 @@ Reply with ONLY the index number (integer). If no good match, reply with 'NONE'.
             best_score = score
             best_match = item
             
+    # HIGH CONFIDENCE KEYWORD MATCH (Skip Gemini to avoid timeout)
+    if best_score > 18:
+        return _realize_artisan_from_heritage(best_match, all_artists)
+
+    # 4. LLM-Based Matching (Gemini) - Fallback for low confidence
+    if GEMINI_API_KEY and (description or style or material):
+        try:
+            # Use 1.5-flash-latest which is highly available
+            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
+            
+            # Create a list of craft options for Gemini to pick from
+            options = []
+            for i, item in enumerate(heritage_items):
+                options.append(f"{i}: {item['name']} ({item['state']})")
+            
+            # We only send the first 80 items to stay within context/token reasonable limits for a quick search
+            options_text = "\n".join(options[:80]) 
+            
+            prompt = f"""You are a Heritage Matching Expert. A user wants to create:
+Description: {description}
+Selected Style: {style}
+Selected Material: {material}
+
+From the following list of Indian heritage crafts, pick the index of the one that is the BEST match.
+PRIORITIZE specific art styles (like 'Madhubani', 'Warli', 'Blue Pottery') found in the description even if the 'Selected Material' is different. 
+
+List:
+{options_text}
+
+Reply with ONLY the index number (integer). If no good match, reply with 'NONE'."""
+            
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            # Tight 6s timeout for matching
+            r = requests.post(model_url, json=payload, timeout=6)
+            if r.status_code == 200:
+                gemini_resp = r.json()
+                res_text = (gemini_resp.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                
+                # Extract number
+                import re
+                match = re.search(r'\d+', res_text)
+                if match:
+                    idx = int(match.group())
+                    if 0 <= idx < len(heritage_items):
+                        return _realize_artisan_from_heritage(heritage_items[idx], all_artists)
+        except Exception as e:
+            print(f"Gemini artisan matching failed: {e}")
+
     if best_match:
         return _realize_artisan_from_heritage(best_match, all_artists)
 
@@ -871,7 +875,8 @@ Large sculptures should be significantly more expensive.
 Reply with ONLY the integer number. No currency, no extra text. Ensure it is a multiple of 100 or 500."""
     
     try:
-        response = client.generate_content(prompt)
+        # Strict 5s timeout for price estimation to prevent gateway timeout
+        response = client.generate_content(prompt, timeout=5)
         price_text = response.text.strip()
         
         import re
@@ -1241,7 +1246,7 @@ def generate_design():
                     "parts": [{"text": f"User Idea: {user_prompt}\nStyle: {style}\nMaterial: {material}\n\nCreate a detailed image prompt:"}]
                 }]
             }
-            r = requests.post(model_url, json=payload, timeout=8)
+            r = requests.post(model_url, json=payload, timeout=6)
             if r.status_code == 200:
                 gemini_resp = r.json()
                 text = (gemini_resp.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
