@@ -229,39 +229,61 @@
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         try {
-            console.log('🎨 Requesting generation via backend...');
-            const response = await fetch('/api/generate-design', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    description: text,
-                    style: selectedStyle,
-                    material: selectedMaterial
-                })
+            console.log('🎨 Generating image via FRONTEND (Pollinations)...');
+
+            // Build enhanced prompt
+            const enhancedPrompt = `${selectedStyle} style ${selectedMaterial} Indian handicraft: ${text}. Professional product photography, high quality, detailed, traditional craftsmanship`;
+
+            // Use Pollinations API directly from frontend (NO BACKEND)
+            const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}`;
+            const params = new URLSearchParams({
+                model: 'flux',
+                width: '1024',
+                height: '1024',
+                nologo: 'true',
+                seed: Math.floor(Math.random() * 999999)
             });
 
-            const data = await response.json();
+            const imageUrl = `${pollinationsUrl}?${params.toString()}`;
+            console.log('📡 Pollinations URL:', imageUrl);
 
-            if (!response.ok) {
-                throw new Error(data.error || "Generation failed");
-            }
-
-            console.log('✅ Generation successful', data);
-
-            // Pre-load image
+            // Pre-load image to verify it works
             const imgLoader = new Image();
             await new Promise((resolve, reject) => {
                 imgLoader.onload = resolve;
                 imgLoader.onerror = () => reject(new Error("Failed to load generated image"));
-                imgLoader.src = data.image_url;
+                imgLoader.src = imageUrl;
             });
 
+            console.log('✅ Image loaded successfully');
+
+            // Now fetch artisan match from backend (fast, no image generation)
+            let artisanMatch = null;
+            try {
+                const matchResponse = await fetch('/api/match-artisan', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        description: text,
+                        style: selectedStyle,
+                        material: selectedMaterial
+                    })
+                });
+                if (matchResponse.ok) {
+                    const matchData = await matchResponse.json();
+                    artisanMatch = matchData.artisan_match;
+                }
+            } catch (err) {
+                console.warn('Artisan matching failed, using defaults:', err);
+            }
+
+            // Display results
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
 
-            generatedImage.src = data.image_url;
-            resultTitle.textContent = data.title || `${selectedStyle} ${selectedMaterial} Artisan Concept`;
-            resultDesc.textContent = data.description || `A unique AI-generated design based on your vision.`;
+            generatedImage.src = imageUrl;
+            resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
+            resultDesc.textContent = `A unique AI-generated design based on your vision: "${text}"`;
 
             if (resMaterial) resMaterial.textContent = selectedMaterial;
             if (resStyle) resStyle.textContent = selectedStyle;
@@ -271,15 +293,15 @@
             let finalPrice = 2999; // Fallback
             let artistName = "Master Craftsman";
 
-            if (data.artisan_match) {
-                artistName = data.artisan_match.artist_name || "Traditional Artisan";
+            if (artisanMatch) {
+                artistName = artisanMatch.artist_name || "Traditional Artisan";
                 document.getElementById('matchName').textContent = artistName;
-                document.getElementById('matchState').textContent = data.artisan_match.state;
-                document.getElementById('matchFact').textContent = data.artisan_match.fact;
+                document.getElementById('matchState').textContent = artisanMatch.state;
+                document.getElementById('matchFact').textContent = artisanMatch.fact;
 
                 // Update Price Display
-                if (data.artisan_match.price) {
-                    finalPrice = data.artisan_match.price;
+                if (artisanMatch.price) {
+                    finalPrice = artisanMatch.price;
                     document.querySelector('.spec-value.price').textContent = '₹' + finalPrice.toLocaleString('en-IN');
                 }
 
@@ -298,7 +320,7 @@
                             id: customId,
                             name: `Custom ${selectedStyle} ${selectedMaterial} by ${artistName}`,
                             price: finalPrice,
-                            image: data.image_url,
+                            image: imageUrl,
                             state: 'AI Studio',
                             quantity: 1
                         });
@@ -318,7 +340,7 @@
 
         } catch (err) {
             console.error("Generation failed", err);
-            alert("Could not generate design: " + err.message);
+            alert("Could not generate design: " + err.message + "\n\nTry again or use a different description.");
         } finally {
             generateBtn.disabled = false;
             generateBtn.querySelector('.btn-text').textContent = "Generate design";

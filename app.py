@@ -1318,6 +1318,35 @@ def generate_design():
             "traceback": error_detail
         }), 500
 
+@app.route('/api/match-artisan', methods=['POST'])
+@login_required
+def match_artisan():
+    """Fast artisan matching endpoint for frontend-only image generation"""
+    try:
+        data = request.json or {}
+        user_prompt = (data.get("description") or "").strip()
+        style = (data.get("style") or "Traditional").strip()
+        material = (data.get("material") or "Clay").strip()
+
+        if not user_prompt:
+            return jsonify({"error": "Description required"}), 400
+
+        # Find artisan match
+        artisan_match = find_artisan_match(material, style, user_prompt)
+        
+        # Get realistic price
+        price_range = artisan_match.get("price_range", "₹2,000 – ₹5,000")
+        final_price = get_authentic_price(user_prompt, material, style, price_range)
+        
+        # Inject price into match
+        artisan_match["price"] = final_price
+
+        return jsonify({"artisan_match": artisan_match})
+    except Exception as e:
+        print(f"Artisan matching error: {e}")
+        return jsonify({"error": str(e)}), 500
+
+
 
 @app.route('/api/proxy-image')
 def proxy_image():
