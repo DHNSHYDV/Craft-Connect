@@ -111,8 +111,8 @@ class GeminiImageClient:
     """Client for generating images using Gemini Imagen 3 (via REST)."""
     def __init__(self, api_key):
         self.api_key = api_key
-        # Using Imagen 4 Fast endpoint (Verified available for this key)
-        self.url = "https://aiplatform.googleapis.com/v1/publishers/google/models/imagen-3.0-generate-001:predict"
+        # Using Imagen 4.0 Fast endpoint
+        self.url = "https://generativelanguage.googleapis.com/v1beta/models/imagen-4.0-fast-generate-001:predict"
 
     def generate_image(self, prompt):
         if not self.api_key:
@@ -820,7 +820,7 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
     b64 = base64.b64encode(image_data).decode("utf-8")
     last_error = None
     # Use current model IDs that support image input (see https://ai.google.dev/gemini-api/docs/models)
-    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]:
+    for model in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY.strip()}"
         payload = {
             "contents": [{
