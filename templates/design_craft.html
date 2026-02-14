@@ -234,76 +234,40 @@
         generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
 
         try {
-            console.log('🎨 Generating image via FRONTEND (Pollinations)...');
+            console.log('🎨 Requesting generation via backend (Hugging Face)...');
 
-            // Build enhanced prompt
-            const enhancedPrompt = `${selectedStyle} style ${selectedMaterial} Indian handicraft: ${text}. Professional product photography, high quality, detailed, traditional craftsmanship`;
-
-            // Use Pollinations API with custom models from environment
-            const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}`;
-
-            // Use first model from env, fallback to flux
-            const modelToUse = POLLINATIONS_MODELS.length > 0 ? POLLINATIONS_MODELS[0] : 'flux';
-            console.log('🎨 Using model:', modelToUse, '(from env:', POLLINATIONS_MODELS, ')');
-
-            const params = new URLSearchParams({
-                model: modelToUse,
-                width: '1024',
-                height: '1024',
-                nologo: 'true',
-                seed: Math.floor(Math.random() * 999999)
+            const response = await fetch('/api/generate-design', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    description: text,
+                    style: selectedStyle,
+                    material: selectedMaterial
+                })
             });
 
-            const imageUrl = `${pollinationsUrl}?${params.toString()}`;
-            console.log('📡 Pollinations URL:', imageUrl);
+            const data = await response.json();
 
-            // Skip preload - let browser handle image loading directly
-            console.log('✅ Image URL ready, loading in UI...');
-
-            // Now fetch artisan match from backend (fast, no image generation)
-            let artisanMatch = null;
-            try {
-                const matchResponse = await fetch('/api/match-artisan', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        description: text,
-                        style: selectedStyle,
-                        material: selectedMaterial
-                    })
-                });
-                if (matchResponse.ok) {
-                    const matchData = await matchResponse.json();
-                    artisanMatch = matchData.artisan_match;
-                }
-            } catch (err) {
-                console.warn('Artisan matching failed, using defaults:', err);
+            if (!response.ok) {
+                throw new Error(data.error || "Generation failed");
             }
+
+            console.log('✅ Generation successful', data);
 
             // Display results
             outputPlaceholder.style.display = 'none';
             outputResult.style.display = 'block';
 
-            // Set image with error handling
-            generatedImage.onerror = function () {
-                console.error('❌ Image failed to load from Pollinations');
-                generatedImage.alt = 'Image generation failed. The model "' + modelToUse + '" may not be supported.';
-                generatedImage.style.background = '#f0f0f0';
-                generatedImage.style.padding = '20px';
-                generatedImage.style.textAlign = 'center';
-            };
-            generatedImage.onload = function () {
-                console.log('✅ Image loaded successfully!');
-            };
-            generatedImage.src = imageUrl;
+            generatedImage.src = data.image_url;
             resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
             resultDesc.textContent = `A unique AI-generated design based on your vision: "${text}"`;
 
             if (resMaterial) resMaterial.textContent = selectedMaterial;
             if (resStyle) resStyle.textContent = selectedStyle;
 
-            // Handle Artisan Match and Dynamic Price
+            // Handle Artisan Match and Dynamic Price from backend
             const matchCard = document.getElementById('artisanMatchCard');
+            const artisanMatch = data.artisan_match;
             let finalPrice = 2999; // Fallback
             let artistName = "Master Craftsman";
 
