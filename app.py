@@ -123,7 +123,7 @@ POLLINATIONS_API_KEY = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINAT
 # import google.generativeai as genai (REMOVED: Too heavy for Vercel)
 class GeminiClient:
     """Lightweight wrapper for Gemini API to avoid 150MB+ grpc dependencies."""
-    def __init__(self, api_key, model="gemini-1.5-flash-latest"):
+    def __init__(self, api_key, model="gemini-2.5-flash"):
         self.api_key = api_key
         self.model = model
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -726,7 +726,7 @@ def find_artisan_match(material, style, description=""):
     if GEMINI_API_KEY and (description or style or material):
         try:
             # Use 1.5-flash-latest which is highly available
-            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
+            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY
             
             # Create a list of craft options for Gemini to pick from
             options = []
@@ -1740,7 +1740,7 @@ Your task: rewrite it as a single, clear image-generation prompt. Rules:
 - Include: subject, style (e.g. Madhubani, traditional, studio photo), materials if mentioned, lighting/quality (e.g. high resolution, sharp focus) if it helps.
 - Keep it under 400 characters. Output ONLY the refined prompt, nothing else."""
 
-    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-flash-latest", "gemini-pro"]:
+    for model in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-2.0-flash-001"]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={key}"
         payload = {
             "contents": [{"parts": [{"text": instruction + "\n\nUser's description:\n" + raw[:800]}]}],
