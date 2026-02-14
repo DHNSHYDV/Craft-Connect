@@ -247,15 +247,8 @@
             const imageUrl = `${pollinationsUrl}?${params.toString()}`;
             console.log('📡 Pollinations URL:', imageUrl);
 
-            // Pre-load image to verify it works
-            const imgLoader = new Image();
-            await new Promise((resolve, reject) => {
-                imgLoader.onload = resolve;
-                imgLoader.onerror = () => reject(new Error("Failed to load generated image"));
-                imgLoader.src = imageUrl;
-            });
-
-            console.log('✅ Image loaded successfully');
+            // Skip preload - let browser handle image loading directly
+            console.log('✅ Image URL ready, loading in UI...');
 
             // Now fetch artisan match from backend (fast, no image generation)
             let artisanMatch = null;
