@@ -533,7 +533,14 @@ def generate_image_pollinations(prompt_text):
 
     last_error = "Unknown error"
     
+    start_time = time.time()
     for model_name in models:
+        # Check if we have enough time left (leave 5s for artisan match and overhead)
+        elapsed = time.time() - start_time
+        if elapsed > 20: 
+            print(f"Pollinations loop timed out after {elapsed:.1f}s. Skipping remaining models.")
+            break
+
         try:
             target_url = f"{base_url}/{encoded_prompt}"
             params = {
@@ -545,7 +552,8 @@ def generate_image_pollinations(prompt_text):
             }
             
             print(f"Attempting Pollinations REST API with model '{model_name}'...")
-            resp = requests.get(target_url, params=params, headers=headers, stream=True, timeout=30)
+            # Tight 10s timeout per model
+            resp = requests.get(target_url, params=params, headers=headers, stream=True, timeout=10)
             
             if resp.status_code == 200:
                 print(f"✓ Pollinations model '{model_name}' succeeded")
@@ -1221,6 +1229,7 @@ def analyze_craft():
 @app.route('/api/generate-design', methods=['POST'])
 @login_required
 def generate_design():
+    start_time = time.time()
     data = request.json or {}
     user_prompt = (data.get("description") or "").strip()
     style = (data.get("style") or "Traditional").strip()
@@ -1265,6 +1274,19 @@ def generate_design():
         
         if not image_url:
              return jsonify({"error": err_msg or "Image generation failed."}), 502
+
+        # Final check: Don't start artisan matching if we are already over the 26s limit
+        elapsed = time.time() - start_time
+        if elapsed > 26:
+            print(f"Request breach: {elapsed:.1f}s. Abandoning artisan match to prevent gateway 502.")
+            return jsonify({
+                "image_url": image_url,
+                "title": title,
+                "description": desc,
+                "prompt_used": refined_prompt,
+                "provider": provider,
+                "warning": "Artisan matching skipped due to processing timeout."
+            })
 
         # 4. Add Artisan Match
         artisan_match = find_artisan_match(material, style, user_prompt)
