@@ -65,6 +65,52 @@ except Exception as e:
     OrderItem = None
     HERITAGE_DATA = {}
 
+# --- Global Naming Pools for Artisans ---
+STATE_NAMING = {
+    "Andhra Pradesh": {
+        "male": ["Ramesh", "Suresh", "Venkatesh", "Srinivas", "Nagarjuna", "Chandra", "Kishore"],
+        "female": ["Lakshmi", "Padma", "Sunita", "Anjali", "Swathi", "Deepa", "Sravani"],
+        "last": ["Reddy", "Rao", "Naidu", "Chowdary", "Gupta", "Murthy", "Goud"]
+    },
+    "Arunachal Pradesh": {
+        "male": ["Tashi", "Dorjee", "Karsang", "Passang", "Jampa", "Sangey", "Wangchu"],
+        "female": ["Pema", "Sonam", "Tsering", "Diki", "Yangchen", "Rinchin", "Dechen"],
+        "last": ["Lama", "Dorjee", "Tsering", "Khandu", "Wangsa", "Libang", "Perme"]
+    },
+    "Assam": {
+        "male": ["Manas", "Pranjal", "Dipankar", "Bishal", "Utpal", "Gautam", "Rahul"],
+        "female": ["Barsha", "Priyanka", "Mousumi", "Pompy", "Nayanmoni", "Gayatri", "Daisy"],
+        "last": ["Baruah", "Gogoi", "Saikia", "Bora", "Kalita", "Sarma", "Das"]
+    },
+    "Bihar": {
+        "male": ["Mukesh", "Rajesh", "Sanjay", "Amit", "Alok", "Prakash", "Ravi"],
+        "female": ["Pooja", "Neha", "Suman", "Kiran", "Rekha", "Rani", "Shila"],
+        "last": ["Kumar", "Singh", "Yadav", "Mishra", "Jha", "Prasad", "Gupta"]
+    },
+    "Chhattisgarh": {
+        "male": ["Rakesh", "Vijay", "Anil", "Dinesh", "Suresh", "Manish", "Pawan"],
+        "female": ["Meena", "Geeta", "Sita", "Lalita", "Kavita", "Anita", "Radha"],
+        "last": ["Baghel", "Sahu", "Baghel", "Verma", "Dewangan", "Netam", "Kashyap"]
+    },
+    "Goa": {
+        "male": ["Mario", "Pedro", "Anthony", "Francisco", "Joao", "Caitan", "Savio"],
+        "female": ["Maria", "Fatima", "Isabella", "Rosie", "Ana", "Josephine", "Carmina"],
+        "last": ["Fernandes", "D'Souza", "Rodrigues", "Pereira", "Gomes", "Dias", "Costa"]
+    },
+    "Gujarat": {
+        "male": ["Hitesh", "Jignesh", "Viral", "Chirag", "Hardik", "Mayur", "Pratik"],
+        "female": ["Bhumika", "Dhara", "Kinjal", "Peral", "Falguni", "Jigisha", "Mittal"],
+        "last": ["Patel", "Shah", "Mehta", "Dave", "Joshi", "Bhatt", "Ammani"]
+    }
+}
+
+GENERIC_NAMING = {
+    "male": ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram"],
+    "female": ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali"],
+    "last": ["Kumar", "Devi", "Khan", "Sharma", "Singh", "Das"]
+}
+
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 HF_TOKEN = os.getenv("HF_TOKEN")
 # Prompt refinement: use this key first so refine has its own quota; if unset, falls back to GEMINI_API_KEY
@@ -77,7 +123,7 @@ POLLINATIONS_API_KEY = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINAT
 # import google.generativeai as genai (REMOVED: Too heavy for Vercel)
 class GeminiClient:
     """Lightweight wrapper for Gemini API to avoid 150MB+ grpc dependencies."""
-    def __init__(self, api_key, model="gemini-1.5-flash"):
+    def __init__(self, api_key, model="gemini-1.5-flash-latest"):
         self.api_key = api_key
         self.model = model
         self.base_url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
@@ -598,70 +644,170 @@ def generate_image_design(prompt_text):
 
 
 
-def find_artisan_match(material, style):
-    """Matches a material and style to a specific artisan from get_artists()."""
+def find_artisan_match(material, style, description=""):
+    """
+    Enhanced matching logic using user description and HERITAGE_DATA.
+    Uses Gemini for intelligent matching if available.
+    """
+    import random
+    from data.products_heritage import HERITAGE_DATA
     
-    # 1. Get real artists from the same source as the frontend
-    all_artists = get_artists()
-    if not all_artists:
-        # Fallback if list is empty (shouldn't happen given the hardcoded list in get_artists)
-        return {
-            "name": "Traditional Artisan",
-            "state": "India",
-            "fact": "Handcrafted with love and tradition.",
-            "category": "Handicraft",
-            "production_time": "1-2 Weeks",
-            "price": 2999,
-            "artist_name": "Master Craftsman"
-        }
+    # 1. Flatten HERITAGE_DATA into a searchable list
+    heritage_items = []
+    for state, data in HERITAGE_DATA.items():
+        for item in data.get("items", []):
+            item_copy = item.copy()
+            item_copy["state"] = state
+            # Add story if available
+            item_copy["story"] = data.get("stories", {}).get(item["name"], "")
+            heritage_items.append(item_copy)
 
-    # 2. Normalize inputs
-    query_terms = (str(material) + " " + str(style)).lower().split()
+    # 2. Get the hardcoded list of artisans
+    all_artists = get_artists()
     
-    # 3. Scoring system
+    # 3. LLM-Based Matching (Gemini)
+    if GEMINI_API_KEY and (description or style or material):
+        try:
+            # Use 1.5-flash-latest which is highly available
+            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=" + GEMINI_API_KEY
+            
+            # Create a list of craft options for Gemini to pick from
+            options = []
+            for i, item in enumerate(heritage_items):
+                options.append(f"{i}: {item['name']} ({item['state']})")
+            
+            # We only send the first 80 items to stay within context/token reasonable limits for a quick search
+            options_text = "\n".join(options[:80]) 
+            
+            prompt = f"""You are a Heritage Matching Expert. A user wants to create:
+Description: {description}
+Selected Style: {style}
+Selected Material: {material}
+
+From the following list of Indian heritage crafts, pick the index of the one that is the BEST match.
+PRIORITIZE specific art styles (like 'Madhubani', 'Warli', 'Blue Pottery') found in the description even if the 'Selected Material' is different. 
+For example, if the description says 'Madhubani style' but material is 'Metal', you should still pick 'Madhubani Painting' because the artist can apply the style to that material.
+
+List:
+{options_text}
+
+Reply with ONLY the index number (integer). If no good match, reply with 'NONE'."""
+            
+            payload = {
+                "contents": [{"parts": [{"text": prompt}]}]
+            }
+            r = requests.post(model_url, json=payload, timeout=10)
+            if r.status_code == 200:
+                gemini_resp = r.json()
+                res_text = (gemini_resp.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
+                
+                # Extract number
+                import re
+                match = re.search(r'\d+', res_text)
+                if match:
+                    idx = int(match.group())
+                    if 0 <= idx < len(heritage_items):
+                        return _realize_artisan_from_heritage(heritage_items[idx], all_artists)
+        except Exception as e:
+            print(f"Gemini artisan matching failed: {e}")
+
+    # 4. Fallback: Keyword Scoring
     best_match = None
     best_score = -1
     
-    import random
+    query_text = f"{description} {style} {material}".lower()
+    query_terms = query_text.split()
     
-    # We want to match based on craft, state, or description
-    for artist in all_artists:
+    for item in heritage_items:
         score = 0
-        artist_text = (artist.get("style", "") + " " + artist.get("state", "") + " " + artist.get("description", "")).lower()
+        search_text = (item["name"] + " " + item["state"] + " " + item.get("category", "") + " " + item.get("story", "")).lower()
         
-        # Heavy weighting for Material and Style keywords
-        for term in query_terms:
-            if term in artist_text:
-                score += 2 if term in artist.get("style", "").lower() else 1
-        
-        # Precise Material check
-        mat_lower = str(material).lower()
-        if mat_lower in artist_text:
-            score += 3
-        
-        # Exact style check
-        style_lower = str(style).lower()
-        if style_lower in artist.get("style", "").lower():
+        # Word-based name match (High weight)
+        name_lower = item["name"].lower()
+        if name_lower in query_text:
+            score += 20
+        else:
+            # Check for significant keywords from the name
+            name_words = name_lower.split()
+            found_words = 0
+            for nw in name_words:
+                if len(nw) > 3 and nw in query_text:
+                    found_words += 1
+            if found_words > 0:
+                score += 15 * (found_words / len(name_words))
+            
+        # Material match
+        if material.lower() in search_text:
             score += 5
             
-        # Add a tiny random factor to break ties
-        score += random.random() * 0.5
+        # Style/Category match
+        if style.lower() in search_text:
+            score += 3
+            
+        # Keyword matching for description
+        for term in query_terms:
+            if len(term) > 3 and term in search_text:
+                score += 1
+                
+        # Random tie-breaker
+        score += random.random()
         
         if score > best_score:
             best_score = score
-            best_match = artist
-
-    # 4. Format the output to match what generate_design_flux expects
+            best_match = item
+            
     if best_match:
-        return {
-            "name": best_match.get("style", "Handicraft"), 
-            "state": best_match.get("state", "India"),
-            "fact": best_match.get("description", "Handcrafted excellence.").split('.')[0] + '.',
-            "category": best_match.get("style", "Handicraft"),
-            "production_time": best_match.get("meta", {}).get("labor", "1-2 Weeks"),
-            "price_range": best_match.get("meta", {}).get("price", "₹2,000 – ₹5,000"),
-            "artist_name": best_match.get("name")
-        }
+        return _realize_artisan_from_heritage(best_match, all_artists)
+
+    # 5. Final Fallback (Generic)
+    return {
+        "name": "Traditional Artisan",
+        "state": "India",
+        "fact": "Handcrafted with love and tradition.",
+        "category": "Handicrafts",
+        "production_time": "1-2 Weeks",
+        "price_range": "₹2,000 – ₹5,000",
+        "artist_name": "Master Craftsman"
+    }
+
+def _realize_artisan_from_heritage(heritage_item, all_artists):
+    """Utility to turn a heritage item into a full artisan match object."""
+    import random
+    
+    # Try to find if we already have an artist for this craft in all_artists
+    for artist in all_artists:
+        if artist.get("style", "").lower() == heritage_item["name"].lower():
+            return {
+                "name": artist.get("style", "Handicraft"),
+                "state": artist.get("state", "India"),
+                "fact": artist.get("description", "Handcrafted excellence.").split('.')[0] + '.',
+                "category": artist.get("style", "Handicraft"),
+                "production_time": artist.get("meta", {}).get("labor", "1-2 Weeks"),
+                "price_range": artist.get("meta", {}).get("price", "₹2,000 – ₹5,000"),
+                "artist_name": artist.get("name")
+            }
+            
+    # Generate a deterministic but realistic artist name based on state
+    state = heritage_item["state"]
+    naming_pool = STATE_NAMING.get(state, GENERIC_NAMING)
+    
+    # Use seed based on item name for determinism
+    rng = random.Random(heritage_item["name"])
+    is_male = rng.random() > 0.4
+    fname = rng.choice(naming_pool["male"]) if is_male else rng.choice(naming_pool["female"])
+    lname = rng.choice(naming_pool["last"])
+    artist_name = f"{fname} {lname}"
+    
+    return {
+        "name": heritage_item["name"],
+        "state": heritage_item["state"],
+        "fact": heritage_item.get("fun_fact", "Handcrafted with traditional techniques."),
+        "category": heritage_item.get("category", "Heritage"),
+        "production_time": heritage_item.get("production_time", "2-3 Weeks"),
+        # Standardize price range display
+        "price_range": f"₹{heritage_item['price_range'][0]:,} – ₹{heritage_item['price_range'][1]:,}" if isinstance(heritage_item.get("price_range"), (list, tuple)) else "₹2,000 – ₹5,000",
+        "artist_name": artist_name
+    }
         
 def is_premium_category(description):
     """Check if the description suggests a high-value item like an idol or statue."""
@@ -776,7 +922,7 @@ def generate_design_flux():
             }), 502
             
         # Add Artisan Match
-        artisan_match = find_artisan_match(material, style)
+        artisan_match = find_artisan_match(material, style, description)
         
         # Get Authentic Price via AI
         final_price = get_authentic_price(description, material, style, artisan_match.get("price_range"))
@@ -1116,7 +1262,7 @@ def generate_design():
              return jsonify({"error": err_msg or "Image generation failed."}), 502
 
         # 4. Add Artisan Match
-        artisan_match = find_artisan_match(material, style)
+        artisan_match = find_artisan_match(material, style, user_prompt)
         
         # 5. Get Realistic Price
         price_range = artisan_match.get("price_range", "₹2,000 – ₹5,000")
@@ -2382,52 +2528,6 @@ def get_artists():
     
     artists = []
     
-    # State-Specific Naming Database (For Cultural Accuracy)
-    STATE_NAMING = {
-        "Andhra Pradesh": {
-            "male": ["Ramesh", "Suresh", "Venkatesh", "Srinivas", "Nagarjuna", "Chandra", "Kishore"],
-            "female": ["Lakshmi", "Padma", "Sunita", "Anjali", "Swathi", "Deepa", "Sravani"],
-            "last": ["Reddy", "Rao", "Naidu", "Chowdary", "Gupta", "Murthy", "Goud"]
-        },
-        "Arunachal Pradesh": {
-            "male": ["Tashi", "Dorjee", "Karsang", "Passang", "Jampa", "Sangey", "Wangchu"],
-            "female": ["Pema", "Sonam", "Tsering", "Diki", "Yangchen", "Rinchin", "Dechen"],
-            "last": ["Lama", "Dorjee", "Tsering", "Khandu", "Wangsa", "Libang", "Perme"]
-        },
-        "Assam": {
-            "male": ["Manas", "Pranjal", "Dipankar", "Bishal", "Utpal", "Gautam", "Rahul"],
-            "female": ["Barsha", "Priyanka", "Mousumi", "Pompy", "Nayanmoni", "Gayatri", "Daisy"],
-            "last": ["Baruah", "Gogoi", "Saikia", "Bora", "Kalita", "Sarma", "Das"]
-        },
-        "Bihar": {
-            "male": ["Mukesh", "Rajesh", "Sanjay", "Amit", "Alok", "Prakash", "Ravi"],
-            "female": ["Pooja", "Neha", "Suman", "Kiran", "Rekha", "Rani", "Shila"],
-            "last": ["Kumar", "Singh", "Yadav", "Mishra", "Jha", "Prasad", "Gupta"]
-        },
-        "Chhattisgarh": {
-            "male": ["Rakesh", "Vijay", "Anil", "Dinesh", "Suresh", "Manish", "Pawan"],
-            "female": ["Meena", "Geeta", "Sita", "Lalita", "Kavita", "Anita", "Radha"],
-            "last": ["Baghel", "Sahu", "Patel", "Verma", "Dewangan", "Netam", "Kashyap"]
-        },
-        "Goa": {
-            "male": ["Mario", "Pedro", "Anthony", "Francisco", "Joao", "Caitan", "Savio"],
-            "female": ["Maria", "Fatima", "Isabella", "Rosie", "Ana", "Josephine", "Carmina"],
-            "last": ["Fernandes", "D'Souza", "Rodrigues", "Pereira", "Gomes", "Dias", "Costa"]
-        },
-        "Gujarat": {
-            "male": ["Hitesh", "Jignesh", "Viral", "Chirag", "Hardik", "Mayur", "Pratik"],
-            "female": ["Bhumika", "Dhara", "Kinjal", "Peral", "Falguni", "Jigisha", "Mittal"],
-            "last": ["Patel", "Shah", "Mehta", "Dave", "Joshi", "Bhatt", "Ammani"]
-        }
-    }
-
-    # Fallback for unknown states
-    GENERIC_NAMING = {
-        "male": ["Ramesh", "Abdul", "Gopal", "Mohammad", "Satish", "Vikram"],
-        "female": ["Sunita", "Meenakshi", "Priya", "Lakshmi", "Anjali"],
-        "last": ["Kumar", "Devi", "Khan", "Sharma", "Singh", "Das"]
-    }
-
     for i, item in enumerate(real_artisans):
         # Use a local Random instance for thread-safety and determinism
         rng = random.Random(i + 5000)
