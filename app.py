@@ -1482,6 +1482,22 @@ def test_gemini():
         })
 
 
+
+@app.route('/api/debug-image-gen', methods=['GET'])
+def debug_image_gen():
+    """Diagnostic endpoint to check image generation configuration"""
+    return jsonify({
+        "environment": "Render/Vercel" if (os.getenv('VERCEL') or os.getenv('AWS_LAMBDA_FUNCTION_NAME')) else "Local",
+        "api_keys": {
+            "GEMINI_API_KEY": "SET" if GEMINI_API_KEY else "NOT SET",
+            "GEMINI_IMAGE_API_KEY": "SET" if GEMINI_IMAGE_API_KEY else "NOT SET",
+            "POLLINATIONS_API_KEY": "SET" if POLLINATIONS_API_KEY else "NOT SET",
+            "HF_TOKEN": "SET" if HF_TOKEN else "NOT SET"
+        },
+        "pollinations_models": POLLINATIONS_IMAGE_MODELS,
+        "note": "If POLLINATIONS_IMAGE_MODEL is not set, defaults to ['flux']"
+    })
+
 # --- Craft Assistant Chatbot (Gemini-powered) ---
 # --- Craft Assistant Chatbot (Gemini-powered with RAG) ---
 
