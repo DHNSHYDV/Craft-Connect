@@ -239,10 +239,15 @@
             // Build enhanced prompt
             const enhancedPrompt = `${selectedStyle} style ${selectedMaterial} Indian handicraft: ${text}. Professional product photography, high quality, detailed, traditional craftsmanship`;
 
-            // Use Pollinations API directly from frontend (NO BACKEND)
+            // Use Pollinations API with custom models from environment
             const pollinationsUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}`;
+
+            // Use first model from env, fallback to flux
+            const modelToUse = POLLINATIONS_MODELS.length > 0 ? POLLINATIONS_MODELS[0] : 'flux';
+            console.log('🎨 Using model:', modelToUse, '(from env:', POLLINATIONS_MODELS, ')');
+
             const params = new URLSearchParams({
-                model: 'flux',
+                model: modelToUse,
                 width: '1024',
                 height: '1024',
                 nologo: 'true',
