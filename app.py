@@ -2658,7 +2658,10 @@ def checkout():
 @app.route('/design-craft')
 @login_required
 def design_craft():
-    return render_template('design_craft.html', gemini_api_key=GEMINI_API_KEY)
+    return render_template('design_craft.html', 
+                         gemini_api_key=GEMINI_API_KEY,
+                         pollinations_api_key=POLLINATIONS_API_KEY,
+                         pollinations_models=','.join(POLLINATIONS_IMAGE_MODELS) if POLLINATIONS_IMAGE_MODELS else 'flux')
 
 @app.route('/data')
 @login_required

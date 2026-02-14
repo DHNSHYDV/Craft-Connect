@@ -135,9 +135,14 @@
 <script src="{{ url_for('static', filename='js/gemini-ai-integration.js') }}"></script>
 
 <script>
-    // Initialize Gemini API Key from server
+    // Initialize API Keys from server
     const GEMINI_API_KEY = "{{ gemini_api_key }}";
+    const POLLINATIONS_API_KEY = "{{ pollinations_api_key }}";
+    const POLLINATIONS_MODELS = "{{ pollinations_models }}".split(',').filter(m => m.trim());
     let geminiAI = null;
+
+    console.log('🔑 Pollinations API Key:', POLLINATIONS_API_KEY ? 'SET' : 'NOT SET');
+    console.log('🎨 Pollinations Models:', POLLINATIONS_MODELS);
 
     if (GEMINI_API_KEY && GEMINI_API_KEY !== 'None') {
         geminiAI = new GeminiAIIntegration(GEMINI_API_KEY);
