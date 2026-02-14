@@ -116,6 +116,8 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_VISION_API_KEY = os.getenv("GEMINI_VISION_API_KEY") or GEMINI_API_KEY
 GEMINI_IMAGE_API_KEY = os.getenv("GEMINI_IMAGE_API_KEY") or GEMINI_API_KEY
 HF_TOKEN = os.getenv("HF_TOKEN")
+HF_TOKENS_RAW = os.getenv("HF_TOKENS")
+HF_TOKENS = [t.strip() for t in HF_TOKENS_RAW.split(",") if t.strip()] if HF_TOKENS_RAW else ([HF_TOKEN] if HF_TOKEN else [])
 # Prompt refinement: use this key first so refine has its own quota; if unset, falls back to GEMINI_API_KEY
 PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
 # Pollinations AI: optional key for prompt refine (text chat completions)
@@ -212,53 +214,66 @@ class GeminiImageClient:
             return None, str(e)
 
 class HFImageClient:
-    """Client for generating images via Hugging Face Inference API."""
-    def __init__(self, token, model="black-forest-labs/FLUX.1-schnell"):
-        self.token = token
+    """Client for generating images via Hugging Face Inference API with fallback tokens."""
+    def __init__(self, tokens, model="black-forest-labs/FLUX.1-schnell"):
+        self.tokens = tokens if isinstance(tokens, list) else ([tokens] if tokens else [])
         self.model = model
         self.url = f"https://router.huggingface.co/hf-inference/models/{model}"
 
     def generate_image(self, prompt):
-        if not self.token:
-            return None, "HF Token missing"
+        if not self.tokens:
+            return None, "HF Token(s) missing"
         
-        headers = {"Authorization": f"Bearer {self.token}"}
-        payload = {"inputs": prompt}
+        last_err = "Unknown error"
         
-        try:
-            print(f"Generating image with HF ({self.model}): {prompt[:50]}...")
+        for token in self.tokens:
+            headers = {"Authorization": f"Bearer {token}"}
+            payload = {"inputs": prompt}
             
-            # Implementation of retry logic for 503 (Model Loading)
-            import time
-            max_retries = 3
-            for i in range(max_retries):
-                resp = requests.post(self.url, headers=headers, json=payload, timeout=90)
+            try:
+                print(f"Generating image with HF ({self.model}) using token {token[:8]}...")
                 
-                if resp.status_code == 200:
-                    # HF returns raw bytes of the image
-                    import base64
-                    b64_data = base64.b64encode(resp.content).decode("utf-8")
-                    return f"data:image/jpeg;base64,{b64_data}", None
+                # Implementation of retry logic for 503 (Model Loading)
+                import time
+                max_retries = 3
+                for i in range(max_retries):
+                    resp = requests.post(self.url, headers=headers, json=payload, timeout=90)
+                    
+                    if resp.status_code == 200:
+                        # HF returns raw bytes of the image
+                        import base64
+                        b64_data = base64.b64encode(resp.content).decode("utf-8")
+                        return f"data:image/jpeg;base64,{b64_data}", None
+                    
+                    if resp.status_code == 503:
+                        # Model is loading, wait and retry
+                        wait_time = resp.json().get('estimated_time', 20)
+                        print(f"HF Model loading, waiting {wait_time}s (try {i+1}/{max_retries})...")
+                        time.sleep(min(wait_time, 30))
+                        continue
+                    
+                    # If token is invalid or quota exceeded, try next token
+                    if resp.status_code in (401, 403, 429):
+                        print(f"HF Token {token[:8]} failed with {resp.status_code}. Trying next...")
+                        last_err = f"HF Error {resp.status_code}: {resp.text[:200]}"
+                        break # Break retry loop to try next token
+                    
+                    print(f"HF Image Error {resp.status_code}: {resp.text}")
+                    return None, f"HF Error {resp.status_code}: {resp.text[:200]}"
                 
-                if resp.status_code == 503:
-                    # Model is loading, wait and retry
-                    wait_time = resp.json().get('estimated_time', 20)
-                    print(f"HF Model loading, waiting {wait_time}s (try {i+1}/{max_retries})...")
-                    time.sleep(min(wait_time, 30))
-                    continue
+                # If we exhausted retries for THIS token and it wasn't a token error, it might be a model issue
+                # But we'll continue to next token just in case
                 
-                print(f"HF Image Error {resp.status_code}: {resp.text}")
-                return None, f"HF Error {resp.status_code}: {resp.text[:200]}"
-            
-            return None, "HF Error: Model still loading after retries"
-            
-        except Exception as e:
-            print(f"HF Image Exception: {e}")
-            return None, str(e)
+            except Exception as e:
+                print(f"HF Image Exception with token {token[:8]}: {e}")
+                last_err = str(e)
+                continue
+                
+        return None, f"HF Error: All tokens failed. Last error: {last_err}"
 
 # Initialize Image Clients
 gemini_img_client = GeminiImageClient(GEMINI_IMAGE_API_KEY)
-hf_img_client = HFImageClient(HF_TOKEN)
+hf_img_client = HFImageClient(HF_TOKENS)
 
 
 if GEMINI_API_KEY:
@@ -618,37 +633,27 @@ def proxy_pollinations_gen():
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Primary: Gemini Imagen 3 (if billed). Fallback: Pollinations (Direct URL)."""
+    """Generate image. Primary: Gemini Imagen 3 (if billed). Fallback: Hugging Face (multi-token)."""
     
     # 1. PRIMARY: GEMINI IMAGEN 3 (Requires Billing)
     if GEMINI_IMAGE_API_KEY:
         print("Attempting Gemini Imagen...")
-        # Note: This will fail with 400 if the account is free tier.
-        # We catch that inside generate_image() and it returns error message, so we fall through.
         img_url, err = gemini_img_client.generate_image(prompt_text)
         if img_url:
             print("✓ Gemini Imagen succeeded")
             return img_url, "Gemini", None
         print(f"Gemini Imagen failed: {err}")
 
-    # 2. FALLBACK: POLLINATIONS (Free Tier, Direct URL)
-    # We always attempt this if Gemini fails, as it's the only free reliable option.
-    print("Attempting Pollinations.ai (Direct URL Fallback)...")
-    url, provider, err = generate_image_pollinations(prompt_text)
-    if url:
-         print("✓ Pollinations URL generated")
-         return url, provider, None
-    print(f"Pollinations failed ({err}).")
-
-    # 3. LEGACY FALLBACK: Hugging Face (Starts broken, user might fix token)
-    if HF_TOKEN:
+    # 2. FALLBACK: Hugging Face (Uses HF_TOKENS fallback mechanism)
+    if HF_TOKENS:
+        print("Attempting Hugging Face (Multi-token Fallback)...")
         img_url, err = hf_img_client.generate_image(prompt_text)
         if img_url:
             print("✓ Hugging Face succeeded")
             return img_url, "HuggingFace", None
         print(f"Hugging Face failed: {err}")
     
-    return None, "Error", "Image generation failed using all available providers."
+    return None, "Error", "Image generation failed using all available providers (Gemini/HF)."
 
 
 
@@ -1865,57 +1870,80 @@ def _refine_design_prompt_pollinations(raw_prompt):
 
 
 def _refine_design_prompt_hf(raw_prompt):
-    """Use Hugging Face router chat completions (v1) for prompt refine. Tries multiple models if one is not supported."""
-    if not HF_TOKEN or not HF_TOKEN.strip():
-        return None, "HF_TOKEN not set (needed for fallback refine)."
+    """Use Hugging Face router chat completions (v1) for prompt refine. Tries multiple models and multiple tokens if one fails."""
+    if not HF_TOKENS:
+        return None, "HF_TOKENS not set (needed for fallback refine)."
+    
     raw = (raw_prompt or "").strip()
     if not raw:
         return None, "No prompt to refine."
+    
     instruction = "Rewrite as a single image-generation prompt for an Indian handicraft. One short paragraph, under 400 characters. Output ONLY the refined prompt, nothing else."
     user_content = f"User's description: {raw[:600]}"
-    headers = {"Authorization": f"Bearer {HF_TOKEN.strip()}", "Content-Type": "application/json"}
-    last_error = "No model succeeded."
-    for model in HF_REFINE_MODELS:
-        payload = {
-            "model": model,
-            "messages": [
-                {"role": "system", "content": instruction},
-                {"role": "user", "content": user_content},
-            ],
-            "max_tokens": 256,
-            "temperature": 0.2,
-        }
-        try:
-            r = requests.post(HF_ROUTER_CHAT_URL, headers=headers, json=payload, timeout=60)
-            if r.status_code == 503:
-                last_error = "Refine model is loading (503). Try again in a minute."
-                continue
-            if r.status_code in (401, 403):
-                return None, "HF token invalid. Use a token with 'Make calls to Inference Providers' at hf.co/settings/tokens."
+    
+    last_error = "No token or model succeeded."
+    
+    for token in HF_TOKENS:
+        headers = {"Authorization": f"Bearer {token.strip()}", "Content-Type": "application/json"}
+        token_failed = False
+        
+        for model in HF_REFINE_MODELS:
+            payload = {
+                "model": model,
+                "messages": [
+                    {"role": "system", "content": instruction},
+                    {"role": "user", "content": user_content},
+                ],
+                "max_tokens": 256,
+                "temperature": 0.2,
+            }
             try:
-                data = r.json()
-            except Exception:
-                data = None
-            if data is None:
-                r.raise_for_status()
-                continue
-            if isinstance(data, dict) and data.get("error"):
-                err_obj = data.get("error") or data.get("message") or "Request failed."
-                err_str = err_obj if isinstance(err_obj, str) else str(err_obj)
-                code = (data.get("code") or "").lower()
-                if "model_not_supported" in code or "model_not_found" in code or "not supported" in err_str.lower() or "does not exist" in err_str.lower():
-                    last_error = err_str[:200]
+                print(f"Refining prompt with HF token {token[:8]} and model {model}...")
+                r = requests.post(HF_ROUTER_CHAT_URL, headers=headers, json=payload, timeout=60)
+                
+                if r.status_code == 503:
+                    last_error = "Refine model is loading (503). Trying next model/token."
                     continue
-                return None, err_str[:200]
-            choices = (data or {}).get("choices") or []
-            if choices:
-                msg = choices[0].get("message") if isinstance(choices[0], dict) else None
-                text = (msg.get("content") or "") if isinstance(msg, dict) else ""
-                if isinstance(text, str) and text.strip():
-                    return text.strip()[:500], None
-            last_error = "No text in response."
-        except requests.RequestException:
-            continue
+                
+                if r.status_code in (401, 403, 429):
+                    print(f"HF Token {token[:8]} failed with {r.status_code}. Trying next token...")
+                    token_failed = True
+                    last_error = f"HF token invalid or quota exceeded ({r.status_code})."
+                    break # Try next token
+                
+                try:
+                    data = r.json()
+                except Exception:
+                    data = None
+                
+                if data is None:
+                    r.raise_for_status()
+                    continue
+                
+                if isinstance(data, dict) and data.get("error"):
+                    err_obj = data.get("error") or data.get("message") or "Request failed."
+                    err_str = err_obj if isinstance(err_obj, str) else str(err_obj)
+                    code = (data.get("code") or "").lower()
+                    if "model_not_supported" in code or "model_not_found" in code or "not supported" in err_str.lower() or "does not exist" in err_str.lower():
+                        last_error = err_str[:200]
+                        continue
+                    return None, err_str[:200]
+                
+                choices = (data or {}).get("choices") or []
+                if choices:
+                    msg = choices[0].get("message") if isinstance(choices[0], dict) else None
+                    text = (msg.get("content") or "") if isinstance(msg, dict) else ""
+                    if isinstance(text, str) and text.strip():
+                        return text.strip()[:500], None
+                
+                last_error = "No text in response."
+            except requests.RequestException as e:
+                print(f"HF Request Exception with token {token[:8]}: {e}")
+                continue
+        
+        if token_failed:
+            continue # Already handled by inner break
+            
     return None, last_error[:200]
 
 
@@ -1941,8 +1969,8 @@ def refine_design_prompt():
         err = err_gem or err or "No Gemini key set."
     else:
         err = err or "No Gemini key set."
-    # 3) Try HF (works with only HF_TOKEN, no Gemini/Pollinations needed)
-    if HF_TOKEN and HF_TOKEN.strip():
+    # 3) Try HF (works with multiple HF_TOKENS, no Gemini/Pollinations needed)
+    if HF_TOKENS:
         refined_hf, err_hf = _refine_design_prompt_hf(raw)
         if refined_hf:
             return jsonify({"prompt": refined_hf, "refined": True})
