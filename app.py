@@ -112,6 +112,9 @@ GENERIC_NAMING = {
 
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+# Separate API keys for different services (with fallback to main key)
+GEMINI_VISION_API_KEY = os.getenv("GEMINI_VISION_API_KEY") or GEMINI_API_KEY
+GEMINI_IMAGE_API_KEY = os.getenv("GEMINI_IMAGE_API_KEY") or GEMINI_API_KEY
 HF_TOKEN = os.getenv("HF_TOKEN")
 # Prompt refinement: use this key first so refine has its own quota; if unset, falls back to GEMINI_API_KEY
 PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
@@ -254,7 +257,7 @@ class HFImageClient:
             return None, str(e)
 
 # Initialize Image Clients
-gemini_img_client = GeminiImageClient(GEMINI_API_KEY)
+gemini_img_client = GeminiImageClient(GEMINI_IMAGE_API_KEY)
 hf_img_client = HFImageClient(HF_TOKEN)
 
 
@@ -619,7 +622,7 @@ def generate_image_design(prompt_text):
     """Generate image. Primary: Gemini Imagen 3 (if billed). Fallback: Pollinations (Direct URL)."""
     
     # 1. PRIMARY: GEMINI IMAGEN 3 (Requires Billing)
-    if GEMINI_API_KEY:
+    if GEMINI_IMAGE_API_KEY:
         print("Attempting Gemini Imagen...")
         # Note: This will fail with 400 if the account is free tier.
         # We catch that inside generate_image() and it returns error message, so we fall through.
@@ -962,8 +965,8 @@ def generate_design_flux():
 
 def _analyze_craft_gemini(image_data, mime_type="image/jpeg"):
     """Use Gemini vision to analyze image. Returns (result_dict, error_hint). result_dict is None on failure."""
-    if not GEMINI_API_KEY or not GEMINI_API_KEY.strip():
-        return None, "GEMINI_API_KEY is not set in .env. Get a key at https://aistudio.google.com/apikey"
+    if not GEMINI_VISION_API_KEY or not GEMINI_VISION_API_KEY.strip():
+        return None, "GEMINI_VISION_API_KEY is not set in .env. Get a key at https://aistudio.google.com/apikey"
     if not image_data or len(image_data) < 100:
         return None, None
     prompt = """Analyze this image. It can be anything Indian traditional: clothing (kurta, saree, sherwani), handicraft, pottery, painting, jewellery, textile, metalwork, etc.
@@ -980,7 +983,7 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
     last_error = None
     # Use current model IDs that support image input (see https://ai.google.dev/gemini-api/docs/models)
     for model in ["gemini-2.5-flash", "gemini-2.0-flash", "gemini-1.5-flash"]:
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY.strip()}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_VISION_API_KEY.strip()}"
         payload = {
             "contents": [{
                 "parts": [
@@ -1000,7 +1003,7 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
                 time.sleep(3)
                 r = requests.post(url, json=payload, timeout=30)
             if r.status_code == 429:
-                return None, "Gemini quota exceeded. Wait a minute and try again, or create a new free API key at https://aistudio.google.com/apikey and add it to .env as GEMINI_API_KEY for more quota."
+                return None, "Gemini quota exceeded. Wait a minute and try again, or create a new free API key at https://aistudio.google.com/apikey and add it to .env as GEMINI_VISION_API_KEY for more quota."
             if r.status_code != 200:
                 last_error = f"HTTP {r.status_code}"
                 print(f"Gemini vision {model}: {r.status_code} {r.text[:300]}")
