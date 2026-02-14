@@ -504,7 +504,7 @@ def generate_image_pollinations(prompt_text):
             if resp.status_code == 200:
                 print(f"✓ Pollinations model '{model_name}' succeeded")
                 b64_str = base64.b64encode(resp.content).decode("utf-8")
-                return f"data:image/jpeg;base64,{b64_str}", None
+                return f"data:image/jpeg;base64,{b64_str}", "Pollinations", None
             else:
                 last_error = f"Model '{model_name}' failed with status {resp.status_code}: {resp.text[:100]}"
                 print(f"Pollinations model '{model_name}' error: {last_error}")
@@ -515,7 +515,7 @@ def generate_image_pollinations(prompt_text):
             print(f"Pollinations model '{model_name}' exception: {last_error}")
             continue
             
-    return None, f"All Pollinations models failed. Last error: {last_error}"
+    return None, "Pollinations", f"All Pollinations models failed. Last error: {last_error}"
 
 @app.route('/api/image/gen')
 def proxy_pollinations_gen():
@@ -572,16 +572,16 @@ def generate_image_design(prompt_text):
         img_url, err = gemini_img_client.generate_image(prompt_text)
         if img_url:
             print("✓ Gemini Imagen succeeded")
-            return img_url, None
+            return img_url, "Gemini", None
         print(f"Gemini Imagen failed: {err}")
 
     # 2. FALLBACK: POLLINATIONS (Free Tier, Direct URL)
     # We always attempt this if Gemini fails, as it's the only free reliable option.
     print("Attempting Pollinations.ai (Direct URL Fallback)...")
-    url, err = generate_image_pollinations(prompt_text)
+    url, provider, err = generate_image_pollinations(prompt_text)
     if url:
          print("✓ Pollinations URL generated")
-         return url, None
+         return url, provider, None
     print(f"Pollinations failed ({err}).")
 
     # 3. LEGACY FALLBACK: Hugging Face (Starts broken, user might fix token)
@@ -589,10 +589,10 @@ def generate_image_design(prompt_text):
         img_url, err = hf_img_client.generate_image(prompt_text)
         if img_url:
             print("✓ Hugging Face succeeded")
-            return img_url, None
+            return img_url, "HuggingFace", None
         print(f"Hugging Face failed: {err}")
     
-    return None, "Image generation failed using all available providers."
+    return None, "Error", "Image generation failed using all available providers."
 
 
 
@@ -766,7 +766,7 @@ def generate_design_flux():
         title = f"{style} {material} Artisan Concept"
         desc = f"A {style} Indian handicraft in {material}. {description}"
         
-        image_url, err_msg = generate_image_design(prompt_text)
+        image_url, provider, err_msg = generate_image_design(prompt_text)
         
         if image_url is None:
             return jsonify({
@@ -786,7 +786,8 @@ def generate_design_flux():
             "title": title, 
             "description": desc, 
             "image_url": image_url,
-            "artisan_match": artisan_match
+            "artisan_match": artisan_match,
+            "provider": provider
         })
         
     except Exception as e:
@@ -819,7 +820,7 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
     b64 = base64.b64encode(image_data).decode("utf-8")
     last_error = None
     # Use current model IDs that support image input (see https://ai.google.dev/gemini-api/docs/models)
-    for model in ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-pro"]:
+    for model in ["gemini-2.0-flash", "gemini-1.5-flash", "gemini-1.5-pro"]:
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent?key={GEMINI_API_KEY.strip()}"
         payload = {
             "contents": [{
@@ -832,8 +833,10 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
         }
         try:
             r = requests.post(url, json=payload, timeout=30)
-            if r.status_code == 401 or r.status_code == 403:
-                return None, "Gemini API key invalid or expired. Get a new key at https://aistudio.google.com/apikey"
+            if r.status_code == 401:
+                return None, "Gemini API key is invalid. Please check your .env file."
+            if r.status_code == 403:
+                return None, "Gemini API key expired or has insufficient permissions."
             if r.status_code == 429:
                 time.sleep(3)
                 r = requests.post(url, json=payload, timeout=30)
@@ -1051,8 +1054,8 @@ def analyze_craft():
     result = _analyze_craft_local_fallback(image_data)
     if result:
         result["mode"] = "live"
-        if error_hint and ("invalid" in error_hint.lower() or "expired" in error_hint.lower() or "401" in error_hint or "403" in error_hint):
-            result["description"] = (result.get("description") or "") + " (Gemini key invalid or expired. Get a new key at https://aistudio.google.com/apikey and add to .env as GEMINI_API_KEY for better analysis.)"
+        if error_hint and any(x in error_hint.lower() for x in ["invalid", "expired", "permission", "401", "403"]):
+            result["description"] = (result.get("description") or "") + f" (Note: Analysis used local fallback because: {error_hint})"
         return jsonify(result)
 
     desc = "We couldn't run a full analysis on this image."
@@ -1107,14 +1110,10 @@ def generate_design():
     # 2. Generate Image (Server-Side Proxy with Key)
     # We use the refined prompt from Gemini for best results
     try:
-        image_url, err_msg = generate_image_design(refined_prompt)
+        image_url, provider, err_msg = generate_image_design(refined_prompt)
         
         if not image_url:
              return jsonify({"error": err_msg or "Image generation failed."}), 502
-
-        # 3. Handle Provider tagging (for debugging as requested)
-        provider = "Gemini" if "data:image" in str(image_url) and "pollinations" not in str(image_url).lower() else "Pollinations"
-        if not GEMINI_API_KEY: provider = "Pollinations"
 
         # 4. Add Artisan Match
         artisan_match = find_artisan_match(material, style)
