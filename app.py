@@ -1913,7 +1913,7 @@ def refine_design_prompt():
 
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'HEAD'])
 def index():
     """Home page - Public Access."""
     return render_template('index.html')
