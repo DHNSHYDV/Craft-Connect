@@ -22,6 +22,15 @@ sys.stderr.flush()
 # Load environment variables
 load_dotenv()
 SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+GEMINI_VISION_API_KEY = os.getenv("GEMINI_VISION_API_KEY") or GEMINI_API_KEY
+GEMINI_IMAGE_API_KEY = os.getenv("GEMINI_IMAGE_API_KEY") or GEMINI_API_KEY
+HF_TOKEN = os.getenv("HF_TOKEN")
+HF_TOKENS_RAW = os.getenv("HF_TOKENS")
+HF_TOKENS = [t.strip() for t in HF_TOKENS_RAW.split(",") if t.strip()] if HF_TOKENS_RAW else ([HF_TOKEN] if HF_TOKEN else [])
+PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
+POLLINATIONS_API_KEY = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINATION_API_KEY") or "").strip()
 
 
 from datetime import timedelta
@@ -111,17 +120,9 @@ GENERIC_NAMING = {
 }
 
 
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 # Separate API keys for different services (with fallback to main key)
-GEMINI_VISION_API_KEY = os.getenv("GEMINI_VISION_API_KEY") or GEMINI_API_KEY
-GEMINI_IMAGE_API_KEY = os.getenv("GEMINI_IMAGE_API_KEY") or GEMINI_API_KEY
-HF_TOKEN = os.getenv("HF_TOKEN")
-HF_TOKENS_RAW = os.getenv("HF_TOKENS")
-HF_TOKENS = [t.strip() for t in HF_TOKENS_RAW.split(",") if t.strip()] if HF_TOKENS_RAW else ([HF_TOKEN] if HF_TOKEN else [])
 # Prompt refinement: use this key first so refine has its own quota; if unset, falls back to GEMINI_API_KEY
-PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
 # Pollinations AI: optional key for prompt refine (text chat completions)
-POLLINATIONS_API_KEY = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINATION_API_KEY") or "").strip()
 
 # Configure Gemini AI for chatbot
 # Configure Gemini AI for chatbot (Lightweight Vercel Version)
@@ -1123,6 +1124,10 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
         vision_model = "llama-3.2-11b-vision-preview"
         print(f"Attempting Groq Vision fallback with {vision_model}...")
         
+        if not image_data:
+            print("Groq Vision error: No image data")
+            return None, "No image data"
+            
         base64_image = base64.b64encode(image_data).decode('utf-8')
         
         headers = {
@@ -1157,6 +1162,7 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
             return None, f"Groq Error {r.status_code}"
             
         data = r.json()
+        print(f"Groq Vision success! Data: {str(data)[:100]}...")
         response_text = data['choices'][0]['message']['content']
         
         if not response_text:
@@ -1173,6 +1179,71 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
         
     except Exception as e:
         print(f"Groq vision error: {e}")
+        return None, str(e)
+
+
+def _analyze_craft_huggingface(image_data, mime_type="image/jpeg"):
+    """Use Hugging Face Inference API (serverless) as a fast web-based fallback."""
+    if not HF_TOKENS:
+        return None, "HF_TOKEN not set"
+    
+    # Try with a common multimodal model on HF
+    model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
+    token = random.choice(HF_TOKENS)
+    api_url = f"https://api-inference.huggingface.co/models/{model_id}"
+    
+    headers = {"Authorization": f"Bearer {token}"}
+    
+    prompt = """Analyze this image. It can be anything Indian traditional: clothing, handicraft, pottery, painting, jewellery, textile, etc.
+If NOT Indian traditional, set 'score' below 30 and accurately name it.
+Reply with ONLY a valid JSON object with: name, origin, score, material, style, description."""
+
+    try:
+        base64_image = base64.b64encode(image_data).decode('utf-8')
+        payload = {
+            "inputs": {
+                "image": f"data:{mime_type};base64,{base64_image}",
+                "text": prompt
+            },
+            "parameters": {"max_new_tokens": 500}
+        }
+        
+        # Note: HF Inference API multimodal input format can vary by model, 
+        # but Llama-3.2-Vision usually expects a conversational structure or specific prompt wrapper.
+        # For simplicity and speed, we'll use the standard JSON prompt approach.
+        
+        print(f"Attempting HF Vision fallback with {model_id}...")
+        r = requests.post(api_url, headers=headers, json=payload, timeout=25)
+        
+        if r.status_code == 503: # Model loading
+            return None, "HF Model is loading. Skipping to next fallback."
+        
+        if r.status_code != 200:
+            print(f"HF Vision Error {r.status_code}: {r.text}")
+            return None, f"HF Error {r.status_code}"
+            
+        result = r.json()
+        # Handle different HF response formats
+        text = ""
+        if isinstance(result, list) and len(result) > 0:
+            text = result[0].get("generated_text", "")
+        elif isinstance(result, dict):
+            text = result.get("generated_text", "")
+            
+        if not text:
+            return None, "Empty response from HF"
+            
+        # Extract JSON
+        text = text.replace("```json", "").replace("```", "").strip()
+        start, end = text.find("{"), text.rfind("}") + 1
+        if start < 0:
+            return None, "No JSON in HF response"
+            
+        obj = json.loads(text[start:end])
+        return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
+        
+    except Exception as e:
+        print(f"HF vision error: {e}")
         return None, str(e)
 
 
@@ -1276,7 +1347,9 @@ def _analyze_craft_glm_ocr(image_data):
         has_craft = any(w in output_lower for w in craft_words)
         has_generic = any(m in output_lower for m in generic_markers)
         if has_generic and not has_craft:
-            description = "Indian handicraft (image-based analysis). For best material and style details, use a clear photo of the item or any text/labels on it."
+            description = "Modern or non-craft object detected. For best results with Indian handicrafts, use a clear photo of the authentic item."
+            name = "Modern / Non-Craft Item"
+            score = 25
         else:
             raw_desc = output_text[:500] + ("..." if len(output_text) > 500 else "")
             # Normalize "object type: x material: y style: z" into readable "Object: x. Material: y. Style: z."
@@ -1286,13 +1359,16 @@ def _analyze_craft_glm_ocr(image_data):
             if "Object:" in raw_desc or "Material:" in raw_desc or "Style:" in raw_desc:
                 raw_desc = re.sub(r"\s+", " ", raw_desc).strip()
             description = raw_desc
+            name = "Indian Handicraft"
+            score = 82
+
         print("GLM-OCR fallback succeeded.")
         return {
-            "name": "Indian Handicraft",
-            "origin": "India",
-            "score": 82,
+            "name": name,
+            "origin": "India" if score > 50 else "N/A",
+            "score": score,
             "material": material,
-            "style": "Heritage craft",
+            "style": "Heritage craft" if score > 50 else "Modern",
             "description": description,
             "engine": "GLM-OCR (local)",
         }
@@ -1329,6 +1405,8 @@ def analyze_craft():
     if not mime.startswith("image/"):
         mime = "image/jpeg"
 
+    print(f"DEBUG: analyze_craft using keys: Gemini={bool(GEMINI_API_KEY)}, Groq={bool(GROQ_API_KEY)}, SambaNova={bool(SAMBANOVA_API_KEY)}")
+
     # Try Gemini when key is set; on failure (e.g. invalid/expired key) try local GLM-OCR so user still gets an analysis
     error_hint = None
     if GEMINI_API_KEY and GEMINI_API_KEY.strip():
@@ -1348,7 +1426,17 @@ def analyze_craft():
         if not error_hint:
             error_hint = gr_error
 
-    # 3. Try SambaNova Vision (Tertiary Fallback - requires key)
+    # 3. Try Hugging Face Vision (Tertiary Fallback - Faster than local)
+    if HF_TOKENS:
+        result, hf_error = _analyze_craft_huggingface(image_data, mime_type=mime)
+        if result:
+            result["mode"] = "live"
+            result["engine"] = "Hugging Face Vision"
+            return jsonify(result)
+        if not error_hint:
+            error_hint = hf_error
+
+    # 4. Try SambaNova Vision (Backup)
     if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
         result, sb_error = _analyze_craft_sambanova(image_data, mime_type=mime)
         if result:
@@ -1358,7 +1446,9 @@ def analyze_craft():
         if not error_hint:
             error_hint = sb_error
 
-    # 4. No Vision Key or all vision APIs failed: try local GLM-OCR
+    # 5. Final Fallback: local GLM-OCR (Only if requested or as absolute last resort)
+    # To keep the site fast, we only do this if all others fail.
+    print("All web Vision APIs failed. Falling back to local model (this may take time)...")
     result = _analyze_craft_local_fallback(image_data)
     if result:
         result["mode"] = "live"
@@ -1843,7 +1933,6 @@ import os
 from groq import Groq
 
 # Use the key from env
-GROQ_API_KEY = os.getenv('GROQ_API_KEY')
 
 try:
     if GROQ_API_KEY:
