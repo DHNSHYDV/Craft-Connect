@@ -634,9 +634,9 @@ def proxy_pollinations_gen():
 
 
 def generate_image_design(prompt_text):
-    """Generate image. Primary: Gemini Imagen 3 (if billed). Fallback: Hugging Face (multi-token)."""
+    """Generate image. Primary: Gemini Imagen 3. Fallback: Pollinations -> Hugging Face."""
     
-    # 1. PRIMARY: GEMINI IMAGEN 3 (Requires Billing)
+    # 1. PRIMARY: GEMINI IMAGEN 3
     if GEMINI_IMAGE_API_KEY:
         print("Attempting Gemini Imagen...")
         img_url, err = gemini_img_client.generate_image(prompt_text)
@@ -645,7 +645,23 @@ def generate_image_design(prompt_text):
             return img_url, "Gemini", None
         print(f"Gemini Imagen failed: {err}")
 
-    # 2. FALLBACK: Hugging Face (Uses HF_TOKENS fallback mechanism)
+    # 2. FALLBACK 1: Pollinations (Unfiltered/Free/Unlimited)
+    print("Attempting Pollinations fallback...")
+    try:
+        # Use simple URL-based generation
+        # We add some random seed and styling keywords to make it look premium
+        enhanced_prompt = f"photorealistic, studio lighting, high resolution, 8k, craft masterpiece, {prompt_text}"
+        safe_prompt = urllib.parse.quote(enhanced_prompt)
+        poll_url = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=1024&nologo=true&seed={random.randint(1, 99999)}"
+        # Verify it works (optional but good for error handling)
+        r = requests.head(poll_url, timeout=5)
+        if r.status_code == 200:
+            print("✓ Pollinations succeeded")
+            return poll_url, "Pollinations", None
+    except Exception as e:
+        print(f"Pollinations failed: {e}")
+
+    # 3. FALLBACK 2: Hugging Face
     if HF_TOKENS:
         print("Attempting Hugging Face (Multi-token Fallback)...")
         img_url, err = hf_img_client.generate_image(prompt_text)
@@ -654,7 +670,7 @@ def generate_image_design(prompt_text):
             return img_url, "HuggingFace", None
         print(f"Hugging Face failed: {err}")
     
-    return None, "Error", "Image generation failed using all available providers (Gemini/HF)."
+    return None, "Error", "Image generation failed using all available providers (Gemini/Pollinations/HF)."
 
 
 
@@ -1103,93 +1119,6 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
         return None, str(e)
 
 
-def _analyze_craft_groq(image_data, mime_type="image/jpeg", model="llama-3.2-11b-vision-preview"):
-    """Use Groq Vision to analyze image as a secondary fallback."""
-    if not GROQ_API_KEY or not GROQ_API_KEY.strip():
-        return None, "GROQ_API_KEY is not set"
-    
-    prompt = """Analyze this image. It can be anything Indian traditional: clothing, handicraft, pottery, painting, jewellery, textile, etc.
-
-If the image is NOT an Indian traditional item (e.g. it is a modern toy, a western brand, a generic modern object, or a person not in traditional wear), you MUST still reply with JSON but set 'score' to a low value (below 40) and describe what it actually is in the 'description'.
-
-Reply with ONLY a valid JSON object (no markdown, no code block) with exactly these keys: name, origin, score, material, style, description.
-
-- name: specific item name
-- origin: Indian state or region
-- score: number 0-100
-- material: main material
-- style: craft style
-- description: 2-3 sentences."""
-
-    try:
-        vision_model = model
-        print(f"Attempting Groq Vision fallback with {vision_model}...")
-        
-        if not image_data:
-            print("Groq Vision error: No image data")
-            return None, "No image data"
-            
-        base64_image = base64.b64encode(image_data).decode('utf-8')
-        
-        headers = {
-            "Authorization": f"Bearer {GROQ_API_KEY}",
-            "Content-Type": "application/json"
-        }
-        
-        payload = {
-            "model": vision_model,
-            "messages": [
-                {
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {
-                            "type": "image_url",
-                            "image_url": {
-                                "url": f"data:{mime_type};base64,{base64_image}"
-                            }
-                        }
-                    ]
-                }
-            ],
-            "temperature": 0.1
-            # removed response_format: json_object as it often causes 400 on vision models
-        }
-        
-        r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=20)
-        
-        if r.status_code != 200:
-            print(f"Groq Vision Error {r.status_code}: {r.text}")
-            return None, f"Groq Error {r.status_code}"
-            
-        data = r.json()
-        print(f"Groq Vision success! Data: {str(data)[:100]}...")
-        response_text = data['choices'][0]['message']['content']
-        
-        if not response_text:
-            return None, "Empty response from Groq"
-            
-        # Extract JSON robustly
-        import re
-        json_match = re.search(r'\{.*\}', response_text.replace('\n', ' '), re.DOTALL)
-        if json_match:
-            try:
-                obj = json.loads(json_match.group())
-            except:
-                return None, "Malformed JSON from Groq"
-        else:
-            return None, "No JSON found in Groq response"
-        # Standardize score
-        if isinstance(obj.get("score"), (int, float)):
-            obj["score"] = int(obj["score"])
-        else:
-            obj["score"] = 85
-            
-        return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
-        
-    except Exception as e:
-        print(f"Groq vision error: {e}")
-        return None, str(e)
 
 
 def _analyze_craft_huggingface(image_data, mime_type="image/jpeg"):
@@ -1420,7 +1349,7 @@ def analyze_craft():
     if not mime.startswith("image/"):
         mime = "image/jpeg"
 
-    print(f"DEBUG: analyze_craft using keys: Gemini={bool(GEMINI_API_KEY)}, Groq={bool(GROQ_API_KEY)}, SambaNova={bool(SAMBANOVA_API_KEY)}")
+    print(f"DEBUG: analyze_craft using keys: Gemini={bool(GEMINI_API_KEY)}, SambaNova={bool(SAMBANOVA_API_KEY)}")
 
     # Try Gemini when key is set
     error_hints = []
@@ -1433,19 +1362,7 @@ def analyze_craft():
         if gemini_err:
             error_hints.append(f"Gemini: {gemini_err}")
     
-    # 2. Try Groq Vision
-    if GROQ_API_KEY and GROQ_API_KEY.strip():
-        # Try multiple models if one fails
-        for model in ["llama-3.2-11b-vision-preview", "llama-3.2-90b-vision-preview"]:
-            result, groq_err = _analyze_craft_groq(image_data, mime_type=mime, model=model)
-            if result:
-                result["mode"] = "live"
-                result["engine"] = f"Groq Vision ({model})"
-                return jsonify(result)
-            if groq_err:
-                error_hints.append(f"Groq ({model}): {groq_err}")
-
-    # 3. Try Hugging Face Vision (Tertiary Fallback)
+    # 2. Try Hugging Face Vision (Secondary Fallback)
     if HF_TOKENS:
         result, hf_err = _analyze_craft_huggingface(image_data, mime_type=mime)
         if result:
@@ -1455,7 +1372,7 @@ def analyze_craft():
         if hf_err:
             error_hints.append(f"Hugging Face: {hf_err}")
 
-    # 4. Try SambaNova Vision
+    # 3. Try SambaNova Vision
     if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
         result, sb_error = _analyze_craft_sambanova(image_data, mime_type=mime)
         if result:
@@ -1465,7 +1382,7 @@ def analyze_craft():
         if sb_error:
             error_hints.append(f"SambaNova: {sb_error}")
 
-    # 5. Final Fallback: local GLM-OCR
+    # 4. Final Fallback: local GLM-OCR
     print("All web Vision APIs failed. Trying local fallback...")
     result = _analyze_craft_local_fallback(image_data)
     if result:
