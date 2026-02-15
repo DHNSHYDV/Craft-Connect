@@ -1152,8 +1152,8 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
                     ]
                 }
             ],
-            "temperature": 0.1,
-            "response_format": {"type": "json_object"}
+            "temperature": 0.1
+            # removed response_format: json_object as it often causes 400 on vision models
         }
         
         r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=20)
@@ -1169,7 +1169,16 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
         if not response_text:
             return None, "Empty response from Groq"
             
-        obj = json.loads(response_text)
+        # Extract JSON robustly
+        import re
+        json_match = re.search(r'\{.*\}', response_text.replace('\n', ' '), re.DOTALL)
+        if json_match:
+            try:
+                obj = json.loads(json_match.group())
+            except:
+                return None, "Malformed JSON from Groq"
+        else:
+            return None, "No JSON found in Groq response"
         # Standardize score
         if isinstance(obj.get("score"), (int, float)):
             obj["score"] = int(obj["score"])
