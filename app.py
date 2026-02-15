@@ -1089,8 +1089,8 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
 - description: 2-3 sentences describing what you see (e.g. "An elegant cream-colored silk ensemble featuring...")"""
 
     try:
-        # Use a high-quality vision model from SambaNova
-        vision_model = "Llama-3.2-90B-Vision-Instruct"
+        # Use 11B model; it's much more stable on the free tier than 90B
+        vision_model = "Llama-3.2-11B-Vision-Instruct"
         print(f"Attempting SambaNova Vision fallback with {vision_model}...")
         
         response_text = call_sambanova(prompt, model=vision_model, image_data=image_data)
@@ -1143,12 +1143,13 @@ Reply with ONLY a valid JSON object with: name, origin, score, material, style, 
         # Try each token for this model
         for token in HF_TOKENS:
             headers = {"Authorization": f"Bearer {token}"}
+            # Correct payload for serverless Inference API multimodal
             payload = {
                 "inputs": {
                     "image": f"data:{mime_type};base64,{base64_image}",
                     "text": prompt
                 },
-                "parameters": {"max_new_tokens": 150}
+                "parameters": {"max_new_tokens": 200, "temperature": 0.1}
             }
             
             try:
@@ -1395,11 +1396,13 @@ def analyze_craft():
     # If everything fails, build a comprehensive error message
     desc = "We couldn't run a full analysis on this image."
     if error_hints:
-        desc += " Errors encountered: " + " | ".join(error_hints)
+        # Keep it concise for the UI
+        desc += " (Web APIs busy or hitting quotas). Please try again in a minute."
+        print(f"Vision Fallback Failure Detail: {' | '.join(error_hints)}")
     else:
         desc += " Please try again with a clear photo."
     
-    return jsonify({"error": desc}), 502
+    return jsonify({"error": desc, "details": "All vision providers failed."}), 200 # Return 200 so the frontend can show the message nicely
 
 
 # --- AI Design Generation (Text-to-Image) ---
