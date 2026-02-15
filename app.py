@@ -1854,8 +1854,18 @@ def get_user_orders_context():
     return "USER'S RECENT ORDERS:\n" + "\n".join(lines)
 
 
+def _log_chatbot_error(provider, error):
+    """Log chatbot errors to a dedicated debug file for easier analysis."""
+    log_file = "/Users/apple/Desktop/craft-site/chatbot_debug.log"
+    timestamp = time.strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        with open(log_file, "a") as f:
+            f.write(f"[{timestamp}] {provider} Error: {error}\n")
+    except Exception as e:
+        print(f"Failed to write to chatbot log: {e}")
+
 def _fallback_response(msg):
-    """Rule-based fallback when Gemini fails."""
+    """Rule-based fallback when all AI brains fail."""
     m = msg.lower()
     if any(x in m for x in ["hello", "hi", "namaste"]):
         return "Namaste! Welcome to Desh Ke Haath. I can help you discover unique handicrafts from across India. What are you looking for today?"
@@ -1881,10 +1891,7 @@ except Exception as e:
     groq_client = None
 
 def call_groq_chat(user_message, context):
-    """Call Groq API (Llama 3) for chat response."""
-    if not groq_client:
-        return _fallback_response(user_message)
-        
+    """Unified AI Chat handler: Primary=Groq, Backup1=SambaNova, Backup2=Gemini."""
     orders_ctx = get_user_orders_context()
     
     system_prompt = f"""
@@ -1905,34 +1912,60 @@ You are "DeshKeHaath AI Assistant", a strict product assistant for the DeshKeHaa
 5. Keep replies short (max 2-3 sentences), professional, and product-focused.
 """
 
-    try:
-        chat_completion = groq_client.chat.completions.create(
-            messages=[
-                {
-                    "role": "system",
-                    "content": system_prompt
-                },
-                {
-                    "role": "user",
-                    "content": user_message
-                }
-            ],
-            model="llama-3.3-70b-versatile", # High performance, fast
-            temperature=0.6,
-            max_tokens=300,
-            top_p=1,
-            stop=None,
-            stream=False,
-        )
-        return chat_completion.choices[0].message.content
-    except Exception as e:
-        print(f"Groq Error: {e}")
-        return _fallback_response(user_message)
-        print(f"Groq Chat Error: {e}")
-        # Fallback to Gemini if Groq fails (or just fallback response)
-        return _fallback_response(user_message)
+    # 1. TRY GROQ (Primary - Llama 3.3)
+    if groq_client:
+        try:
+            print("Attempting Groq Chat...")
+            chat_completion = groq_client.chat.completions.create(
+                messages=[
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": user_message}
+                ],
+                model="llama-3.3-70b-versatile",
+                temperature=0.6,
+                max_tokens=400,
+            )
+            return chat_completion.choices[0].message.content
+        except Exception as e:
+            print(f"Groq Chat Error: {e}")
+            _log_chatbot_error("Groq", e)
 
-# Alias for backward compatibility if needed, but we will use this
+    # 2. TRY SAMBANOVA (Secondary - Llama 3.3 - Very fast)
+    if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
+        try:
+            print("Attempting SambaNova Chat fallback...")
+            # We use the same system prompt and context
+            full_prompt = f"System: {system_prompt}\n\nUser: {user_message}"
+            response = call_sambanova(full_prompt, model="Meta-Llama-3.3-70B-Instruct")
+            if response:
+                return response
+        except Exception as e:
+            print(f"SambaNova Chat Error: {e}")
+            _log_chatbot_error("SambaNova", e)
+
+    # 3. TRY GEMINI (Tertiary - Flash)
+    if GEMINI_API_KEY and GEMINI_API_KEY.strip():
+        try:
+            print("Attempting Gemini Chat fallback...")
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+            payload = {
+                "systemInstruction": {"parts": [{"text": system_prompt}]},
+                "contents": [{"parts": [{"text": user_message}]}]
+            }
+            r = requests.post(url, json=payload, timeout=15)
+            if r.status_code == 200:
+                data = r.json()
+                return data['candidates'][0]['content']['parts'][0]['text']
+            else:
+                _log_chatbot_error("Gemini", f"HTTP {r.status_code}: {r.text[:100]}")
+        except Exception as e:
+            print(f"Gemini Chat Error: {e}")
+            _log_chatbot_error("Gemini", e)
+
+    # FINAL FALLBACK
+    return _fallback_response(user_message)
+
+# Alias for backward compatibility
 call_gemini_chat = call_groq_chat 
 
 
