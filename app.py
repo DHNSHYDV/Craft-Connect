@@ -1126,8 +1126,8 @@ def _analyze_craft_huggingface(image_data, mime_type="image/jpeg"):
     if not HF_TOKENS:
         return None, "HF_TOKENS not set"
     
-    # Common multimodal models on HF
-    models = ["meta-llama/Llama-3.2-11B-Vision-Instruct", "meta-llama/Llama-3.2-90B-Vision-Instruct"]
+    # Common multimodal models on HF (11B is typically verified for serverless)
+    models = ["meta-llama/Llama-3.2-11B-Vision-Instruct"]
     
     prompt = """Analyze this image. It can be anything Indian traditional: clothing, handicraft, pottery, painting, jewellery, textile, etc.
 If NOT Indian traditional, set 'score' below 30.
@@ -1362,17 +1362,7 @@ def analyze_craft():
         if gemini_err:
             error_hints.append(f"Gemini: {gemini_err}")
     
-    # 2. Try Hugging Face Vision (Secondary Fallback)
-    if HF_TOKENS:
-        result, hf_err = _analyze_craft_huggingface(image_data, mime_type=mime)
-        if result:
-            result["mode"] = "live"
-            result["engine"] = "Hugging Face Vision"
-            return jsonify(result)
-        if hf_err:
-            error_hints.append(f"Hugging Face: {hf_err}")
-
-    # 3. Try SambaNova Vision
+    # 2. Try SambaNova Vision (Fast and reliable free tier)
     if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
         result, sb_error = _analyze_craft_sambanova(image_data, mime_type=mime)
         if result:
@@ -1381,6 +1371,16 @@ def analyze_craft():
             return jsonify(result)
         if sb_error:
             error_hints.append(f"SambaNova: {sb_error}")
+
+    # 3. Try Hugging Face Vision
+    if HF_TOKENS:
+        result, hf_err = _analyze_craft_huggingface(image_data, mime_type=mime)
+        if result:
+            result["mode"] = "live"
+            result["engine"] = "Hugging Face Vision"
+            return jsonify(result)
+        if hf_err:
+            error_hints.append(f"Hugging Face: {hf_err}")
 
     # 4. Final Fallback: local GLM-OCR
     print("All web Vision APIs failed. Trying local fallback...")
