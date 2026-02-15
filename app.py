@@ -1709,7 +1709,11 @@ def debug_image_gen():
 
 def search_products_heritage(query):
     """Search HERITAGE_DATA for products relevant to the query."""
-    from data.products_heritage import HERITAGE_DATA
+    try:
+        from data.products_heritage import HERITAGE_DATA
+    except ImportError:
+        print("Error: Could not import HERITAGE_DATA")
+        return []
 
     query = query.lower().strip()
     results = []
@@ -1793,17 +1797,20 @@ def build_chatbot_context(user_query=""):
     # 3. If no specific results, provide a diverse mix (fallback to 'featured')
     if not relevant_products and not found_artist_info:
         # Fallback: Get 1 item from each valid state to show diversity
-        from data.products_heritage import HERITAGE_DATA
-        for state, data in list(HERITAGE_DATA.items())[:8]:
-             if data["items"]:
-                 item = data["items"][0]
-                 relevant_products.append({
-                    "name": item["name"],
-                    "state": state,
-                    "category": item["category"],
-                    "price_range": f"₹{item['price_range'][0]}-{item['price_range'][1]}",
-                    "fun_fact": item.get("fun_fact", "")
-                 })
+        try:
+            from data.products_heritage import HERITAGE_DATA
+            for state, data in list(HERITAGE_DATA.items())[:8]:
+                 if data["items"]:
+                     item = data["items"][0]
+                     relevant_products.append({
+                        "name": item["name"],
+                        "state": state,
+                        "category": item["category"],
+                        "price_range": f"₹{item['price_range'][0]}-{item['price_range'][1]}",
+                        "fun_fact": item.get("fun_fact", "")
+                     })
+        except Exception as e:
+            print(f"RAG Fallback error: {e}")
 
     # 4. Format product list for LLM
     products_json = json.dumps(relevant_products, indent=2)
@@ -1845,16 +1852,25 @@ def get_user_orders_context():
     """Get user's orders for chatbot context (if logged in)."""
     if not current_user.is_authenticated:
         return "User is NOT logged in. For order tracking, ask them to sign in via the profile api."
-    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(5).all()
-    if not orders:
-        return "User is logged in but has NO orders yet."
     
-    lines = []
-    for o in orders:
-        order_label = o.order_number or f"#{o.id}"
-        items_str = ", ".join([f"{i.product_name} (x{i.quantity})" for i in o.items])
-        lines.append(f"- Order {order_label}: ₹{o.total_amount:.0f} | Status: {o.status} | Items: {items_str} | Date: {o.created_at.strftime('%d %b %Y')}")
-    return "USER'S RECENT ORDERS:\n" + "\n".join(lines)
+    # Safety check for database availability
+    if db is None or Order is None:
+        return "Order tracking system is currently unavailable (database issue)."
+
+    try:
+        orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).limit(5).all()
+        if not orders:
+            return "User is logged in but has NO orders yet."
+        
+        lines = []
+        for o in orders:
+            order_label = o.order_number or f"#{o.id}"
+            items_str = ", ".join([f"{i.product_name} (x{i.quantity})" for i in o.items])
+            lines.append(f"- Order {order_label}: ₹{o.total_amount:.0f} | Status: {o.status} | Items: {items_str} | Date: {o.created_at.strftime('%d %b %Y')}")
+        return "USER'S RECENT ORDERS:\n" + "\n".join(lines)
+    except Exception as e:
+        print(f"Chatbot order context error: {e}")
+        return "Could not retrieve order history at this moment."
 
 
 def _log_chatbot_error(provider, error):
@@ -2928,9 +2944,11 @@ def chat():
         
     except Exception as e:
         print(f"AI Chat Error: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return jsonify({
-            'error': 'Failed to generate response',
-            'message': 'I apologize, but I encountered an error. Please try again.'
+            'error': str(e),
+            'message': 'The assistant encountered a technical error. This could be due to a high volume of requests or a configuration issue. Please try again or ask about a different topic.'
         }), 500
 
 if __name__ == '__main__':

@@ -219,13 +219,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ message: input })
                 });
-                if (!resp.ok) {
-                    return "Server error. Make sure Flask is running (flask run) and refresh the page.";
-                }
+
                 const data = await resp.json();
+
+                if (!resp.ok) {
+                    // Try to show the specific error message from backend
+                    return data.message || data.error || "The assistant is experiencing some technical difficulties. Please try again soon.";
+                }
+
                 return data.reply || "I couldn't process that. Please try again or contact support@deshkehaath.in.";
             } catch (e) {
-                return "Connection failed. Start the server with: flask run. Then refresh and try again.";
+                console.error("Chat API Error:", e);
+                return "Connection failed. Please ensure you are logged in and the server is reachable, then try again.";
             }
         }
 
