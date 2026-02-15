@@ -1103,25 +1103,26 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
         return None, str(e)
 
 
-def _analyze_craft_groq(image_data, mime_type="image/jpeg"):
-    """Use Groq Llama-3.2 Vision to analyze image as a secondary fallback."""
+def _analyze_craft_groq(image_data, mime_type="image/jpeg", model="llama-3.2-11b-vision-preview"):
+    """Use Groq Vision to analyze image as a secondary fallback."""
     if not GROQ_API_KEY or not GROQ_API_KEY.strip():
-        return None, "GROQ_API_KEY is not set. Skipping Groq fallback."
+        return None, "GROQ_API_KEY is not set"
     
-    prompt = """Analyze this image. It can be anything Indian traditional: clothing (kurta, saree, sherwani), handicraft, pottery, painting, jewellery, textile, metalwork, etc.
+    prompt = """Analyze this image. It can be anything Indian traditional: clothing, handicraft, pottery, painting, jewellery, textile, etc.
+
+If the image is NOT an Indian traditional item (e.g. it is a modern toy, a western brand, a generic modern object, or a person not in traditional wear), you MUST still reply with JSON but set 'score' to a low value (below 40) and describe what it actually is in the 'description'.
 
 Reply with ONLY a valid JSON object (no markdown, no code block) with exactly these keys: name, origin, score, material, style, description.
 
-- name: specific item name (e.g. "Men's Silk Kurta Dhoti Set with Angavastram", "Madhubani Painting", "Blue Pottery vase")
-- origin: Indian state or region if you can tell (e.g. "South India", "Rajasthan"), else "India"
-- score: number 0-100 (confidence it is traditional Indian)
-- material: the ONE primary material you see—e.g. Silk, Cotton, Clay, Brass, Gold, Paper, Wood. Not a list; pick the main one.
-- style: e.g. "Traditional ethnic wear", "Kantha embroidery", "Terracotta"
-- description: 2-3 sentences describing what you see (e.g. "An elegant cream-colored silk ensemble featuring...")"""
+- name: specific item name
+- origin: Indian state or region
+- score: number 0-100
+- material: main material
+- style: craft style
+- description: 2-3 sentences."""
 
     try:
-        # Groq Vision Model
-        vision_model = "llama-3.2-11b-vision-preview"
+        vision_model = model
         print(f"Attempting Groq Vision fallback with {vision_model}...")
         
         if not image_data:
@@ -1183,68 +1184,73 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
 
 
 def _analyze_craft_huggingface(image_data, mime_type="image/jpeg"):
-    """Use Hugging Face Inference API (serverless) as a fast web-based fallback."""
+    """Use Hugging Face Inference API as a fast web-based fallback with token rotation."""
     if not HF_TOKENS:
-        return None, "HF_TOKEN not set"
+        return None, "HF_TOKENS not set"
     
-    # Try with a common multimodal model on HF
-    model_id = "meta-llama/Llama-3.2-11B-Vision-Instruct"
-    token = random.choice(HF_TOKENS)
-    api_url = f"https://api-inference.huggingface.co/models/{model_id}"
-    
-    headers = {"Authorization": f"Bearer {token}"}
+    # Common multimodal models on HF
+    models = ["meta-llama/Llama-3.2-11B-Vision-Instruct", "meta-llama/Llama-3.2-90B-Vision-Instruct"]
     
     prompt = """Analyze this image. It can be anything Indian traditional: clothing, handicraft, pottery, painting, jewellery, textile, etc.
-If NOT Indian traditional, set 'score' below 30 and accurately name it.
+If NOT Indian traditional, set 'score' below 30.
 Reply with ONLY a valid JSON object with: name, origin, score, material, style, description."""
 
-    try:
-        base64_image = base64.b64encode(image_data).decode('utf-8')
-        payload = {
-            "inputs": {
-                "image": f"data:{mime_type};base64,{base64_image}",
-                "text": prompt
-            },
-            "parameters": {"max_new_tokens": 500}
-        }
+    base64_image = base64.b64encode(image_data).decode('utf-8')
+    last_err = "Unknown HF error"
+
+    for model_id in models:
+        # Use the router for better load balancing if available, else standard API
+        api_url = f"https://router.huggingface.co/hf-inference/models/{model_id}"
         
-        # Note: HF Inference API multimodal input format can vary by model, 
-        # but Llama-3.2-Vision usually expects a conversational structure or specific prompt wrapper.
-        # For simplicity and speed, we'll use the standard JSON prompt approach.
-        
-        print(f"Attempting HF Vision fallback with {model_id}...")
-        r = requests.post(api_url, headers=headers, json=payload, timeout=25)
-        
-        if r.status_code == 503: # Model loading
-            return None, "HF Model is loading. Skipping to next fallback."
-        
-        if r.status_code != 200:
-            print(f"HF Vision Error {r.status_code}: {r.text}")
-            return None, f"HF Error {r.status_code}"
+        # Try each token for this model
+        for token in HF_TOKENS:
+            headers = {"Authorization": f"Bearer {token}"}
+            payload = {
+                "inputs": {
+                    "image": f"data:{mime_type};base64,{base64_image}",
+                    "text": prompt
+                },
+                "parameters": {"max_new_tokens": 150}
+            }
             
-        result = r.json()
-        # Handle different HF response formats
-        text = ""
-        if isinstance(result, list) and len(result) > 0:
-            text = result[0].get("generated_text", "")
-        elif isinstance(result, dict):
-            text = result.get("generated_text", "")
-            
-        if not text:
-            return None, "Empty response from HF"
-            
-        # Extract JSON
-        text = text.replace("```json", "").replace("```", "").strip()
-        start, end = text.find("{"), text.rfind("}") + 1
-        if start < 0:
-            return None, "No JSON in HF response"
-            
-        obj = json.loads(text[start:end])
-        return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
-        
-    except Exception as e:
-        print(f"HF vision error: {e}")
-        return None, str(e)
+            try:
+                print(f"Attempting HF Vision with {model_id} (token {token[:8]}...)")
+                r = requests.post(api_url, headers=headers, json=payload, timeout=20)
+                
+                if r.status_code == 200:
+                    result = r.json()
+                    text = ""
+                    if isinstance(result, list) and len(result) > 0:
+                        text = result[0].get("generated_text", "")
+                    elif isinstance(result, dict):
+                        text = result.get("generated_text", "")
+                    
+                    if text:
+                        # Extract JSON
+                        text = text.replace("```json", "").replace("```", "").strip()
+                        start, end = text.find("{"), text.rfind("}") + 1
+                        if start >= 0:
+                            obj = json.loads(text[start:end])
+                            return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
+                
+                if r.status_code in (429, 401, 403):
+                    print(f"HF Token {token[:8]} failed ({r.status_code}). Rotating...")
+                    last_err = f"HF {model_id} Token {r.status_code}"
+                    continue # Try next token
+                
+                if r.status_code == 503:
+                    print(f"HF Model {model_id} is loading. Trying next model...")
+                    break # Break token loop to try next model
+                    
+                print(f"HF error {r.status_code} with {model_id}: {r.text[:100]}")
+                last_err = f"HF {model_id} {r.status_code}"
+                
+            except Exception as e:
+                print(f"HF exception with {model_id}: {e}")
+                last_err = str(e)
+                continue
+                
+    return None, f"All HF attempts failed. Last: {last_err}"
 
 
 def _analyze_craft_local_fallback(image_data):
@@ -1407,61 +1413,66 @@ def analyze_craft():
 
     print(f"DEBUG: analyze_craft using keys: Gemini={bool(GEMINI_API_KEY)}, Groq={bool(GROQ_API_KEY)}, SambaNova={bool(SAMBANOVA_API_KEY)}")
 
-    # Try Gemini when key is set; on failure (e.g. invalid/expired key) try local GLM-OCR so user still gets an analysis
-    error_hint = None
+    # Try Gemini when key is set
+    error_hints = []
     if GEMINI_API_KEY and GEMINI_API_KEY.strip():
-        result, error_hint = _analyze_craft_gemini(image_data, mime_type=mime)
+        result, gemini_err = _analyze_craft_gemini(image_data, mime_type=mime)
         if result:
             result["mode"] = "live"
             result["engine"] = "Gemini Vision"
             return jsonify(result)
+        if gemini_err:
+            error_hints.append(f"Gemini: {gemini_err}")
     
-    # 2. Try Groq Vision (Secondary Fallback - key exists)
+    # 2. Try Groq Vision
     if GROQ_API_KEY and GROQ_API_KEY.strip():
-        result, gr_error = _analyze_craft_groq(image_data, mime_type=mime)
-        if result:
-            result["mode"] = "live"
-            result["engine"] = "Groq Vision"
-            return jsonify(result)
-        if not error_hint:
-            error_hint = gr_error
+        # Try multiple models if one fails
+        for model in ["llama-3.2-11b-vision-preview", "llama-3.2-90b-vision-preview"]:
+            result, groq_err = _analyze_craft_groq(image_data, mime_type=mime, model=model)
+            if result:
+                result["mode"] = "live"
+                result["engine"] = f"Groq Vision ({model})"
+                return jsonify(result)
+            if groq_err:
+                error_hints.append(f"Groq ({model}): {groq_err}")
 
-    # 3. Try Hugging Face Vision (Tertiary Fallback - Faster than local)
+    # 3. Try Hugging Face Vision (Tertiary Fallback)
     if HF_TOKENS:
-        result, hf_error = _analyze_craft_huggingface(image_data, mime_type=mime)
+        result, hf_err = _analyze_craft_huggingface(image_data, mime_type=mime)
         if result:
             result["mode"] = "live"
             result["engine"] = "Hugging Face Vision"
             return jsonify(result)
-        if not error_hint:
-            error_hint = hf_error
+        if hf_err:
+            error_hints.append(f"Hugging Face: {hf_err}")
 
-    # 4. Try SambaNova Vision (Backup)
+    # 4. Try SambaNova Vision
     if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
         result, sb_error = _analyze_craft_sambanova(image_data, mime_type=mime)
         if result:
             result["mode"] = "live"
             result["engine"] = "SambaNova Vision"
             return jsonify(result)
-        if not error_hint:
-            error_hint = sb_error
+        if sb_error:
+            error_hints.append(f"SambaNova: {sb_error}")
 
-    # 5. Final Fallback: local GLM-OCR (Only if requested or as absolute last resort)
-    # To keep the site fast, we only do this if all others fail.
-    print("All web Vision APIs failed. Falling back to local model (this may take time)...")
+    # 5. Final Fallback: local GLM-OCR
+    print("All web Vision APIs failed. Trying local fallback...")
     result = _analyze_craft_local_fallback(image_data)
     if result:
         result["mode"] = "live"
         result["engine"] = "Local GLM-OCR"
-        if error_hint and any(x in error_hint.lower() for x in ["invalid", "expired", "permission", "401", "403", "quota", "429"]):
-            result["description"] = (result.get("description") or "") + f" (Note: Analysis used local fallback because: {error_hint})"
+        if error_hints:
+            result["description"] = (result.get("description") or "") + f" (Note: Web APIs failed: {'; '.join(error_hints[:2])})"
         return jsonify(result)
 
+    # If everything fails, build a comprehensive error message
     desc = "We couldn't run a full analysis on this image."
-    if error_hint:
-        desc += " " + error_hint
+    if error_hints:
+        desc += " Errors encountered: " + " | ".join(error_hints)
     else:
         desc += " Please try again with a clear photo."
+    
     return jsonify({"error": desc}), 502
 
 
