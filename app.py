@@ -1055,6 +1055,127 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
     return None, last_error
 
 
+def _analyze_craft_sambanova(image_data, mime_type="image/jpeg"):
+    """Use SambaNova Llama-3.2-Vision to analyze image as a high-quality fallback."""
+    if not SAMBANOVA_API_KEY or not SAMBANOVA_API_KEY.strip():
+        return None, "SAMBANOVA_API_KEY is not set. Skipping SambaNova fallback."
+    
+    prompt = """Analyze this image. It can be anything Indian traditional: clothing (kurta, saree, sherwani), handicraft, pottery, painting, jewellery, textile, metalwork, etc.
+
+Reply with ONLY a valid JSON object (no markdown, no code block) with exactly these keys: name, origin, score, material, style, description.
+
+- name: specific item name (e.g. "Men's Silk Kurta Dhoti Set with Angavastram", "Madhubani Painting", "Blue Pottery vase")
+- origin: Indian state or region if you can tell (e.g. "South India", "Rajasthan"), else "India"
+- score: number 0-100 (confidence it is traditional Indian)
+- material: the ONE primary material you see—e.g. Silk, Cotton, Clay, Brass, Gold, Paper, Wood. Not a list; pick the main one.
+- style: e.g. "Traditional ethnic wear", "Kantha embroidery", "Terracotta"
+- description: 2-3 sentences describing what you see (e.g. "An elegant cream-colored silk ensemble featuring...")"""
+
+    try:
+        # Use a high-quality vision model from SambaNova
+        vision_model = "Llama-3.2-90B-Vision-Instruct"
+        print(f"Attempting SambaNova Vision fallback with {vision_model}...")
+        
+        response_text = call_sambanova(prompt, model=vision_model, image_data=image_data)
+        
+        if not response_text:
+            return None, "Empty response from SambaNova"
+            
+        # Clean up code blocks if present
+        text = response_text.replace("```json", "").replace("```", "").strip()
+        start, end = text.find("{"), text.rfind("}") + 1
+        if start < 0 or end <= start:
+            print(f"SambaNova Vision: No JSON found. Raw: {text[:200]}")
+            return None, "No JSON found in SambaNova response"
+            
+        obj = json.loads(text[start:end])
+        # Standardize score
+        if isinstance(obj.get("score"), (int, float)):
+            obj["score"] = int(obj["score"])
+        else:
+            obj["score"] = 85
+            
+        return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
+        
+    except Exception as e:
+        print(f"SambaNova vision error: {e}")
+        return None, str(e)
+
+
+def _analyze_craft_groq(image_data, mime_type="image/jpeg"):
+    """Use Groq Llama-3.2 Vision to analyze image as a secondary fallback."""
+    if not GROQ_API_KEY or not GROQ_API_KEY.strip():
+        return None, "GROQ_API_KEY is not set. Skipping Groq fallback."
+    
+    prompt = """Analyze this image. It can be anything Indian traditional: clothing (kurta, saree, sherwani), handicraft, pottery, painting, jewellery, textile, metalwork, etc.
+
+Reply with ONLY a valid JSON object (no markdown, no code block) with exactly these keys: name, origin, score, material, style, description.
+
+- name: specific item name (e.g. "Men's Silk Kurta Dhoti Set with Angavastram", "Madhubani Painting", "Blue Pottery vase")
+- origin: Indian state or region if you can tell (e.g. "South India", "Rajasthan"), else "India"
+- score: number 0-100 (confidence it is traditional Indian)
+- material: the ONE primary material you see—e.g. Silk, Cotton, Clay, Brass, Gold, Paper, Wood. Not a list; pick the main one.
+- style: e.g. "Traditional ethnic wear", "Kantha embroidery", "Terracotta"
+- description: 2-3 sentences describing what you see (e.g. "An elegant cream-colored silk ensemble featuring...")"""
+
+    try:
+        # Groq Vision Model
+        vision_model = "llama-3.2-11b-vision-preview"
+        print(f"Attempting Groq Vision fallback with {vision_model}...")
+        
+        base64_image = base64.b64encode(image_data).decode('utf-8')
+        
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": vision_model,
+            "messages": [
+                {
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {
+                            "type": "image_url",
+                            "image_url": {
+                                "url": f"data:{mime_type};base64,{base64_image}"
+                            }
+                        }
+                    ]
+                }
+            ],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"}
+        }
+        
+        r = requests.post("https://api.groq.com/openai/v1/chat/completions", headers=headers, json=payload, timeout=20)
+        
+        if r.status_code != 200:
+            print(f"Groq Vision Error {r.status_code}: {r.text}")
+            return None, f"Groq Error {r.status_code}"
+            
+        data = r.json()
+        response_text = data['choices'][0]['message']['content']
+        
+        if not response_text:
+            return None, "Empty response from Groq"
+            
+        obj = json.loads(response_text)
+        # Standardize score
+        if isinstance(obj.get("score"), (int, float)):
+            obj["score"] = int(obj["score"])
+        else:
+            obj["score"] = 85
+            
+        return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
+        
+    except Exception as e:
+        print(f"Groq vision error: {e}")
+        return None, str(e)
+
+
 def _analyze_craft_local_fallback(image_data):
     """Run local GLM-OCR for craft analysis (no Gemini). Returns result dict or None."""
     if not image_data:
@@ -1216,11 +1337,33 @@ def analyze_craft():
             result["mode"] = "live"
             result["engine"] = "Gemini Vision"
             return jsonify(result)
-    # No Gemini key or Gemini failed: try local GLM-OCR
+    
+    # 2. Try Groq Vision (Secondary Fallback - key exists)
+    if GROQ_API_KEY and GROQ_API_KEY.strip():
+        result, gr_error = _analyze_craft_groq(image_data, mime_type=mime)
+        if result:
+            result["mode"] = "live"
+            result["engine"] = "Groq Vision"
+            return jsonify(result)
+        if not error_hint:
+            error_hint = gr_error
+
+    # 3. Try SambaNova Vision (Tertiary Fallback - requires key)
+    if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
+        result, sb_error = _analyze_craft_sambanova(image_data, mime_type=mime)
+        if result:
+            result["mode"] = "live"
+            result["engine"] = "SambaNova Vision"
+            return jsonify(result)
+        if not error_hint:
+            error_hint = sb_error
+
+    # 4. No Vision Key or all vision APIs failed: try local GLM-OCR
     result = _analyze_craft_local_fallback(image_data)
     if result:
         result["mode"] = "live"
-        if error_hint and any(x in error_hint.lower() for x in ["invalid", "expired", "permission", "401", "403"]):
+        result["engine"] = "Local GLM-OCR"
+        if error_hint and any(x in error_hint.lower() for x in ["invalid", "expired", "permission", "401", "403", "quota", "429"]):
             result["description"] = (result.get("description") or "") + f" (Note: Analysis used local fallback because: {error_hint})"
         return jsonify(result)
 
