@@ -11,6 +11,7 @@ flask-login
 groq
 google-generativeai
 huggingface_hub
+boto3
 
 # Heavy dependencies
 torch

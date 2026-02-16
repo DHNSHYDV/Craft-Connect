@@ -21,8 +21,8 @@ sys.stderr.flush()
 
 # Load environment variables
 load_dotenv()
-SAMBANOVA_API_KEY = os.getenv("SAMBANOVA_API_KEY")
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+OPENWEB_NINJA_API_KEY = os.getenv("OPENWEB_NINJA_API_KEY")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 GEMINI_VISION_API_KEY = os.getenv("GEMINI_VISION_API_KEY") or GEMINI_API_KEY
 GEMINI_IMAGE_API_KEY = os.getenv("GEMINI_IMAGE_API_KEY") or GEMINI_API_KEY
@@ -31,6 +31,12 @@ HF_TOKENS_RAW = os.getenv("HF_TOKENS")
 HF_TOKENS = [t.strip() for t in HF_TOKENS_RAW.split(",") if t.strip()] if HF_TOKENS_RAW else ([HF_TOKEN] if HF_TOKEN else [])
 PROMPT_REFINE_API_KEY = (os.getenv("PROMPT_REFINE_API_KEY") or os.getenv("GEMINI_API_KEY") or "").strip()
 POLLINATIONS_API_KEY = (os.getenv("POLLINATIONS_API_KEY") or os.getenv("POLLINATION_API_KEY") or "").strip()
+
+# AWS Rekognition Configuration
+AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION", "ap-south-1")
+AWS_REKOGNITION_CUSTOM_MODEL_ARN = os.getenv("AWS_REKOGNITION_CUSTOM_MODEL_ARN")
 
 
 from datetime import timedelta
@@ -480,50 +486,7 @@ def orders():
 
 
 
-# SambaNova Helper
-def call_sambanova(prompt, model="Meta-Llama-3.3-70B-Instruct", image_data=None):
-    url = "https://api.sambanova.ai/v1/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {SAMBANOVA_API_KEY}",
-        "Content-Type": "application/json"
-    }
-    
-    messages = []
-    if image_data:
-        # Multimodal request for Llama-4-Maverick
-        base64_image = base64.b64encode(image_data).decode('utf-8')
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": prompt},
-                {
-                    "type": "image_url",
-                    "image_url": {
-                        "url": f"data:image/jpeg;base64,{base64_image}"
-                    }
-                }
-            ]
-        }]
-    else:
-        messages = [{"role": "user", "content": prompt}]
-
-    data = {
-        "messages": messages,
-        "model": model,
-        "temperature": 0.1,
-        "top_p": 0.1
-    }
-    
-    try:
-        response = requests.post(url, headers=headers, json=data, timeout=30)
-        if response.status_code == 200:
-            return response.json()['choices'][0]['message']['content']
-        else:
-            raise Exception(f"SambaNova Error: {response.status_code} - {response.text}")
-    except Exception as e:
-        raise Exception(f"SambaNova Request Failed: {str(e)}")
-
-
+# --- Computer Vision: Indian Craft Identification ---
 # fal-ai text-to-image model (use one that supports HF token: e.g. zai-org/GLM-Image)
 HF_IMAGE_MODEL = os.getenv("HF_IMAGE_MODEL", "zai-org/GLM-Image")
 
@@ -750,7 +713,7 @@ def find_artisan_match(material, style, description=""):
     if GEMINI_API_KEY and (description or style or material):
         try:
             # Use 1.5-flash-latest which is highly available
-            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY
+            model_url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=" + GEMINI_API_KEY
             
             # Create a list of craft options for Gemini to pick from
             options = []
@@ -1072,51 +1035,113 @@ Reply with ONLY a valid JSON object (no markdown, no code block) with exactly th
     return None, last_error
 
 
-def _analyze_craft_sambanova(image_data, mime_type="image/jpeg"):
-    """Use SambaNova Llama-3.2-Vision to analyze image as a high-quality fallback."""
-    if not SAMBANOVA_API_KEY or not SAMBANOVA_API_KEY.strip():
-        return None, "SAMBANOVA_API_KEY is not set. Skipping SambaNova fallback."
-    
-    prompt = """Analyze this image. It can be anything Indian traditional: clothing (kurta, saree, sherwani), handicraft, pottery, painting, jewellery, textile, metalwork, etc.
+    return None, last_error
 
-Reply with ONLY a valid JSON object (no markdown, no code block) with exactly these keys: name, origin, score, material, style, description.
 
-- name: specific item name (e.g. "Men's Silk Kurta Dhoti Set with Angavastram", "Madhubani Painting", "Blue Pottery vase")
-- origin: Indian state or region if you can tell (e.g. "South India", "Rajasthan"), else "India"
-- score: number 0-100 (confidence it is traditional Indian)
-- material: the ONE primary material you see—e.g. Silk, Cotton, Clay, Brass, Gold, Paper, Wood. Not a list; pick the main one.
-- style: e.g. "Traditional ethnic wear", "Kantha embroidery", "Terracotta"
-- description: 2-3 sentences describing what you see (e.g. "An elegant cream-colored silk ensemble featuring...")"""
-
+def _get_public_url(image_data):
+    """Upload image to tmpfiles.org for a temporary public URL (required for OpenWeb Ninja)."""
     try:
-        # Use 11B model; it's much more stable on the free tier than 90B
-        vision_model = "Llama-3.2-11B-Vision-Instruct"
-        print(f"Attempting SambaNova Vision fallback with {vision_model}...")
-        
-        response_text = call_sambanova(prompt, model=vision_model, image_data=image_data)
-        
-        if not response_text:
-            return None, "Empty response from SambaNova"
-            
-        # Clean up code blocks if present
-        text = response_text.replace("```json", "").replace("```", "").strip()
-        start, end = text.find("{"), text.rfind("}") + 1
-        if start < 0 or end <= start:
-            print(f"SambaNova Vision: No JSON found. Raw: {text[:200]}")
-            return None, "No JSON found in SambaNova response"
-            
-        obj = json.loads(text[start:end])
-        # Standardize score
-        if isinstance(obj.get("score"), (int, float)):
-            obj["score"] = int(obj["score"])
-        else:
-            obj["score"] = 85
-            
-        return {k: str(obj.get(k, "")) for k in ["name", "origin", "score", "material", "style", "description"]}, None
-        
+        url = "https://tmpfiles.org/api/v1/upload"
+        files = {"file": ("image.jpg", image_data, "image/jpeg")}
+        r = requests.post(url, files=files, timeout=10)
+        if r.status_code == 200:
+            res_data = r.json()
+            if res_data.get("status") == "success":
+                # Convert short URL to direct download URL if needed, 
+                # but tmpfiles.org urls are typically direct or redirect cleanly.
+                raw_url = res_data.get("data", {}).get("url")
+                if raw_url:
+                    # tmpfiles.org/12345 -> tmpfiles.org/dl/12345 for direct access
+                    return raw_url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
+        print(f"tmpfiles.org upload failed: {r.status_code} {r.text}")
     except Exception as e:
-        print(f"SambaNova vision error: {e}")
+        print(f"tmpfiles.org error: {e}")
+    return None
+
+
+def _search_by_image_openwebninja(image_url):
+    """Perform reverse image search via OpenWeb Ninja (RapidAPI)."""
+    if not OPENWEB_NINJA_API_KEY:
+        return None, "OPENWEB_NINJA_API_KEY not set"
+    
+    # OpenWeb Ninja is hosted on RapidAPI
+    url = "https://real-time-image-search.p.rapidapi.com/search"
+    headers = {
+        "X-RapidAPI-Host": "real-time-image-search.p.rapidapi.com",
+        "X-RapidAPI-Key": OPENWEB_NINJA_API_KEY.strip()
+    }
+    params = {
+        "url": image_url,
+        "limit": "10"
+    }
+    
+    try:
+        print(f"Calling OpenWeb Ninja (RapidAPI) for URL: {image_url}")
+        r = requests.get(url, headers=headers, params=params, timeout=20)
+        print(f"OpenWeb Ninja response status: {r.status_code}")
+        if r.status_code == 200:
+            result = r.json()
+            print(f"OpenWeb Ninja returned {len(result.get('data', []))} results")
+            return result, None
+        print(f"OpenWeb Ninja failed: {r.status_code} {r.text}")
+        return None, f"OpenWeb Ninja error: {r.status_code}"
+    except Exception as e:
+        print(f"OpenWeb Ninja error: {e}")
         return None, str(e)
+
+
+def _synthesize_analysis_with_results(search_results, original_image_data=None):
+    """Use Gemini to synthesize the search results into a structured craft analysis."""
+    # Use any available Gemini key
+    key = GEMINI_API_KEY or GEMINI_VISION_API_KEY
+    if not key:
+        return None
+    
+    snippets = []
+    # RapidAPI returns results in 'data' array, fallback to 'results' for compatibility
+    results_list = search_results.get("data") or search_results.get("results") or []
+    for item in results_list:
+        title = item.get('title') or item.get('name') or ''
+        snippet = item.get('snippet') or item.get('description') or ''
+        if title or snippet:
+            snippets.append(f"Title: {title}\nSnippet: {snippet}")
+    
+    if not snippets:
+        print("No search results to synthesize")
+        return None
+    
+    context = "\n---\n".join(snippets[:5])
+    
+    prompt = f"""Based on these web search results for an image of a craft, analyze what it is.
+If the search results mention a specific Indian handicraft, regional wear, or traditional art, provide the details.
+
+Search Context:
+{context}
+
+Reply with ONLY a valid JSON object with: name, origin, score, material, style, description.
+- score: 0-100 (confidence in being Indian traditional)
+- material: primary material (Canvas, Clay, Silk, etc.)
+- description: 2-3 sentences.
+"""
+
+    model_url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={key.strip()}"
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+    
+    try:
+        r = requests.post(model_url, json=payload, timeout=15)
+        if r.status_code == 200:
+            data = r.json()
+            text = (data.get("candidates") or [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+            text = text.replace("```json", "").replace("```", "").strip()
+            start, end = text.find("{"), text.rfind("}") + 1
+            if start >= 0:
+                obj = json.loads(text[start:end])
+                return obj
+    except Exception as e:
+        print(f"Synthesis error: {e}")
+    return None
 
 
 
@@ -1350,7 +1375,7 @@ def analyze_craft():
     if not mime.startswith("image/"):
         mime = "image/jpeg"
 
-    print(f"DEBUG: analyze_craft using keys: Gemini={bool(GEMINI_API_KEY)}, SambaNova={bool(SAMBANOVA_API_KEY)}")
+    print(f"DEBUG: analyze_craft using keys: Gemini={bool(GEMINI_API_KEY)}, OpenWebNinja={bool(OPENWEB_NINJA_API_KEY)}")
 
     # Try Gemini when key is set
     error_hints = []
@@ -1363,15 +1388,22 @@ def analyze_craft():
         if gemini_err:
             error_hints.append(f"Gemini: {gemini_err}")
     
-    # 2. Try SambaNova Vision (Fast and reliable free tier)
-    if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
-        result, sb_error = _analyze_craft_sambanova(image_data, mime_type=mime)
-        if result:
-            result["mode"] = "live"
-            result["engine"] = "SambaNova Vision"
-            return jsonify(result)
-        if sb_error:
-            error_hints.append(f"SambaNova: {sb_error}")
+    # 2. Try OpenWeb Ninja Reverse Image Search (Gaining web grounding)
+    if OPENWEB_NINJA_API_KEY:
+        print("Attempting OpenWeb Ninja Reverse Image Search...")
+        p_url = _get_public_url(image_data)
+        if p_url:
+            s_results, s_err = _search_by_image_openwebninja(p_url)
+            if s_results:
+                synth = _synthesize_analysis_with_results(s_results)
+                if synth:
+                    synth["mode"] = "live"
+                    synth["engine"] = "OpenWeb Ninja + Gemini"
+                    return jsonify(synth)
+            if s_err:
+                error_hints.append(f"OpenWebNinja: {s_err}")
+        else:
+            error_hints.append("Public URL generation failed for Reverse Image Search")
 
     # 3. Try Hugging Face Vision
     if HF_TOKENS:
@@ -1426,7 +1458,7 @@ def generate_design():
     if GEMINI_API_KEY:
         try:
             # Ask Gemini to create a better image generation prompt
-            model_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
+            model_url = "https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key=" + GEMINI_API_KEY
             payload = {
                 "systemInstruction": {
                     "parts": [{"text": "You are an expert prompt engineer for Indian heritage crafts. Your goal is to take a user's rough idea and turn it into a high-quality, photorealistic image generation prompt for AI. Focus on lighting, texture, cultural details, and camera angle. Output ONLY the prompt text, no intro."}]
@@ -1641,7 +1673,7 @@ def test_gemini():
             "message": "GEMINI_API_KEY is not set in .env",
             "hint": "Add your key to .env and restart the app."
         })
-    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={key}"
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={key}"
     payload = {
         "contents": [{"parts": [{"text": "Reply with exactly: OK"}]}],
         "generationConfig": {"maxOutputTokens": 10}
@@ -1949,24 +1981,11 @@ You are "DeshKeHaath AI Assistant", a strict product assistant for the DeshKeHaa
             print(f"Groq Chat Error: {e}")
             _log_chatbot_error("Groq", e)
 
-    # 2. TRY SAMBANOVA (Secondary - Llama 3.3 - Very fast)
-    if SAMBANOVA_API_KEY and SAMBANOVA_API_KEY.strip():
-        try:
-            print("Attempting SambaNova Chat fallback...")
-            # We use the same system prompt and context
-            full_prompt = f"System: {system_prompt}\n\nUser: {user_message}"
-            response = call_sambanova(full_prompt, model="Meta-Llama-3.3-70B-Instruct")
-            if response:
-                return response
-        except Exception as e:
-            print(f"SambaNova Chat Error: {e}")
-            _log_chatbot_error("SambaNova", e)
-
-    # 3. TRY GEMINI (Tertiary - Flash)
+    # 3. TRY GEMINI (Secondary - Flash)
     if GEMINI_API_KEY and GEMINI_API_KEY.strip():
         try:
             print("Attempting Gemini Chat fallback...")
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+            url = f"https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
             payload = {
                 "systemInstruction": {"parts": [{"text": system_prompt}]},
                 "contents": [{"parts": [{"text": user_message}]}]
