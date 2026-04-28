@@ -364,7 +364,14 @@ with app.app_context():
 
 @app.route('/map')
 def map_page():
-    return render_template('map.html')
+    map_state_data = {}
+    for state, data in HERITAGE_DATA.items():
+        items = data.get("items", [])
+        top_crafts = [i.get("name", "Heritage Craft") for i in items[:3]]
+        if len(top_crafts) < 3:
+            top_crafts.extend(["Traditional Craft"] * (3 - len(top_crafts)))
+        map_state_data[state] = top_crafts[:3]
+    return render_template('map.html', map_state_data=map_state_data)
 
 
 @app.route('/about')
@@ -611,16 +618,12 @@ def generate_image_design(prompt_text):
     # 2. FALLBACK 1: Pollinations (Unfiltered/Free/Unlimited)
     print("Attempting Pollinations fallback...")
     try:
-        # Use simple URL-based generation
-        # We add some random seed and styling keywords to make it look premium
         enhanced_prompt = f"photorealistic, studio lighting, high resolution, 8k, craft masterpiece, {prompt_text}"
-        safe_prompt = urllib.parse.quote(enhanced_prompt)
-        poll_url = f"https://image.pollinations.ai/prompt/{safe_prompt}?width=1024&height=1024&nologo=true&seed={random.randint(1, 99999)}"
-        # Verify it works (optional but good for error handling)
-        r = requests.head(poll_url, timeout=5)
-        if r.status_code == 200:
+        poll_img, poll_provider, poll_err = generate_image_pollinations(enhanced_prompt)
+        if poll_img:
             print("✓ Pollinations succeeded")
-            return poll_url, "Pollinations", None
+            return poll_img, poll_provider, None
+        print(f"Pollinations returned no image: {poll_err}")
     except Exception as e:
         print(f"Pollinations failed: {e}")
 
@@ -633,7 +636,43 @@ def generate_image_design(prompt_text):
             return img_url, "HuggingFace", None
         print(f"Hugging Face failed: {err}")
     
-    return None, "Error", "Image generation failed using all available providers (Gemini/Pollinations/HF)."
+    # 4. LAST-RESORT FALLBACK: local SVG so UI never hard-fails.
+    safe_title = html.escape(prompt_text[:72] if prompt_text else "Custom Craft Concept")
+    svg_markup = f"""
+<svg xmlns='http://www.w3.org/2000/svg' width='1024' height='1024' viewBox='0 0 1024 1024'>
+  <defs>
+    <linearGradient id='bg' x1='0%' y1='0%' x2='100%' y2='100%'>
+      <stop offset='0%' stop-color='#f7e8c6'/>
+      <stop offset='100%' stop-color='#ecd49b'/>
+    </linearGradient>
+  </defs>
+  <rect width='1024' height='1024' fill='url(#bg)'/>
+  <rect x='96' y='120' width='832' height='784' rx='28' fill='#fff8ea' stroke='#d9b36a' stroke-width='4'/>
+  <text x='512' y='290' text-anchor='middle' font-family='Arial, sans-serif' font-size='56' fill='#2d2a26'>Craft Connect</text>
+  <text x='512' y='360' text-anchor='middle' font-family='Arial, sans-serif' font-size='34' fill='#7b5a2b'>AI concept preview</text>
+  <text x='512' y='470' text-anchor='middle' font-family='Arial, sans-serif' font-size='30' fill='#4e3f2a'>Prompt:</text>
+  <foreignObject x='180' y='510' width='664' height='260'>
+    <div xmlns='http://www.w3.org/1999/xhtml' style='font-family: Arial, sans-serif; font-size: 28px; color: #3d3222; text-align: center; line-height: 1.35;'>
+      {safe_title}
+    </div>
+  </foreignObject>
+</svg>
+""".strip()
+    svg_data_uri = "data:image/svg+xml;charset=utf-8," + urllib.parse.quote(svg_markup)
+    print("All providers failed. Returning local SVG fallback preview.")
+    return svg_data_uri, "LocalFallback", None
+
+
+def build_api_issue_hint(error_message, feature_name="This feature"):
+    """Return user-friendly troubleshooting text for common API failures."""
+    msg = (error_message or "").lower()
+    if any(k in msg for k in ["429", "quota", "rate limit", "too many requests", "hit the limit"]):
+        return f"{feature_name} is using free-tier APIs and the usage limit is temporarily hit. Please retry in 1-2 minutes."
+    if any(k in msg for k in ["401", "403", "invalid api key", "missing api key", "permission", "unauthorized"]):
+        return f"{feature_name} needs a valid API key/permission to run. Please verify your key configuration."
+    if any(k in msg for k in ["timeout", "timed out", "busy", "unavailable", "provider", "failed"]):
+        return f"{feature_name} provider is temporarily busy. Please retry shortly; fallback providers are attempted automatically."
+    return f"{feature_name} is temporarily unavailable. Please try again in a moment."
 
 
 
@@ -1418,27 +1457,21 @@ def analyze_craft():
         if hf_err:
             error_hints.append(f"Hugging Face: {hf_err}")
 
-    # 4. Final Fallback: local GLM-OCR
-    print("All web Vision APIs failed. Trying local fallback...")
-    result = _analyze_craft_local_fallback(image_data)
-    if result:
-        result["mode"] = "live"
-        result["engine"] = "Local GLM-OCR"
-        result["similar_products"] = get_similar_products_for_analysis(result)
-        if error_hints:
-            result["description"] = (result.get("description") or "") + f" (Note: Web APIs failed: {'; '.join(error_hints[:2])})"
-        return jsonify(result)
-
-    # If everything fails, build a comprehensive error message
-    desc = "We couldn't run a full analysis on this image."
+    # 4. Do NOT return guessed/local-only recognition when web APIs fail.
+    # User-facing behavior should be explicit about API/provider issues.
+    desc = "Image recognition is unavailable right now."
+    hint = "Using free APIs: current provider is busy or you hit usage limits. Please retry in 1-2 minutes."
     if error_hints:
-        # Keep it concise for the UI
-        desc += " (Web APIs busy or hitting quotas). Please try again in a minute."
-        print(f"Vision Fallback Failure Detail: {' | '.join(error_hints)}")
+        print(f"Vision API Failure Detail: {' | '.join(error_hints)}")
     else:
-        desc += " Please try again with a clear photo."
-    
-    return jsonify({"error": desc, "details": "All vision providers failed."}), 200 # Return 200 so the frontend can show the message nicely
+        hint = "No live vision provider is available. Please check API keys/quotas and try again."
+
+    return jsonify({
+        "error": desc,
+        "hint": hint,
+        "details": "All live vision providers failed.",
+        "provider_errors": error_hints
+    }), 503
 
 
 # --- AI Design Generation (Text-to-Image) ---
@@ -1453,6 +1486,46 @@ def generate_design():
 
     if not user_prompt:
         return jsonify({"error": "Please describe your design."}), 400
+
+    def estimate_price_from_range(price_range):
+        """Fast deterministic fallback estimate when AI pricing is unavailable."""
+        if isinstance(price_range, (list, tuple)) and len(price_range) >= 2:
+            low, high = int(price_range[0]), int(price_range[1])
+            return int(round(((low + high) / 2) / 50.0) * 50)
+        if isinstance(price_range, str):
+            nums = re.findall(r"\d[\d,]*", price_range)
+            vals = [int(n.replace(",", "")) for n in nums]
+            if len(vals) >= 2:
+                return int(round(((vals[0] + vals[1]) / 2) / 50.0) * 50)
+            if len(vals) == 1:
+                return vals[0]
+        return 3500
+
+    def build_artisan_with_price(force_fast=False):
+        """Always return an artisan suggestion plus estimated cost."""
+        try:
+            artisan = find_artisan_match(material, style, user_prompt)
+        except Exception as match_err:
+            print(f"Artisan match fallback used: {match_err}")
+            artisan = {
+                "artist_name": "Recommended Master Artisan",
+                "state": "Rajasthan",
+                "fact": "Skilled in traditional handcrafted production with custom design support.",
+                "price_range": "₹2,000 – ₹5,000"
+            }
+
+        price_range = artisan.get("price_range", "₹2,000 – ₹5,000")
+        if force_fast:
+            final_price = estimate_price_from_range(price_range)
+        else:
+            try:
+                final_price = get_authentic_price(user_prompt, material, style, price_range)
+            except Exception as price_err:
+                print(f"AI pricing failed, using deterministic estimate: {price_err}")
+                final_price = estimate_price_from_range(price_range)
+
+        artisan["price"] = final_price
+        return artisan, final_price
 
     # 1. Refine Prompt using Gemini Text
     refined_prompt = f"{style} {material} Indian handicraft: {user_prompt}"
@@ -1489,30 +1562,30 @@ def generate_design():
         image_url, provider, err_msg = generate_image_design(refined_prompt)
         
         if not image_url:
-             return jsonify({"error": err_msg or "Image generation failed."}), 502
+             issue_hint = build_api_issue_hint(err_msg, "Design generation")
+             return jsonify({
+                 "error": err_msg or "Image generation failed.",
+                 "hint": issue_hint
+             }), 502
 
         # Final check: Don't start artisan matching if we are already over the 26s limit
         elapsed = time.time() - start_time
         if elapsed > 26:
-            print(f"Request breach: {elapsed:.1f}s. Abandoning artisan match to prevent gateway 502.")
+            print(f"Request breach: {elapsed:.1f}s. Using fast artisan+cost fallback.")
+            artisan_match, estimated_cost = build_artisan_with_price(force_fast=True)
             return jsonify({
                 "image_url": image_url,
                 "title": title,
                 "description": desc,
                 "prompt_used": refined_prompt,
                 "provider": provider,
-                "warning": "Artisan matching skipped due to processing timeout."
+                "artisan_match": artisan_match,
+                "estimated_cost": estimated_cost,
+                "warning": "Fast artisan/cost estimate used due to processing time."
             })
 
         # 4. Add Artisan Match
-        artisan_match = find_artisan_match(material, style, user_prompt)
-        
-        # 5. Get Realistic Price
-        price_range = artisan_match.get("price_range", "₹2,000 – ₹5,000")
-        final_price = get_authentic_price(user_prompt, material, style, price_range)
-
-        # Inject price back into match for UI consistency
-        artisan_match["price"] = final_price
+        artisan_match, final_price = build_artisan_with_price(force_fast=False)
 
         return jsonify({
             "image_url": image_url, # Now a Base64 data URI
@@ -1520,14 +1593,17 @@ def generate_design():
             "description": desc,
             "prompt_used": refined_prompt,
             "artisan_match": artisan_match,
+            "estimated_cost": final_price,
             "provider": provider
         })
     except Exception as e:
         import traceback
         error_detail = traceback.format_exc()
         print(f"CRASH in generate_design: {error_detail}")
+        issue_hint = build_api_issue_hint(str(e), "Design generation")
         return jsonify({
             "error": f"Internal Server Crash: {str(e)}",
+            "hint": issue_hint,
             "traceback": error_detail
         }), 500
 
@@ -1557,7 +1633,10 @@ def match_artisan():
         return jsonify({"artisan_match": artisan_match})
     except Exception as e:
         print(f"Artisan matching error: {e}")
-        return jsonify({"error": str(e)}), 500
+        return jsonify({
+            "error": str(e),
+            "hint": build_api_issue_hint(str(e), "Artisan recommendation")
+        }), 500
 
 
 

@@ -523,6 +523,21 @@
     const similarSection = document.getElementById('similarSection');
     const similarGrid = document.getElementById('similarGrid');
 
+    function formatApiError(errorText, hintText) {
+        const msg = (errorText || '').toLowerCase();
+        if (hintText) return `${errorText}\n\nTip: ${hintText}`;
+        if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('429') || msg.includes('hit the limit')) {
+            return "Free API limit reached for this feature. Please retry after 1-2 minutes.";
+        }
+        if (msg.includes('api key') || msg.includes('401') || msg.includes('403') || msg.includes('permission')) {
+            return "This feature needs a valid API key/permission. Please check API setup.";
+        }
+        if (msg.includes('busy') || msg.includes('timeout') || msg.includes('provider')) {
+            return "AI provider is busy right now. Please retry shortly.";
+        }
+        return errorText || "Feature temporarily unavailable. Please try again.";
+    }
+
     dropZone.onclick = () => fileInput.click();
 
     fileInput.onchange = (e) => {
@@ -550,11 +565,11 @@
                 });
 
                 const data = await response.json();
-                if (!response.ok || data.error) throw new Error(data.error || "Analysis failed");
+                if (!response.ok || data.error) throw new Error(formatApiError(data.error || "Analysis failed", data.hint));
 
                 showResults(data);
             } catch (err) {
-                alert(err.message);
+                alert(formatApiError(err.message));
                 resetVision();
             } finally {
                 scanningOverlay.style.display = 'none';

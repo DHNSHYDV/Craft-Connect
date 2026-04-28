@@ -56,12 +56,14 @@
                 <div id="india-map-wrapper">
                     {% include 'includes/india_map.svg' %}
                 </div>
+
+                <div id="map-info-link" class="map-info-link" style="display: none;"></div>
                 
                 <!-- Floating State Card -->
                 <div id="map-info-card" class="map-info-card" style="display: none;">
                     <div class="card-header-mini">
                         <h4 id="infoStateName">State</h4>
-                        <span class="craft-count-badge">8 Crafts</span>
+                        <span class="craft-count-badge" id="craftCountBadge">3 Crafts</span>
                     </div>
                     <ul class="craft-highlights" id="infoCraftList">
                         <li>Craft Name</li>
@@ -186,16 +188,17 @@
 
     /* Map SVG Interactions */
     #india-map-wrapper path {
-        fill: var(--card-bg);
-        stroke: var(--border-color);
-        stroke-width: 0.5;
+        fill: #faf7f2;
+        stroke: rgba(15, 23, 42, 0.35);
+        stroke-width: 1;
         transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         cursor: pointer;
+        vector-effect: non-scaling-stroke;
     }
 
     #india-map-wrapper path:hover {
-        fill: rgba(232, 168, 56, 0.15);
-        stroke: var(--accent-gold);
+        fill: rgba(232, 168, 56, 0.18);
+        stroke: #cc8f1f;
         stroke-width: 1.5;
         filter: drop-shadow(0 0 8px rgba(232, 168, 56, 0.3));
     }
@@ -216,6 +219,15 @@
         border: 1px solid var(--border-color);
         z-index: 100;
         animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    .map-info-link {
+        position: absolute;
+        height: 0;
+        border-top: 2px dotted rgba(204, 143, 31, 0.8);
+        transform-origin: left center;
+        z-index: 90;
+        pointer-events: none;
     }
 
     @keyframes fadeInScale {
@@ -263,52 +275,136 @@
         font-weight: 600;
     }
 
-    body.dark-mode #india-map-wrapper path { fill: #16162A; stroke: #2A2A3E; }
+    body.dark-mode #india-map-wrapper path {
+        fill: #17192b;
+        stroke: rgba(185, 193, 255, 0.42);
+        stroke-width: 1.15;
+    }
+    body.dark-mode #india-map-wrapper path:hover {
+        fill: rgba(232, 168, 56, 0.22);
+        stroke: #f3bf5a;
+        filter: drop-shadow(0 0 10px rgba(243, 191, 90, 0.45));
+    }
+    body.dark-mode #india-map-wrapper path.active {
+        fill: #e8a838;
+        stroke: #ffe1a7;
+        stroke-width: 2.1;
+    }
     body.dark-mode .map-info-card { background: #1A1A2E; }
     body.dark-mode .chip-mini { background: #16162A; }
+    body.dark-mode .map-info-link { border-top-color: rgba(243, 191, 90, 0.82); }
 </style>
 
 <script>
     const mapInfoCard = document.getElementById('map-info-card');
+    const mapInfoLink = document.getElementById('map-info-link');
     const infoStateName = document.getElementById('infoStateName');
     const infoCraftList = document.getElementById('infoCraftList');
     const viewStateBtn = document.getElementById('viewStateBtn');
+    const craftCountBadge = document.getElementById('craftCountBadge');
 
-    // Sample data (Replace with backend fetch)
-    const stateData = {
-        'Rajasthan': ['Blue Pottery', 'Jaipur Quilts', 'Marble Carving'],
-        'Bihar': ['Madhubani Painting', 'Sikki Grass', 'Bhagalpur Silk'],
-        'Assam': ['Muga Silk', 'Bamboo Craft', 'Water Hyacinth'],
-        'Arunachal Pradesh': ['Monpa Handmade Paper', 'Wancho Wood Carving']
+    // Top 3 crafts per state from backend catalog.
+    const stateData = {{ map_state_data | tojson }};
+
+    const stateAliases = {
+        'andaman and nicobar islands': 'Andaman and Nicobar Islands',
+        'andaman and nicobar': 'Andaman and Nicobar Islands',
+        'dadra and nagar haveli and daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
+        'dadra and nagar haveli': 'Dadra and Nagar Haveli and Daman and Diu',
+        'daman and diu': 'Dadra and Nagar Haveli and Daman and Diu',
+        'jammu & kashmir': 'Jammu and Kashmir',
+        'jammu and kashmir': 'Jammu and Kashmir',
+        'nct of delhi': 'Delhi',
+        'new delhi': 'Delhi',
+        'orissa': 'Odisha',
+        'pondicherry': 'Puducherry',
+        'uttaranchal': 'Uttarakhand'
     };
 
+    function toTitleCase(text) {
+        return (text || '')
+            .toLowerCase()
+            .split(' ')
+            .filter(Boolean)
+            .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+            .join(' ');
+    }
+
+    function normalizeStateName(rawName) {
+        if (!rawName) return '';
+        const compact = rawName.replace(/\s+/g, ' ').trim();
+        const lower = compact.toLowerCase();
+        if (stateAliases[lower]) return stateAliases[lower];
+        if (stateData[compact]) return compact;
+        const title = toTitleCase(compact);
+        if (stateData[title]) return title;
+        return title || compact;
+    }
+
+    function getStateNameFromPath(pathEl) {
+        const raw = pathEl.getAttribute('name') || pathEl.getAttribute('title') || pathEl.id || '';
+        return normalizeStateName(raw);
+    }
+
+    function showStateCard(pathEl, state) {
+        const crafts = (stateData[state] || ['Traditional Weaving', 'Local Pottery', 'Regional Handicraft']).slice(0, 3);
+        infoStateName.textContent = state;
+        craftCountBadge.textContent = `${crafts.length} Crafts`;
+        infoCraftList.innerHTML = crafts.map(c => `<li>${c}</li>`).join('');
+        viewStateBtn.href = '/products?state=' + encodeURIComponent(state);
+
+        const rect = pathEl.getBoundingClientRect();
+        const parentRect = document.querySelector('.map-visual').getBoundingClientRect();
+        const anchorX = rect.left - parentRect.left + rect.width / 2;
+        const anchorY = rect.top - parentRect.top + rect.height / 2;
+
+        // Keep card farther from map region for easier state-to-state hovering.
+        let cardLeft = anchorX + 92;
+        let cardTop = anchorY - 150;
+        const minTop = 12;
+        const maxTop = parentRect.height - 230;
+        const maxLeft = parentRect.width - 255;
+        cardTop = Math.max(minTop, Math.min(maxTop, cardTop));
+        cardLeft = Math.max(12, Math.min(maxLeft, cardLeft));
+
+        mapInfoCard.style.left = cardLeft + 'px';
+        mapInfoCard.style.top = cardTop + 'px';
+        mapInfoCard.style.display = 'block';
+
+        const cardCenterY = cardTop + 40;
+        const dx = cardLeft - anchorX;
+        const dy = cardCenterY - anchorY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+
+        mapInfoLink.style.left = anchorX + 'px';
+        mapInfoLink.style.top = anchorY + 'px';
+        mapInfoLink.style.width = distance + 'px';
+        mapInfoLink.style.transform = `rotate(${angle}deg)`;
+        mapInfoLink.style.display = 'block';
+    }
+
     document.querySelectorAll('#india-map-wrapper path').forEach(path => {
-        path.onmouseenter = (e) => {
-            const state = path.getAttribute('title') || path.id;
-            const crafts = stateData[state] || ['Traditional Weaving', 'Local Pottery'];
-            
-            infoStateName.textContent = state;
-            infoCraftList.innerHTML = crafts.map(c => `<li>${c}</li>`).join('');
-            viewStateBtn.href = '/products?state=' + encodeURIComponent(state);
-            
-            // Position card
-            const rect = path.getBoundingClientRect();
-            const parentRect = document.querySelector('.map-visual').getBoundingClientRect();
-            
-            mapInfoCard.style.left = (rect.left - parentRect.left + rect.width/2) + 'px';
-            mapInfoCard.style.top = (rect.top - parentRect.top - 20) + 'px';
-            mapInfoCard.style.display = 'block';
+        path.onmouseenter = () => {
+            const state = getStateNameFromPath(path);
+            showStateCard(path, state);
         };
     });
 
     document.querySelector('.map-visual').onmouseleave = () => {
         mapInfoCard.style.display = 'none';
+        mapInfoLink.style.display = 'none';
     };
 
     function highlightState(state) {
         document.querySelectorAll('#india-map-wrapper path').forEach(p => p.classList.remove('active'));
-        const path = Array.from(document.querySelectorAll('#india-map-wrapper path')).find(p => p.getAttribute('title') === state);
-        if (path) path.classList.add('active');
+        const normalized = normalizeStateName(state);
+        const path = Array.from(document.querySelectorAll('#india-map-wrapper path'))
+            .find(p => getStateNameFromPath(p) === normalized);
+        if (path) {
+            path.classList.add('active');
+            showStateCard(path, normalized);
+        }
     }
 
     function useMyLocation() {

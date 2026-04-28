@@ -26,11 +26,11 @@
             <div class="feature-info">
                 <div class="feature-tag-pill" style="color: #E63946;">Voice Intelligence</div>
                 <h2>Conversational Heritage Search</h2>
-                <p>We built a multilingual voice interface using the <strong>Web Speech API</strong> and <strong>Gemini 1.5 Flash</strong>. It allows rural and urban users alike to search for crafts using natural language in English or Hindi, breaking accessibility barriers.</p>
+                <p>We use the <strong>Web Speech API</strong> for English voice input and route the recognized text directly to product search. A manual text fallback is provided whenever voice recognition is unavailable.</p>
                 <ul class="tech-stack-mini">
-                    <li>Gemini 1.5 Flash</li>
+                    <li>Browser Speech Recognition</li>
                     <li>Web Speech API</li>
-                    <li>NLP Intent Analysis</li>
+                    <li>Direct Product Search Redirect</li>
                 </ul>
                 <a href="{{ url_for('voice') }}" class="btn-explore-mini">Explore Voice AI →</a>
             </div>
@@ -49,11 +49,11 @@
             <div class="feature-info">
                 <div class="feature-tag-pill" style="color: #00B4A6;">Gemini Vision Pro</div>
                 <h2>Visual Craft Identification</h2>
-                <p>Using <strong>Gemini 1.5 Pro (Vision)</strong>, our system can identify authentic handicrafts from a single photo. It analyzes patterns, materials, and regional styles to provide an "Authenticity Score," helping users avoid counterfeit products and support real artisans.</p>
+                <p>Image analysis runs on live vision APIs (Gemini/HF/OpenWeb paths) to detect craft type, origin, material, and style, then shows similar products from our catalog. If API limits are hit, users get a clear retry message instead of fake results.</p>
                 <ul class="tech-stack-mini">
-                    <li>Gemini 1.5 Pro (Vision)</li>
+                    <li>Gemini / HF / OpenWeb Vision</li>
                     <li>Computer Vision</li>
-                    <li>Authenticity Scoring</li>
+                    <li>Catalog Similarity Matching</li>
                 </ul>
                 <a href="{{ url_for('ai_craft') }}" class="btn-explore-mini">Explore Vision AI →</a>
             </div>
@@ -72,7 +72,7 @@
             <div class="feature-info">
                 <div class="feature-tag-pill" style="color: #7C3AED;">Generative Design</div>
                 <h2>Artisan Co-Creation Studio</h2>
-                <p>Our AI Studio uses <strong>Hugging Face Diffusers</strong> and <strong>Gemini Refinement</strong> to co-create new designs with users. A user describes a vision, AI generates a concept, and the platform matches it with a real artisan in the specific region capable of making it.</p>
+                <p>Our AI Studio refines prompts and generates concept visuals via available providers, then always returns a suitable artisan recommendation and an estimated price for practical ordering decisions.</p>
                 <ul class="tech-stack-mini">
                     <li>Hugging Face (FLUX/SDXL)</li>
                     <li>Gemini Prompt Engineering</li>

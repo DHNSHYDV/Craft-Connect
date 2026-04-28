@@ -328,6 +328,21 @@
     let selectedStyle = 'Traditional';
     let selectedMaterial = 'Metal/Brass';
 
+    function formatApiError(errorText, hintText) {
+        const msg = (errorText || '').toLowerCase();
+        if (hintText) return `${errorText}\n\nTip: ${hintText}`;
+        if (msg.includes('quota') || msg.includes('rate limit') || msg.includes('429') || msg.includes('hit the limit')) {
+            return "Free API limit reached for now. Please wait 1-2 minutes and try again.";
+        }
+        if (msg.includes('api key') || msg.includes('401') || msg.includes('403') || msg.includes('permission')) {
+            return "This feature needs a valid API key/permission. Please check API configuration.";
+        }
+        if (msg.includes('timeout') || msg.includes('busy') || msg.includes('provider')) {
+            return "API provider is busy right now. Please retry in a moment.";
+        }
+        return errorText || "Feature temporarily unavailable. Please try again.";
+    }
+
     document.querySelectorAll('#styleGrid .style-pill').forEach(pill => {
         pill.onclick = () => {
             document.querySelectorAll('#styleGrid .style-pill').forEach(p => p.classList.remove('active'));
@@ -366,7 +381,7 @@
             });
 
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error);
+            if (!response.ok) throw new Error(formatApiError(data.error, data.hint));
 
             document.getElementById('outputPlaceholder').style.display = 'none';
             document.getElementById('outputResult').style.display = 'block';
@@ -384,7 +399,7 @@
             document.getElementById('outputResult').scrollIntoView({ behavior: 'smooth' });
 
         } catch (err) {
-            alert(err.message);
+            alert(formatApiError(err.message));
         } finally {
             generateBtn.disabled = false;
             generateBtn.querySelector('.btn-text').textContent = "Generate Design";
