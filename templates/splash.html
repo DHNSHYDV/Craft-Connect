@@ -7,7 +7,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>Welcome - Desh Ke Haath</title>
+    <title>Welcome - Craft Connect</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
@@ -102,6 +102,49 @@
             backdrop-filter: blur(4px);
         }
 
+        .exit-auth-btn {
+            position: absolute;
+            top: 2rem;
+            left: 2rem;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            z-index: 100;
+            transition: all 0.25s ease;
+            backdrop-filter: blur(4px);
+        }
+
+        .exit-auth-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .exit-auth-btn:hover {
+            transform: scale(1.06);
+            background: rgba(239, 68, 68, 0.18);
+            border-color: rgba(239, 68, 68, 0.45);
+            color: #fecaca;
+        }
+
+        body.light-mode .exit-auth-btn {
+            background: rgba(255, 255, 255, 0.85);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+            color: #334155;
+        }
+
+        body.light-mode .exit-auth-btn:hover {
+            background: #fee2e2;
+            border-color: #fca5a5;
+            color: #b91c1c;
+        }
+
         body.light-mode .theme-toggle-btn {
             background: rgba(255, 255, 255, 0.8);
             border: 1px solid rgba(0, 0, 0, 0.1);
@@ -171,6 +214,20 @@
             color: var(--text-secondary);
             font-weight: 300;
             letter-spacing: 0.5px;
+        }
+
+        .gsc-badge-splash {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(232, 168, 56, 0.1);
+            border: 1px solid rgba(232, 168, 56, 0.3);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #E8A838;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
         }
 
         /* Auth Tabs */
@@ -358,6 +415,11 @@
                 right: 1rem;
             }
 
+            .exit-auth-btn {
+                top: 1rem;
+                left: 1rem;
+            }
+
             .splash-container {
                 flex-direction: column;
                 height: auto;
@@ -377,6 +439,13 @@
 </head>
 
 <body>
+    <a href="{{ url_for('home') }}" class="exit-auth-btn" aria-label="Close and go to home">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+        </svg>
+    </a>
+
     <!-- Theme Toggle -->
     <button class="theme-toggle-btn" aria-label="Toggle Theme">
         <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
@@ -410,8 +479,8 @@
         <!-- Right Auth Section -->
         <div class="auth-panel">
             <div class="brand-header">
-                <h1>Desh Ke Haath</h1>
-                <p class="subtitle">Discover the Soul of India</p>
+                <h1>Craft Connect</h1>
+                <p class="subtitle">Where Heritage Meets Intelligence</p>
             </div>
 
             {% if current_user.is_authenticated %}

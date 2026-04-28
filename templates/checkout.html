@@ -130,7 +130,7 @@
                         </div>
                         <div class="payment-input-panel" id="panelQr">
                             <div class="qr-placeholder">
-                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=deshkehaath@upi&pn=DeshKeHaath&mc=5678&tid=1234567890&tr=1234567890&tn=Payment%20for%20Handicrafts&am=0&cu=INR"
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=craftconnect@upi&pn=CraftConnect&mc=5678&tid=1234567890&tr=1234567890&tn=Payment%20for%20Handicrafts&am=0&cu=INR"
                                     alt="Scan to Pay" class="qr-code-img" id="qrImage"
                                     style="width: 150px; height: 150px; margin: 0 auto 1rem; display: block;">
                                 <p>Scan QR with any UPI app</p>
@@ -634,7 +634,7 @@
         document.getElementById('qrAmount').textContent = `₹${grandTotal.toLocaleString()}`;
 
         // Update QR Code with real amount
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=deshkehaath@upi&pn=DeshKeHaath&am=${grandTotal}&cu=INR`;
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=upi://pay?pa=craftconnect@upi&pn=CraftConnect&am=${grandTotal}&cu=INR`;
         const qrImg = document.getElementById('qrImage');
         if (qrImg) qrImg.src = qrUrl;
 

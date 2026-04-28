@@ -4,95 +4,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Desh Ke Haath - Prachin Kala, Adhunik Disha</title>
+    <meta name="description" content="Craft Connect — Where Heritage Meets Intelligence. Discover India's authentic handicrafts powered by AI. Voice search, image recognition, location-based discovery and AI craft creation.">
+    <title>Craft Connect — Where Heritage Meets Intelligence</title>
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/custom_logo.png') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- Google Fonts for premium typography -->
+    <!-- Google Fonts: Cormorant Garamond + Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap"
         rel="stylesheet">
     {% block extra_head %}{% endblock %}
 </head>
 
 <body>
     <header class="main-header">
-        <div class="logo-container">
-            <a href="{{ url_for('home') }}" class="logo-link">
-                <img src="{{ url_for('static', filename='images/custom_logo.png') }}"
-                    onerror="this.src='{{ url_for('static', filename='images/logo_map.png') }}';"
-                    alt="Desh Ke Haath Logo" class="site-logo">
-            </a>
-        </div>
-        <nav class="main-nav">
-            <ul>
-                <li><a href="{{ url_for('home') }}">Home</a></li>
-                <li><a href="{{ url_for('about') }}">About</a></li>
-                <li><a href="{{ url_for('products') }}">Handicrafts</a></li>
-                <li><a href="{{ url_for('artisans') }}">Artists</a></li>
-                <li><a href="{{ url_for('data') }}">Data Insights</a></li>
-            </ul>
-        </nav>
-        <div class="header-actions">
-            <button class="theme-toggle" aria-label="Toggle Dark Mode">
-                <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-                <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
-                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    style="display: none;">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-            </button>
-            <a href="/cart" class="cart-btn" aria-label="Shopping Cart">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                    class="feather feather-shopping-bag">
-                    <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                    <line x1="3" y1="6" x2="21" y2="6"></line>
-                    <path d="M16 10a4 4 0 0 1-8 0"></path>
-                </svg>
-                <span class="cart-count">0</span>
-            </a>
-            <div class="profile-menu">
-                <button class="profile-icon" aria-label="Account"
-                    onclick="document.querySelector('.profile-dropdown').classList.toggle('active')">
-                    {% if current_user.is_authenticated and current_user.profile_image and current_user.profile_image !=
-                    'default.jpg' %}
-                    <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_image) }}"
-                        alt="{{ current_user.name }}"
-                        style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
-                    {% else %}
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="12" cy="7" r="4"></circle>
+        <div class="header-inner container">
+            <div class="logo-container">
+                <a href="{{ url_for('home') }}" class="logo-link">
+                    <img src="{{ url_for('static', filename='images/custom_logo.png') }}"
+                        onerror="this.src='{{ url_for('static', filename='images/logo_map.png') }}';"
+                        alt="Craft Connect Logo" class="site-logo">
+                </a>
+            </div>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('products') }}">Handicrafts</a></li>
+                    <li><a href="{{ url_for('artisans') }}">Artisans</a></li>
+                    <li><a href="{{ url_for('data') }}">Data Insights</a></li>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                </ul>
+            </nav>
+            <div class="header-actions">
+                <button class="theme-toggle" aria-label="Toggle Dark Mode">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
                     </svg>
-                    {% endif %}
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        style="display: none;">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
                 </button>
-                <div class="profile-dropdown">
-                    {% if current_user.is_authenticated %}
-                    <span class="dropdown-user">Hello, {{ current_user.name }}</span>
-                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
-                    <a href="{{ url_for('profile') }}" class="dropdown-item">My Profile</a>
-                    <a href="{{ url_for('orders') }}" class="dropdown-item">My Orders</a>
-                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
-                    <a href="{{ url_for('logout') }}" class="dropdown-item">Log Out</a>
-                    {% else %}
-                    <span class="dropdown-user">Welcome, Guest</span>
-                    <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
-                    <a href="{{ url_for('entry') }}" class="dropdown-item">Sign In / Sign Up</a>
-                    {% endif %}
+                <a href="/cart" class="cart-btn" aria-label="Shopping Cart">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <path d="M16 10a4 4 0 0 1-8 0"></path>
+                    </svg>
+                    <span class="cart-count">0</span>
+                </a>
+                <div class="profile-menu">
+                    <button class="profile-icon" aria-label="Account"
+                        onclick="document.querySelector('.profile-dropdown').classList.toggle('active')">
+                        {% if current_user.is_authenticated and current_user.profile_image and current_user.profile_image !=
+                        'default.jpg' %}
+                        <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_image) }}"
+                            alt="{{ current_user.name }}"
+                            style="width: 24px; height: 24px; border-radius: 50%; object-fit: cover;">
+                        {% else %}
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                        {% endif %}
+                    </button>
+                    <div class="profile-dropdown">
+                        {% if current_user.is_authenticated %}
+                        <span class="dropdown-user">Hello, {{ current_user.name }}</span>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
+                        <a href="{{ url_for('profile') }}" class="dropdown-item">My Profile</a>
+                        <a href="{{ url_for('orders') }}" class="dropdown-item">My Orders</a>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
+                        <a href="{{ url_for('logout') }}" class="dropdown-item">Log Out</a>
+                        {% else %}
+                        <span class="dropdown-user">Welcome, Guest</span>
+                        <hr style="margin: 8px 0; border: 0; border-top: 1px solid var(--border-color);">
+                        <a href="{{ url_for('entry') }}" class="dropdown-item">Sign In / Sign Up</a>
+                        {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
@@ -108,47 +110,353 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Premium Footer -->
     <footer class="main-footer">
-        <p>&copy; 2026 Desh Ke Haath. All rights reserved.</p>
+        <div class="footer-inner container">
+            <div class="footer-brand">
+                <div class="footer-logo-area">
+                    <img src="{{ url_for('static', filename='images/custom_logo.png') }}"
+                        onerror="this.style.display='none'" alt="Craft Connect" class="footer-logo-img">
+                    <div>
+                        <div class="footer-brand-name">Craft Connect</div>
+                        <div class="footer-tagline">Where Heritage Meets Intelligence</div>
+                    </div>
+                </div>
+                <p class="footer-desc">Empowering India's 7 million artisans through AI-powered discovery. Every purchase preserves a tradition.</p>
+            </div>
+
+            <div class="footer-links-group">
+                <h4 class="footer-links-title">Explore</h4>
+                <ul class="footer-links">
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('products') }}">Handicrafts</a></li>
+                    <li><a href="{{ url_for('artisans') }}">Artisans</a></li>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                    <li><a href="{{ url_for('data') }}">Data Insights</a></li>
+                </ul>
+            </div>
+
+        </div>
+
+        <div class="footer-bottom">
+            <p>&copy; 2026 Craft Connect. All rights reserved.</p>
+            <p class="footer-bottom-sub">Preserving India's 5,000-year craft heritage through AI</p>
+        </div>
     </footer>
 
     <!-- Chatbot Widget -->
     <div class="chatbot-widget">
         <div class="chat-window" id="chatWindow">
             <div class="chat-header">
-                <h3>Craft Assistant</h3>
+                <div class="chat-header-info">
+                    <div class="chat-ai-dot"></div>
+                    <div>
+                        <h3>Heritage AI Assistant</h3>
+                        <span class="chat-status">Powered by Gemini</span>
+                    </div>
+                </div>
                 <button id="closeChat">&times;</button>
             </div>
             <div class="chat-body" id="chatBody">
                 <div class="message bot-message">
-                    Hello! Welcome to Indian Craft. How can I help you today?
+                    Namaste! 🙏 I'm your Heritage AI Assistant. Ask me about crafts, artisans, orders, or let me help you find the perfect piece.
                 </div>
                 <div class="chat-options">
                     <button class="chat-option-btn">Track my order</button>
-                    <button class="chat-option-btn">Best selling products</button>
-                    <button class="chat-option-btn">Return policy</button>
+                    <button class="chat-option-btn">Best selling crafts</button>
+                    <button class="chat-option-btn">About GI tagged items</button>
                     <button class="chat-option-btn">Contact support</button>
                 </div>
             </div>
             <div class="chat-input-area">
-                <input type="text" placeholder="Type a message...">
-                <button>Send</button>
+                <input type="text" placeholder="Ask about crafts, artisans...">
+                <button>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                </button>
             </div>
         </div>
-        <button class="chat-fab" id="chatFab">
-            <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none"
+        <button class="chat-fab" id="chatFab" title="Chat with Heritage AI">
+            <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none"
                 stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="11" width="18" height="10" rx="2"></rect>
-                <circle cx="12" cy="5" r="2"></circle>
-                <path d="M12 7v4"></path>
-                <line x1="8" y1="16" x2="8.01" y2="16"></line>
-                <line x1="16" y1="16" x2="16.01" y2="16"></line>
+                <path d="M12 2a8 8 0 0 1 8 8 8 8 0 0 1-8 8H5l-3 3V10a8 8 0 0 1 10-8z"></path>
             </svg>
         </button>
     </div>
 
     <script>window.CHAT_API_URL = "{{ url_for('chat') }}";</script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+
+    <!-- New navbar dropdown styles -->
+    <style>
+        /* === New Header & Nav Styles === */
+        .main-header {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border-bottom: 1px solid var(--glass-border);
+            box-shadow: 0 1px 0 rgba(212,175,55,0.1), 0 4px 20px rgba(0,0,0,0.05);
+        }
+        body.dark-mode .main-header {
+            background: rgba(10,10,10,0.92);
+            border-bottom-color: rgba(212,175,55,0.1);
+        }
+
+        /* Gold accent line at very top */
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--gradient-gold);
+        }
+
+        /* GSC Badge in header */
+        .header-gsc-badge {
+            font-size: 0.65rem;
+            padding: 3px 8px;
+        }
+
+        /* AI Trigger nav item */
+        .nav-ai-trigger {
+            display: flex !important;
+            align-items: center;
+            gap: 4px;
+        }
+        .nav-ai-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            animation: pulseDot 2s infinite;
+            flex-shrink: 0;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.4); }
+        }
+
+        /* AI Dropdown - richer design */
+        .nav-item-has-dropdown .nav-dropdown {
+            min-width: 260px;
+            padding: 0.5rem;
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+        }
+        .nav-dropdown-item {
+            display: flex !important;
+            align-items: center;
+            gap: 12px;
+            padding: 0.7rem 0.8rem !important;
+            border-radius: 10px !important;
+            text-transform: none !important;
+            letter-spacing: 0 !important;
+            font-size: 0.9rem !important;
+        }
+        .nav-dropdown-item:hover {
+            background: rgba(212,175,55,0.06) !important;
+        }
+
+        /* === PREMIUM FOOTER === */
+        .main-footer {
+            background: #f6f7f9;
+            color: #2a3340;
+            padding: 0;
+            border-top: 1px solid rgba(30, 41, 59, 0.12);
+            position: relative;
+        }
+        body.dark-mode .main-footer {
+            background: #050505;
+            color: rgba(255,255,255,0.7);
+            border-top-color: rgba(212,175,55,0.1);
+        }
+        .main-footer::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: var(--gradient-gold);
+        }
+        .footer-inner {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 2rem 2rem 1.25rem;
+            display: grid;
+            grid-template-columns: 1.8fr 1.2fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+        @media (max-width: 960px) {
+            .footer-inner { grid-template-columns: 1fr; gap: 1.25rem; padding: 1.75rem 1.5rem 1rem; }
+        }
+        @media (max-width: 600px) {
+            .footer-inner { grid-template-columns: 1fr; gap: 1rem; padding: 1.5rem 1rem 1rem; }
+        }
+        .footer-logo-area {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 0.6rem;
+        }
+        .footer-logo-img {
+            width: 34px;
+            height: 34px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .footer-brand-name {
+            font-family: var(--font-heading);
+            font-size: 1.08rem;
+            font-weight: 700;
+            color: #0f172a;
+            letter-spacing: -0.02em;
+        }
+        body.dark-mode .footer-brand-name { color: #fff; }
+        .footer-tagline {
+            font-size: 0.66rem;
+            color: var(--accent-gold);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+        .footer-desc {
+            font-size: 0.78rem;
+            line-height: 1.5;
+            color: rgba(15, 23, 42, 0.72);
+            margin-bottom: 0;
+            max-width: 560px;
+        }
+        body.dark-mode .footer-desc { color: rgba(255,255,255,0.5); }
+        .footer-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .footer-links-group {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            gap: 0.35rem;
+        }
+        .footer-links-title {
+            display: inline-block;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.3px;
+            color: var(--accent-gold);
+            margin-bottom: 0.15rem;
+            padding-bottom: 0.2rem;
+            border-bottom: 2px solid rgba(184, 134, 11, 0.75);
+        }
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: row;
+            flex-wrap: wrap;
+            gap: 0.6rem 1rem;
+            align-items: center;
+        }
+        @media (max-width: 960px) {
+            .footer-links-group {
+                align-items: center;
+            }
+        }
+        .footer-links a {
+            font-size: 0.8rem;
+            color: rgba(15, 23, 42, 0.72);
+            text-decoration: none;
+            transition: color 0.2s, transform 0.2s;
+            display: inline-block;
+        }
+        body.dark-mode .footer-links a { color: rgba(255,255,255,0.55); }
+        .footer-links a:hover {
+            color: var(--accent-gold);
+            transform: translateX(3px);
+        }
+        .footer-bottom {
+            border-top: 1px solid rgba(15, 23, 42, 0.12);
+            padding: 0.85rem 1.2rem;
+            max-width: 1300px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2px;
+            text-align: center;
+        }
+        body.dark-mode .footer-bottom { border-top-color: rgba(255,255,255,0.06); }
+        .footer-bottom p {
+            font-size: 0.72rem;
+            color: rgba(15, 23, 42, 0.62);
+        }
+        body.dark-mode .footer-bottom p { color: rgba(255,255,255,0.35); }
+        .footer-bottom-sub {
+            font-size: 0.64rem !important;
+            color: rgba(184, 134, 11, 0.9) !important;
+        }
+        body.dark-mode .footer-bottom-sub { color: rgba(232,168,56,0.4) !important; }
+
+        /* === CHATBOT WIDGET UPGRADE === */
+        .chat-header {
+            background: linear-gradient(135deg, #050505 0%, #161616 100%);
+            padding: 1rem 1.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-radius: 16px 16px 0 0;
+        }
+        .chat-header-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .chat-ai-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-gold);
+            animation: pulseDot 2s infinite;
+            flex-shrink: 0;
+        }
+        .chat-header h3 {
+            color: white;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin: 0;
+        }
+        .chat-status {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.5);
+            display: block;
+        }
+        #closeChat {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.2s;
+        }
+        #closeChat:hover { background: rgba(255,255,255,0.2); }
+
+        .chat-fab {
+            background: #050505;
+            border: 2px solid rgba(212,175,55,0.4);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+        }
+        .chat-fab:hover {
+            background: var(--gradient-gold);
+            border-color: transparent;
+            transform: scale(1.08);
+            color: #000;
+        }
+    </style>
 </body>
 
 </html>

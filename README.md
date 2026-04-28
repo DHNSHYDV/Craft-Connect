@@ -1,8 +1,8 @@
-# Desh Ke Haath: Indian Heritage Craft E-commerce
+# Craft Connect: Indian Heritage Craft E-commerce
 
-**"Prachin Kala, Adhunik Disha"**
+**"Where Heritage Meets Intelligence"**
 
-Desh Ke Haath is a premium e-commerce platform dedicated to showcasing and selling authentic Indian handicrafts. We bridge the gap between traditional Indian artisans and the modern digital market, celebrating the mantra *"Prachin Kala, Adhunik Disha"* (Ancient Art, Modern Direction).
+Craft Connect is a premium e-commerce platform dedicated to showcasing and selling authentic Indian handicrafts. We bridge the gap between traditional Indian artisans and the modern digital market, guided by the tagline *"Where Heritage Meets Intelligence"*.
 
 ## 🚀 Key Features
 

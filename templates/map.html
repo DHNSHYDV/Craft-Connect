@@ -1,204 +1,322 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="map-page-section">
-    <div class="map-header">
-        <h2 class="hero-title-premium">Search by Location</h2>
-        <p class="hero-subtitle-premium">Hover over the states to discover the rich artistic legacy of Desh Ke Haath.
-        </p>
-    </div>
-
-    <div class="map-page-container">
-        <!-- SVG Connector Line Overlay -->
-        <svg id="map-connector-svg" class="map-connector-overlay">
-            <line id="map-connector-line" x1="0" y1="0" x2="0" y2="0" stroke="var(--accent-color)" stroke-width="1.5"
-                stroke-dasharray="5,5" opacity="0" />
-            <circle id="map-connector-dot" cx="0" cy="0" r="3" fill="var(--accent-color)" opacity="0" />
-        </svg>
-
-        <div id="india-map-wrapper">
-            {% include 'includes/india_map.svg' %}
+<section class="ai-hero map-hero">
+    <div class="container">
+        <div class="hero-badge-row">
+            <span class="ai-badge">Geo-Spatial Discovery</span>
+            <span class="gsc-badge">Interactive Map</span>
         </div>
-
-        <div id="map-tooltip" class="map-tooltip">
-            <h4 class="tooltip-state">State Name</h4>
-            <ul class="tooltip-items">
-                <li>Popular Craft 1</li>
-                <li>Popular Craft 2</li>
-            </ul>
-        </div>
+        <h1 class="hero-title-premium">Explore by Location</h1>
+        <p class="hero-subtitle-premium">Discover the unique artistic legacy of India. Every state has a story to tell through its heritage crafts.</p>
     </div>
+</section>
 
-    <div class="map-legend">
-        <div class="legend-item">
-            <span class="legend-color"></span>
-            <p>Hover over states to explore handicrafts</p>
+<section class="map-interface">
+    <div class="container">
+        <div class="map-layout">
+            <div class="map-controls card-premium">
+                <div class="control-header">
+                    <h3>Explore States</h3>
+                    <button class="btn-location-access" onclick="useMyLocation()">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                        Find Near Me
+                    </button>
+                </div>
+                
+                <div class="state-stats">
+                    <div class="stat-bubble">
+                        <strong>28</strong>
+                        <span>States</span>
+                    </div>
+                    <div class="stat-bubble">
+                        <strong>500+</strong>
+                        <span>Crafts</span>
+                    </div>
+                </div>
+
+                <div class="featured-states-list">
+                    <label>Trending Regions</label>
+                    <div class="region-chips">
+                        <button class="chip-mini" onclick="highlightState('Rajasthan')">Rajasthan</button>
+                        <button class="chip-mini" onclick="highlightState('Bihar')">Bihar</button>
+                        <button class="chip-mini" onclick="highlightState('Assam')">Assam</button>
+                        <button class="chip-mini" onclick="highlightState('Arunachal Pradesh')">Arunachal</button>
+                    </div>
+                </div>
+
+                <div class="selection-detail" id="selectionDetail">
+                    <div class="empty-state">
+                        <p>Hover or click a state to explore its heritage.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="map-visual card-premium">
+                <div id="india-map-wrapper">
+                    {% include 'includes/india_map.svg' %}
+                </div>
+                
+                <!-- Floating State Card -->
+                <div id="map-info-card" class="map-info-card" style="display: none;">
+                    <div class="card-header-mini">
+                        <h4 id="infoStateName">State</h4>
+                        <span class="craft-count-badge">8 Crafts</span>
+                    </div>
+                    <ul class="craft-highlights" id="infoCraftList">
+                        <li>Craft Name</li>
+                    </ul>
+                    <a href="#" id="viewStateBtn" class="btn-explore-state">View All Crafts →</a>
+                </div>
+            </div>
         </div>
     </div>
 </section>
 
-
-<script>
-    document.body.classList.add('map-page-body');
-</script>
-
 <style>
-    /*
-     * MAP VISUAL UPDATES
-     * Increased size and theme-adaptive background
-     */
+    .map-hero { padding: 160px 2rem 4rem; text-align: center; }
 
-    html,
-    body.map-page-body {
-        height: 100%;
-        margin: 0;
-        overflow-x: hidden;
+    .map-layout {
+        display: grid;
+        grid-template-columns: 350px 1fr;
+        gap: 2rem;
+        margin-bottom: 5rem;
     }
 
-    /* Use Theme Background - Remove Grid */
-    body.map-page-body {
-        background-color: var(--bg-color) !important;
-        background-image: none !important;
-        transition: background-color 0.3s ease, color 0.3s ease;
+    @media (max-width: 1100px) {
+        .map-layout { grid-template-columns: 1fr; }
+        .map-controls { order: 2; }
+        .map-visual { order: 1; }
     }
 
-    /* Ensure content containers are transparent so body bg shows */
-    /* Ensure content containers are transparent so body bg shows */
-    body.map-page-body main,
-    body.map-page-body .map-page-section {
-        background: transparent !important;
+    .card-premium {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
     }
 
-    /* Existing Map Styles - Critical for layout */
-    .map-page-section {
-        padding: 120px 20px 60px;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        position: relative;
-        background: transparent !important;
-        transition: background 0.3s ease;
-        z-index: 5;
-    }
+    .map-controls { display: flex; flex-direction: column; gap: 2rem; }
 
-    main {
-        background: transparent !important;
-    }
-
-    .map-header {
-        text-align: center;
-        margin-bottom: 4rem;
-        max-width: 800px;
-        position: relative;
-        z-index: 10;
-    }
-
-    .map-page-container {
-        position: relative;
-        width: 100%;
-        max-width: 1200px;
-        /* Increased from 900px */
-        margin: 0 auto;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 1.5rem;
-        gap: 1.5rem;
-        /* filter: drop-shadow(0 30px 60px rgba(0, 0, 0, 0.15)); */
-        z-index: 10;
-        z-index: 10;
-    }
-
-    .map-connector-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        pointer-events: none;
-        z-index: 1500;
-        overflow: visible;
-    }
-
-    #map-connector-line {
-        transition: opacity 0.3s;
-    }
-
-    body.dark-mode #india-map-wrapper {
-        background: transparent !important;
-    }
-
-    body:not(.dark-mode) #india-map-wrapper {
-        background: transparent !important;
-    }
-
-    #india-map-wrapper {
-        flex: 0 1 70%;
-        /* Increased flex basis */
-        display: flex;
-        justify-content: center;
-        padding: 1rem;
-        /* Reduced padding */
-        border-radius: 20px;
-        background: transparent !important;
-    }
-
-    /* Force all parents to be transparent */
-    /* Force all parents to be transparent */
-    .map-page-section,
-    .map-page-container,
-    .map-page-container *,
-    #india-map-wrapper,
-    main {
-        background-color: transparent !important;
-    }
-
-    /* Nuclear option for map section children */
-    .map-page-section * {
-        background-color: transparent !important;
-    }
-
-    /* Re-apply background to tooltips and specific UI elements if needed */
-    .map-tooltip {
-        background: var(--card-bg) !important;
-    }
-
-    /* Ensure content containers are transparent so body bg shows */
-    html {
-        background: transparent !important;
-    }
-
-    /* Ensure Body and HTML carry the color */
-    html,
-    body.map-page-body {
-        background-color: var(--bg-color) !important;
-    }
-
-    #india-map-wrapper svg {
-        width: 100%;
-        height: auto;
-        max-height: 85vh;
-        /* Increased from 70vh */
-        transition: transform 0.3s ease, filter 0.3s ease;
-    }
-
-    .tooltip-item-content {
+    .control-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        width: 100%;
-        gap: 10px;
     }
 
-    .gi-badge-mini {
-        height: 14px;
-        width: auto;
-        opacity: 0.9;
-        filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+    .control-header h3 { font-family: var(--font-heading); font-size: 1.5rem; }
+
+    .btn-location-access {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        background: rgba(232, 168, 56, 0.1);
+        border: 1px solid rgba(232, 168, 56, 0.2);
+        color: var(--accent-gold);
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
     }
+
+    .btn-location-access:hover {
+        background: var(--accent-gold);
+        color: white;
+    }
+
+    .state-stats {
+        display: flex;
+        gap: 1.5rem;
+    }
+
+    .stat-bubble {
+        flex: 1;
+        background: rgba(0, 180, 166, 0.05);
+        padding: 1.25rem;
+        border-radius: 20px;
+        text-align: center;
+    }
+
+    .stat-bubble strong { display: block; font-size: 1.5rem; color: var(--accent-teal); }
+    .stat-bubble span { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); }
+
+    .featured-states-list label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    .region-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .chip-mini {
+        padding: 6px 14px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .chip-mini:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
+
+    .selection-detail {
+        margin-top: auto;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-color);
+    }
+
+    .empty-state { text-align: center; color: var(--text-muted); font-size: 0.9rem; }
+
+    .map-visual {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem;
+        background: rgba(0, 0, 0, 0.02);
+    }
+
+    #india-map-wrapper { width: 100%; max-width: 600px; }
+
+    /* Map SVG Interactions */
+    #india-map-wrapper path {
+        fill: var(--card-bg);
+        stroke: var(--border-color);
+        stroke-width: 0.5;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    #india-map-wrapper path:hover {
+        fill: rgba(232, 168, 56, 0.15);
+        stroke: var(--accent-gold);
+        stroke-width: 1.5;
+        filter: drop-shadow(0 0 8px rgba(232, 168, 56, 0.3));
+    }
+
+    #india-map-wrapper path.active {
+        fill: var(--accent-gold);
+        stroke: var(--brand-navy);
+        stroke-width: 2;
+    }
+
+    .map-info-card {
+        position: absolute;
+        width: 240px;
+        background: white;
+        border-radius: 16px;
+        padding: 1.25rem;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        border: 1px solid var(--border-color);
+        z-index: 100;
+        animation: fadeInScale 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes fadeInScale {
+        from { opacity: 0; transform: scale(0.9); }
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    .card-header-mini {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+
+    .card-header-mini h4 { font-family: var(--font-heading); font-size: 1.2rem; }
+    .craft-count-badge { background: rgba(0, 180, 166, 0.1); color: var(--accent-teal); padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 700; }
+
+    .craft-highlights {
+        list-style: none;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.25rem;
+    }
+
+    .craft-highlights li {
+        font-size: 0.85rem;
+        color: var(--text-color);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .craft-highlights li::before { content: '•'; color: var(--accent-gold); }
+
+    .btn-explore-state {
+        display: block;
+        text-align: center;
+        padding: 10px;
+        background: var(--brand-navy);
+        color: white;
+        text-decoration: none;
+        border-radius: 10px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+
+    body.dark-mode #india-map-wrapper path { fill: #16162A; stroke: #2A2A3E; }
+    body.dark-mode .map-info-card { background: #1A1A2E; }
+    body.dark-mode .chip-mini { background: #16162A; }
 </style>
 
+<script>
+    const mapInfoCard = document.getElementById('map-info-card');
+    const infoStateName = document.getElementById('infoStateName');
+    const infoCraftList = document.getElementById('infoCraftList');
+    const viewStateBtn = document.getElementById('viewStateBtn');
 
+    // Sample data (Replace with backend fetch)
+    const stateData = {
+        'Rajasthan': ['Blue Pottery', 'Jaipur Quilts', 'Marble Carving'],
+        'Bihar': ['Madhubani Painting', 'Sikki Grass', 'Bhagalpur Silk'],
+        'Assam': ['Muga Silk', 'Bamboo Craft', 'Water Hyacinth'],
+        'Arunachal Pradesh': ['Monpa Handmade Paper', 'Wancho Wood Carving']
+    };
+
+    document.querySelectorAll('#india-map-wrapper path').forEach(path => {
+        path.onmouseenter = (e) => {
+            const state = path.getAttribute('title') || path.id;
+            const crafts = stateData[state] || ['Traditional Weaving', 'Local Pottery'];
+            
+            infoStateName.textContent = state;
+            infoCraftList.innerHTML = crafts.map(c => `<li>${c}</li>`).join('');
+            viewStateBtn.href = '/products?state=' + encodeURIComponent(state);
+            
+            // Position card
+            const rect = path.getBoundingClientRect();
+            const parentRect = document.querySelector('.map-visual').getBoundingClientRect();
+            
+            mapInfoCard.style.left = (rect.left - parentRect.left + rect.width/2) + 'px';
+            mapInfoCard.style.top = (rect.top - parentRect.top - 20) + 'px';
+            mapInfoCard.style.display = 'block';
+        };
+    });
+
+    document.querySelector('.map-visual').onmouseleave = () => {
+        mapInfoCard.style.display = 'none';
+    };
+
+    function highlightState(state) {
+        document.querySelectorAll('#india-map-wrapper path').forEach(p => p.classList.remove('active'));
+        const path = Array.from(document.querySelectorAll('#india-map-wrapper path')).find(p => p.getAttribute('title') === state);
+        if (path) path.classList.add('active');
+    }
+
+    function useMyLocation() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(pos => {
+            alert("Detected region: Rajasthan (Demo). Centering map on Jaipur artisans...");
+            highlightState('Rajasthan');
+        });
+    }
+</script>
 {% endblock %}

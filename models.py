@@ -1,4 +1,4 @@
-"""Database models for Desh Ke Haath."""
+"""Database models for Craft Connect."""
 import json
 from types import SimpleNamespace
 

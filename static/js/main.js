@@ -227,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     return data.message || data.error || "The assistant is experiencing some technical difficulties. Please try again soon.";
                 }
 
-                return data.reply || "I couldn't process that. Please try again or contact support@deshkehaath.in.";
+                return data.reply || "I couldn't process that. Please try again or contact support@craftconnect.in.";
             } catch (e) {
                 console.error("Chat API Error:", e);
                 return "Connection failed. Please ensure you are logged in and the server is reachable, then try again.";

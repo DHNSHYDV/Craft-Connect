@@ -1,4 +1,9 @@
 /* Animated Contact Cards */
+/* About contact section spacing */
+.contact-section {
+    padding-bottom: 3rem;
+}
+
 .contact-container {
     display: flex;
     align-items: stretch !important;
@@ -6,6 +11,7 @@
     gap: 3rem;
     flex-wrap: wrap;
     margin-top: 3rem;
+    margin-bottom: 2.5rem;
 }
 
 .animated-card {
@@ -19,6 +25,13 @@
     box-shadow: 0 .25rem .25rem rgba(0, 0, 0, 0.2),
         0 0 1rem rgba(0, 0, 0, 0.2);
     overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.animated-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 .5rem .75rem rgba(0, 0, 0, 0.22),
+        0 0 1.1rem rgba(0, 0, 0, 0.2);
 }
 
 .animated-card__image-container {
@@ -167,9 +180,13 @@ body:not(.dark-mode) .animated-card__icon {
 
 /* Responsive */
 @media (max-width: 768px) {
+    .contact-section {
+        padding-bottom: 2rem;
+    }
     .contact-container {
         flex-direction: column;
         gap: 2rem;
+        margin-bottom: 1.5rem;
     }
 
     .animated-card {

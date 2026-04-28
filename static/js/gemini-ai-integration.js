@@ -1,4 +1,4 @@
-// Gemini AI Integration for Desh Ke Haath
+// Gemini AI Integration for Craft Connect
 // Real AI-powered image generation for custom designs
 
 class GeminiAIIntegration {

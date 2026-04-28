@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<section class="ai-hero features-showcase-hero">
+    <div class="container">
+        <div class="hero-badge-row">
+            <span class="ai-badge">Gemini Ecosystem</span>
+        </div>
+        <h1 class="hero-title-premium">AI at the Heart of Heritage</h1>
+        <p class="hero-subtitle-premium">How we use Google's Gemini AI to empower India's 7 million artisans and preserve 5,000 years of tradition.</p>
+    </div>
+</section>
+
+<section class="features-details">
+    <div class="container">
+        <!-- Feature 1: Voice -->
+        <div class="feature-row">
+            <div class="feature-visual">
+                <div class="visual-card-premium voice-visual">
+                    <div class="waveform-demo">
+                        <span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                    <div class="mic-icon-demo">🎤</div>
+                </div>
+            </div>
+            <div class="feature-info">
+                <div class="feature-tag-pill" style="color: #E63946;">Voice Intelligence</div>
+                <h2>Conversational Heritage Search</h2>
+                <p>We built a multilingual voice interface using the <strong>Web Speech API</strong> and <strong>Gemini 1.5 Flash</strong>. It allows rural and urban users alike to search for crafts using natural language in English or Hindi, breaking accessibility barriers.</p>
+                <ul class="tech-stack-mini">
+                    <li>Gemini 1.5 Flash</li>
+                    <li>Web Speech API</li>
+                    <li>NLP Intent Analysis</li>
+                </ul>
+                <a href="{{ url_for('voice') }}" class="btn-explore-mini">Explore Voice AI →</a>
+            </div>
+        </div>
+
+        <!-- Feature 2: Vision -->
+        <div class="feature-row reverse">
+            <div class="feature-visual">
+                <div class="visual-card-premium vision-visual">
+                    <div class="scan-demo-wrap">
+                        <div class="scan-bar-demo"></div>
+                        <img src="{{ url_for('static', filename='images/logo_map.png') }}" alt="Craft Scan" style="width: 100px; opacity: 0.5;">
+                    </div>
+                </div>
+            </div>
+            <div class="feature-info">
+                <div class="feature-tag-pill" style="color: #00B4A6;">Gemini Vision Pro</div>
+                <h2>Visual Craft Identification</h2>
+                <p>Using <strong>Gemini 1.5 Pro (Vision)</strong>, our system can identify authentic handicrafts from a single photo. It analyzes patterns, materials, and regional styles to provide an "Authenticity Score," helping users avoid counterfeit products and support real artisans.</p>
+                <ul class="tech-stack-mini">
+                    <li>Gemini 1.5 Pro (Vision)</li>
+                    <li>Computer Vision</li>
+                    <li>Authenticity Scoring</li>
+                </ul>
+                <a href="{{ url_for('ai_craft') }}" class="btn-explore-mini">Explore Vision AI →</a>
+            </div>
+        </div>
+
+        <!-- Feature 3: Creation -->
+        <div class="feature-row">
+            <div class="feature-visual">
+                <div class="visual-card-premium creation-visual">
+                    <div class="canvas-demo-wrap">
+                        <div class="ai-sparkle">✨</div>
+                        <div class="gen-progress-demo"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="feature-info">
+                <div class="feature-tag-pill" style="color: #7C3AED;">Generative Design</div>
+                <h2>Artisan Co-Creation Studio</h2>
+                <p>Our AI Studio uses <strong>Hugging Face Diffusers</strong> and <strong>Gemini Refinement</strong> to co-create new designs with users. A user describes a vision, AI generates a concept, and the platform matches it with a real artisan in the specific region capable of making it.</p>
+                <ul class="tech-stack-mini">
+                    <li>Hugging Face (FLUX/SDXL)</li>
+                    <li>Gemini Prompt Engineering</li>
+                    <li>Artisan Mapping Algorithm</li>
+                </ul>
+                <a href="{{ url_for('design_craft') }}" class="btn-explore-mini">Explore Creative AI →</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="tech-architecture">
+    <div class="container">
+        <div class="architecture-card card-premium">
+            <div class="arch-header">
+                <h2>Our AI Stack</h2>
+                <p>Platform architecture for artisan empowerment</p>
+            </div>
+            <div class="arch-grid">
+                <div class="arch-item">
+                    <strong>Logic & Routing</strong>
+                    <p>Flask (Python 3.10)</p>
+                </div>
+                <div class="arch-item">
+                    <strong>Core Intelligence</strong>
+                    <p>Google Gemini 1.5 Flash/Pro</p>
+                </div>
+                <div class="arch-item">
+                    <strong>Generative Media</strong>
+                    <p>Hugging Face API / Pollinations</p>
+                </div>
+                <div class="arch-item">
+                    <strong>Knowledge Base</strong>
+                    <p>SQLite / Heritage Vector Map</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+    .features-showcase-hero { padding: 160px 2rem 4rem; text-align: center; background: var(--bg-color); }
+
+    .features-details { padding: 5rem 0; }
+    .feature-row {
+        display: flex;
+        align-items: center;
+        gap: 4rem;
+        margin-bottom: 8rem;
+    }
+    .feature-row.reverse { flex-direction: row-reverse; }
+
+    @media (max-width: 900px) {
+        .feature-row, .feature-row.reverse { flex-direction: column; text-align: center; gap: 2rem; }
+    }
+
+    .feature-visual { flex: 1; }
+    .feature-info { flex: 1; }
+
+    .visual-card-premium {
+        height: 350px;
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: var(--card-shadow);
+        position: relative;
+        overflow: hidden;
+    }
+
+    .feature-tag-pill {
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
+    }
+
+    .feature-info h2 { font-family: var(--font-heading); font-size: 2.5rem; margin-bottom: 1.5rem; color: var(--text-color); }
+    .feature-info p { font-size: 1.1rem; line-height: 1.7; color: var(--text-muted); margin-bottom: 1.5rem; }
+
+    .tech-stack-mini {
+        list-style: none;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 2rem;
+    }
+
+    .tech-stack-mini li {
+        padding: 4px 12px;
+        background: rgba(0,0,0,0.05);
+        border-radius: 6px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-muted);
+    }
+
+    .btn-explore-mini {
+        color: var(--accent-gold);
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: transform 0.2s;
+        display: inline-block;
+    }
+
+    .btn-explore-mini:hover { transform: translateX(5px); }
+
+    /* Visual Demos */
+    .voice-visual { background: linear-gradient(135deg, #050505, #1F1F1F); }
+    .waveform-demo { display: flex; gap: 5px; }
+    .waveform-demo span { width: 4px; height: 30px; background: #E63946; border-radius: 4px; animation: wave-bounce 1s infinite; }
+    .mic-icon-demo { font-size: 3rem; position: absolute; bottom: 2rem; opacity: 0.2; }
+
+    .vision-visual { background: #f8f8f8; }
+    .scan-bar-demo { position: absolute; width: 100%; height: 2px; background: #00B4A6; animation: scan 2s infinite linear; }
+
+    .creation-visual { background: rgba(0, 0, 0, 0.02); }
+    .ai-sparkle { font-size: 4rem; animation: float 3s infinite ease-in-out; }
+
+    .tech-architecture { padding-bottom: 8rem; }
+    .architecture-card { text-align: center; }
+    .arch-header { margin-bottom: 3rem; }
+    .arch-header h2 { font-family: var(--font-heading); font-size: 2rem; }
+
+    .arch-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 2rem;
+    }
+
+    @media (max-width: 800px) { .arch-grid { grid-template-columns: 1fr 1fr; } }
+
+    .arch-item strong { display: block; font-size: 0.9rem; color: var(--accent-gold); margin-bottom: 0.5rem; }
+    .arch-item p { font-weight: 600; color: var(--text-color); }
+
+    @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+    @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-20px); } }
+    @keyframes wave-bounce { 0%, 100% { height: 20px; } 50% { height: 50px; } }
+</style>
+{% endblock %}

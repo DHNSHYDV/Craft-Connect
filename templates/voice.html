@@ -1,124 +1,207 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="ai-hero">
+<section class="ai-hero voice-hero">
     <div class="container">
-        <!-- <span class="badge">Voice Assistance</span> -->
+        <div class="hero-badge-row">
+            <span class="ai-badge">Conversational AI</span>
+        </div>
         <h1 class="hero-title-premium">Search by Voice</h1>
+        <p class="hero-subtitle-premium">Speak to our Heritage Assistant in English or Hindi to find crafts, artisans, or learn about traditions.</p>
     </div>
 </section>
 
-<section class="voice-search">
+<section class="voice-interface">
     <div class="container">
-        <div class="voice-center">
-            <div class="mic-container" id="micBtn">
-                <div class="mic-rings">
-                    <div class="ring"></div>
-                    <div class="ring"></div>
-                    <div class="ring"></div>
-                </div>
-                <button class="mic-btn">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
-                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
-                        <line x1="12" y1="19" x2="12" y2="23"></line>
-                        <line x1="8" y1="23" x2="16" y2="23"></line>
-                    </svg>
-                </button>
-            </div>
-
-            <div class="voice-status" id="voiceStatus">Click mic to start recording.</div>
-
-            <div class="language-selection">
-                <button class="lang-tag active" data-lang="en-US">English</button>
-            </div>
-            <br>
-
-
+        <div class="voice-quick-nav">
+            <a href="{{ url_for('ai_craft') }}" class="q-link">🖼️ Image Search</a>
+            <a href="{{ url_for('map_page') }}" class="q-link">📍 Location</a>
+            <a href="{{ url_for('design_craft') }}" class="q-link">✨ Create</a>
         </div>
 
-        <div class="transcription-card" id="transcriptionCard" style="display: none;">
-            <div class="transcription-header">
-                <span>Recognized Speech</span>
-                <span class="lang-detected" id="detectedLang">Detected: English</span>
+        <div class="voice-center">
+            <div class="mic-outer-wrap">
+                <div class="waveform-container" id="waveform">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                <div class="mic-container" id="micBtn">
+                    <div class="mic-rings">
+                        <div class="ring"></div>
+                        <div class="ring"></div>
+                        <div class="ring"></div>
+                    </div>
+                    <button class="mic-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                            <line x1="12" y1="19" x2="12" y2="23"></line>
+                            <line x1="8" y1="23" x2="16" y2="23"></line>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="voice-status" id="voiceStatus">Tap the mic to start speaking</div>
+
+            <div class="voice-fallback" id="voiceFallback" style="display: none;">
+                <input type="text" id="voiceFallbackInput" placeholder="Type what you want to search..." />
+                <button type="button" id="voiceFallbackBtn">Search Products</button>
+            </div>
+
+            <div class="language-selection-modern">
+                <button class="lang-pill active" data-lang="en-US">English</button>
+            </div>
+
+            <div class="try-saying">
+                <span>Try saying:</span>
+                <div class="chips-row">
+                    <button class="try-chip" onclick="searchProducts('Show me Madhubani paintings')">"Show me Madhubani paintings"</button>
+                    <button class="try-chip" onclick="searchProducts('Blue pottery from Rajasthan')">"Blue pottery from Rajasthan"</button>
+                    <button class="try-chip" onclick="searchProducts('Tell me about Pashmina')">"Tell me about Pashmina"</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="transcription-card-premium" id="transcriptionCard" style="display: none;">
+            <div class="card-header">
+                <span class="status-indicator"></span>
+                <span id="detectedLang">Processing Speech...</span>
             </div>
             <div class="transcription-text" id="transcriptionText">"..."</div>
-            <div class="assistant-reply" id="assistantReply" style="display: none;">
-                <div class="assistant-label">Assistant (Gemini)</div>
-                <div class="assistant-text" id="assistantText"></div>
+            
+            <div class="ai-response-area" id="assistantReply" style="display: none;">
+                <div class="ai-label">Heritage AI</div>
+                <div class="ai-text" id="assistantText"></div>
             </div>
-            <div class="action-feedback" id="actionFeedback">
-                <div class="loading-dots">
-                    <span></span><span></span><span></span>
-                </div>
-                <span id="actionFeedbackText">Asking Gemini...</span>
-            </div>
+
             <div class="voice-actions" id="voiceActions" style="display: none;">
-                <a class="btn-search-products" id="searchProductsBtn" href="#">Search products with this</a>
+                <a class="btn-action-primary" id="searchProductsBtn" href="#">Shop These Crafts</a>
             </div>
         </div>
     </div>
 
-    <!-- Voice Permission Modal -->
+    <!-- Permission Modal -->
     <div id="voice-modal" class="modal-overlay">
         <div class="modal-content">
-            <div class="modal-icon">🎤🚫</div>
-            <h3 class="modal-title" id="modal-title">Microphone Access Needed</h3>
+            <div class="modal-icon">🎤</div>
+            <h3 class="modal-title" id="modal-title">Microphone Access</h3>
             <p class="modal-message" id="modal-message">
-                Please allow microphone access to use voice search.
+                Please allow microphone access to use voice search features.
             </p>
-            <button class="modal-btn" onclick="closeModal()">Okay, I understand</button>
+            <button class="modal-btn" onclick="closeModal()">Got it</button>
         </div>
     </div>
 </section>
 
 <style>
-    .ai-hero {
-        padding: 140px 2rem 4rem;
+    .voice-hero {
+        padding: 160px 2rem 4rem;
         text-align: center;
+        background: var(--bg-color);
     }
 
-    .badge {
-        display: inline-block;
-        padding: 6px 16px;
-        background: #f4511e;
-        /* Voice theme color */
-        color: white;
-        border-radius: 20px;
+    .voice-quick-nav {
+        display: flex;
+        justify-content: center;
+        gap: 1.5rem;
+        margin-bottom: 3rem;
+    }
+
+    .q-link {
         font-size: 0.85rem;
         font-weight: 600;
-        margin-bottom: 1.5rem;
+        color: var(--text-muted);
+        text-decoration: none;
+        padding: 8px 16px;
+        border: 1px solid var(--border-color);
+        border-radius: 30px;
+        transition: all 0.3s;
+    }
+
+    .q-link:hover {
+        border-color: var(--accent-gold);
+        color: var(--accent-gold);
+        background: rgba(232, 168, 56, 0.05);
     }
 
     .voice-center {
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 4rem 0;
+        padding: 2rem 0 4rem;
     }
+
+    .mic-outer-wrap {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 300px;
+        height: 300px;
+    }
+
+    .waveform-container {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        height: 100px;
+        opacity: 0;
+        transition: opacity 0.5s;
+    }
+
+    .listening .waveform-container {
+        opacity: 1;
+    }
+
+    .wave-bar {
+        width: 4px;
+        height: 20px;
+        background: var(--accent-gold);
+        border-radius: 4px;
+        animation: wave-bounce 1s infinite ease-in-out;
+    }
+
+    @keyframes wave-bounce {
+        0%, 100% { height: 20px; }
+        50% { height: 60px; }
+    }
+
+    .wave-bar:nth-child(2) { animation-delay: 0.1s; }
+    .wave-bar:nth-child(3) { animation-delay: 0.2s; }
+    .wave-bar:nth-child(4) { animation-delay: 0.3s; }
+    .wave-bar:nth-child(5) { animation-delay: 0.4s; }
+    .wave-bar:nth-child(6) { animation-delay: 0.5s; }
+    .wave-bar:nth-child(7) { animation-delay: 0.6s; }
+    .wave-bar:nth-child(8) { animation-delay: 0.7s; }
 
     .mic-container {
         position: relative;
-        width: 120px;
-        height: 120px;
-        margin-bottom: 2rem;
-        cursor: pointer;
+        width: 140px;
+        height: 140px;
+        z-index: 5;
     }
 
     .mic-btn {
         width: 100%;
         height: 100%;
         border-radius: 50%;
-        background: #f4511e;
+        background: var(--gradient-gold);
         border: none;
-        color: white;
+        color: var(--brand-navy);
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 10px 30px rgba(244, 81, 30, 0.3);
-        z-index: 2;
-        position: relative;
+        box-shadow: 0 10px 40px rgba(232, 168, 56, 0.3);
+        cursor: pointer;
         transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
@@ -145,334 +228,218 @@
         left: 0;
         width: 100%;
         height: 100%;
-        border: 2px solid #f4511e;
+        border: 2px solid var(--accent-gold);
         border-radius: 50%;
         animation: ringRipple 2s infinite ease-out;
         opacity: 0;
     }
 
-    .ring:nth-child(2) {
-        animation-delay: 0.5s;
-    }
-
-    .ring:nth-child(3) {
-        animation-delay: 1s;
-    }
+    .ring:nth-child(2) { animation-delay: 0.5s; }
+    .ring:nth-child(3) { animation-delay: 1s; }
 
     @keyframes ringRipple {
-        0% {
-            transform: scale(1);
-            opacity: 0.8;
-        }
-
-        100% {
-            transform: scale(2.5);
-            opacity: 0;
-        }
+        0% { transform: scale(1); opacity: 0.8; }
+        100% { transform: scale(2.5); opacity: 0; }
     }
 
     .voice-status {
-        font-size: 1.25rem;
+        font-size: 1.2rem;
         font-weight: 500;
-        opacity: 0.7;
-        margin-bottom: 1rem;
+        color: var(--text-color);
+        margin-bottom: 2rem;
+        font-family: var(--font-heading);
     }
 
-    .type-instead-box {
-        width: 100%;
-        max-width: 520px;
-        margin: 0 auto 2rem;
-        padding: 1.5rem;
-        background: rgba(244, 81, 30, 0.08);
-        border: 2px solid #f4511e;
-        border-radius: 16px;
-    }
-
-    .type-instead-title {
-        font-size: 1rem;
-        font-weight: 600;
-        margin: 0 0 1rem;
-        color: #f4511e;
-        text-align: center;
-    }
-
-    .type-instead {
+    .language-selection-modern {
         display: flex;
-        gap: 10px;
-        max-width: 100%;
+        gap: 1rem;
+        margin-bottom: 3rem;
     }
 
-    .voice-text-input {
+    .voice-fallback {
+        display: flex;
+        gap: 0.6rem;
+        margin: 0 0 1.2rem;
+        width: min(640px, 92vw);
+    }
+
+    .voice-fallback input {
         flex: 1;
-        min-width: 0;
-        padding: 12px 16px;
         border: 1px solid var(--border-color);
-        border-radius: 30px;
-        font-size: 1rem;
         background: var(--card-bg);
+        color: var(--text-color);
+        border-radius: 999px;
+        padding: 0.65rem 1rem;
+        font-size: 0.92rem;
+    }
+
+    .voice-fallback button {
+        border: none;
+        border-radius: 999px;
+        background: var(--brand-navy);
+        color: #fff;
+        padding: 0.65rem 1rem;
+        font-size: 0.86rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .lang-pill {
+        padding: 10px 24px;
+        border: 1px solid var(--border-color);
+        background: var(--card-bg);
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
         color: var(--text-color);
     }
 
-    .voice-ask-btn {
-        padding: 12px 24px;
-        background: #f4511e;
+    .lang-pill.active {
+        background: var(--brand-navy);
         color: white;
-        border: none;
-        border-radius: 30px;
-        font-size: 0.95rem;
-        font-weight: 600;
-        cursor: pointer;
-        white-space: nowrap;
-        flex-shrink: 0;
+        border-color: var(--brand-navy);
     }
 
-    .voice-ask-btn:hover {
-        opacity: 0.9;
+    .try-saying {
+        text-align: center;
     }
 
-    .language-selection {
+    .try-saying span {
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        display: block;
+        margin-bottom: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+
+    .chips-row {
         display: flex;
-        gap: 1rem;
+        gap: 0.75rem;
         flex-wrap: wrap;
         justify-content: center;
-        margin-bottom: 1.5rem;
     }
 
-    .lang-tag {
-        padding: 8px 18px;
-        border: 1px solid var(--border-color);
-        background: var(--card-bg);
+    .try-chip {
+        padding: 8px 16px;
+        background: rgba(232, 168, 56, 0.08);
+        border: 1px solid rgba(232, 168, 56, 0.2);
         border-radius: 30px;
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        color: var(--accent-gold);
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all 0.2s;
     }
 
-    .lang-tag.active,
-    .lang-tag:hover {
-        background: #f4511e;
+    .try-chip:hover {
+        background: var(--accent-gold);
         color: white;
-        border-color: #f4511e;
     }
 
-    .transcription-card {
-        max-width: 600px;
-        margin: 2rem auto;
+    .transcription-card-premium {
+        max-width: 700px;
+        margin: 0 auto;
         background: var(--card-bg);
         border: 1px solid var(--border-color);
-        border-radius: 20px;
+        border-radius: 24px;
         padding: 2.5rem;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.05);
-        animation: slideInUp 0.5s ease;
+        box-shadow: var(--card-shadow);
+        animation: slideInUp 0.6s ease;
     }
 
-    .transcription-header {
+    .card-header {
         display: flex;
-        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
         margin-bottom: 1.5rem;
         font-size: 0.8rem;
         font-weight: 700;
         text-transform: uppercase;
-        letter-spacing: 1px;
+        color: var(--accent-teal);
     }
 
-    .lang-detected {
-        color: #f4511e;
+    .status-indicator {
+        width: 8px;
+        height: 8px;
+        background: var(--accent-teal);
+        border-radius: 50%;
+        display: block;
+        animation: pulseDot 2s infinite;
     }
 
     .transcription-text {
-        font-size: 1.8rem;
         font-family: var(--font-heading);
-        margin-bottom: 0.5rem;
+        font-size: 1.8rem;
+        line-height: 1.3;
+        margin-bottom: 2rem;
         color: var(--text-color);
     }
 
-    .translation-text {
-        font-size: 1.1rem;
-        font-style: italic;
-        opacity: 0.6;
-        margin-bottom: 2rem;
+    .ai-response-area {
+        background: rgba(0, 180, 166, 0.05);
+        border-left: 4px solid var(--accent-teal);
+        padding: 1.5rem;
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 1.5rem;
     }
 
-    .assistant-reply {
-        margin: 1.5rem 0;
-        padding: 1.25rem;
-        background: rgba(244, 81, 30, 0.08);
-        border-radius: 12px;
-        border-left: 4px solid #f4511e;
-    }
-
-    .assistant-label {
+    .ai-label {
         font-size: 0.75rem;
         font-weight: 700;
+        color: var(--accent-teal);
         text-transform: uppercase;
-        letter-spacing: 1px;
-        color: #f4511e;
         margin-bottom: 0.5rem;
     }
 
-    .assistant-text {
+    .ai-text {
         font-size: 1.05rem;
-        line-height: 1.5;
+        line-height: 1.6;
         color: var(--text-color);
     }
 
-    .voice-actions {
-        margin-top: 1.5rem;
-    }
-
-    .btn-search-products {
+    .btn-action-primary {
         display: inline-block;
-        padding: 10px 20px;
-        background: var(--card-bg);
-        border: 1px solid var(--border-color);
-        border-radius: 30px;
-        font-size: 0.9rem;
-        color: var(--text-color);
-        text-decoration: none;
-        transition: all 0.3s ease;
-    }
-
-    .btn-search-products:hover {
-        background: #f4511e;
+        padding: 12px 28px;
+        background: var(--brand-navy);
         color: white;
-        border-color: #f4511e;
-    }
-
-    .action-feedback {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+        text-decoration: none;
+        border-radius: 50px;
         font-weight: 600;
-        color: #4caf50;
+        transition: all 0.3s;
     }
 
-    .loading-dots span {
-        width: 8px;
-        height: 8px;
-        background: #4caf50;
-        border-radius: 50%;
-        display: inline-block;
-        animation: jump 1.4s infinite ease-in-out;
-    }
-
-    .loading-dots span:nth-child(1) {
-        animation-delay: -0.32s;
-    }
-
-    .loading-dots span:nth-child(2) {
-        animation-delay: -0.16s;
-    }
-
-    @keyframes jump {
-
-        0%,
-        80%,
-        100% {
-            transform: scale(0);
-        }
-
-        40% {
-            transform: scale(1);
-        }
+    .btn-action-primary:hover {
+        background: var(--accent-gold);
+        transform: translateY(-2px);
     }
 
     @keyframes slideInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-
-    /* Mobile: fit screen, no horizontal overflow */
-    @media (max-width: 600px) {
-        .voice-center {
-            width: 100%;
-            max-width: 100%;
-            padding: 2rem 1rem;
-            box-sizing: border-box;
-        }
-
-        .type-instead-box {
-            width: 100%;
-            max-width: 100%;
-            padding: 1rem;
-            box-sizing: border-box;
-        }
-
-        .type-instead {
-            flex-direction: column;
-            width: 100%;
-        }
-
-        .voice-text-input {
-            width: 100%;
-        }
-
-        .voice-ask-btn {
-            width: 100%;
-            white-space: normal;
-        }
-
-        .voice-fallback-hint {
-            font-size: 0.85rem;
-        }
-
-        .transcription-card {
-            max-width: 100%;
-            margin-left: 1rem;
-            margin-right: 1rem;
-            padding: 1.25rem;
-        }
-
-        .transcription-text {
-            font-size: 1.35rem;
-        }
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
     }
 
     /* Modal Styles */
     .modal-overlay {
         display: none;
         position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.6);
+        inset: 0;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
         z-index: 1000;
-        justify-content: center;
         align-items: center;
-        padding: 1rem;
-        backdrop-filter: blur(4px);
+        justify-content: center;
+        padding: 2rem;
     }
 
     .modal-content {
         background: var(--card-bg);
-        padding: 2rem;
-        border-radius: 16px;
+        padding: 2.5rem;
+        border-radius: 24px;
         max-width: 400px;
-        width: 100%;
         text-align: center;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-        border: 1px solid var(--border-color);
-        animation: slideUp 0.3s ease-out;
-    }
-
-    @keyframes slideUp {
-        from {
-            transform: translateY(20px);
-            opacity: 0;
-        }
-
-        to {
-            transform: translateY(0);
-            opacity: 1;
-        }
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     }
 
     .modal-icon {
@@ -480,34 +447,16 @@
         margin-bottom: 1rem;
     }
 
-    .modal-title {
-        font-size: 1.25rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: var(--text-color);
-    }
-
-    .modal-message {
-        font-size: 0.95rem;
-        color: var(--text-muted);
-        margin-bottom: 1.5rem;
-        line-height: 1.5;
-    }
-
     .modal-btn {
-        background: var(--accent-color);
+        width: 100%;
+        padding: 12px;
+        background: var(--accent-gold);
         color: white;
         border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 8px;
-        font-size: 1rem;
+        border-radius: 12px;
+        font-weight: 600;
         cursor: pointer;
-        width: 100%;
-        transition: opacity 0.2s;
-    }
-
-    .modal-btn:hover {
-        opacity: 0.9;
+        margin-top: 1.5rem;
     }
 </style>
 
@@ -517,262 +466,127 @@
     const transcriptionCard = document.getElementById('transcriptionCard');
     const transcriptionText = document.getElementById('transcriptionText');
     const detectedLangEl = document.getElementById('detectedLang');
-    const langTags = document.querySelectorAll('.lang-tag');
+    const langPills = document.querySelectorAll('.lang-pill');
+    const voiceFallback = document.getElementById('voiceFallback');
+    const voiceFallbackInput = document.getElementById('voiceFallbackInput');
+    const voiceFallbackBtn = document.getElementById('voiceFallbackBtn');
+    let selectedLang = 'en-US';
 
-    let mediaRecorder = null;
-    let recordedChunks = [];
+    langPills.forEach(pill => {
+        pill.onclick = () => {
+            langPills.forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            selectedLang = 'en-US';
+        };
+    });
+
     let isRecording = false;
-    let stream = null;
-    var voiceTimeout; // Store timeout ID
-
-    const voiceModal = document.getElementById('voice-modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalMessage = document.getElementById('modal-message');
-
-    function showModal(title, message) {
-        modalTitle.textContent = title;
-        modalMessage.textContent = message;
-        voiceModal.style.display = 'flex';
-    }
-
-    window.closeModal = function () {
-        voiceModal.style.display = 'none';
-        micBtn.classList.remove('listening');
-    }
+    let voiceTimeout;
 
     function searchProducts(query) {
-        if (!query || !query.trim()) return;
-
-        // Show feedback
+        if (!query) return;
         transcriptionCard.style.display = 'block';
         transcriptionText.textContent = '"' + query + '"';
         voiceStatus.textContent = "Searching products...";
 
-        const actionFeedback = document.getElementById('actionFeedback');
-        const actionFeedbackText = document.getElementById('actionFeedbackText');
+        // Keep action button available if user wants manual click
+        document.getElementById('assistantReply').style.display = 'none';
+        document.getElementById('voiceActions').style.display = 'block';
+        document.getElementById('searchProductsBtn').href = '/products?search=' + encodeURIComponent(query);
 
-        if (actionFeedback) actionFeedback.style.display = 'flex';
-        if (actionFeedbackText) actionFeedbackText.textContent = 'Searching...';
-
-        // Redirect to products page with search query
+        // Direct browser-voice -> products search flow
         setTimeout(() => {
             window.location.href = '/products?search=' + encodeURIComponent(query);
-        }, 1000);
+        }, 350);
     }
-
-    langTags.forEach(function (tag) {
-        tag.onclick = function () {
-            langTags.forEach(function (t) { t.classList.remove('active'); });
-            tag.classList.add('active');
-            detectedLangEl.textContent = "Detected: " + tag.textContent.split(' ')[0];
-        };
-    });
 
     micBtn.onclick = function () {
         if (isRecording) {
-            // Manual stop: clear timeout
-            if (voiceTimeout) clearTimeout(voiceTimeout);
-
-            // Stop recording logic depends on which mode we are in
-            if (window.recognition && window.recognition_active) {
-                window.recognition.stop();
-                isRecording = false;
-                micBtn.classList.remove('listening');
-                voiceStatus.textContent = "Processing...";
-            } else if (mediaRecorder && mediaRecorder.state === 'recording') {
-                mediaRecorder.stop();
-                isRecording = false;
-                micBtn.classList.remove('listening');
-            }
+            stopRecognition();
             return;
         }
-
-        // Try Web Speech API first (Chrome, Edge, Safari, Android)
-        var SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-        if (SpeechRecognition) {
-            window.recognition = new SpeechRecognition();
-            window.recognition.lang = 'en-US'; // Default, could be dynamic
-            window.recognition.interimResults = false;
-            window.recognition.maxAlternatives = 1;
-
-            window.recognition.onstart = function () {
-                isRecording = true;
-                window.recognition_active = true;
-                micBtn.classList.add('listening');
-                voiceStatus.textContent = "Listening (Web Speech)...";
-                voiceStatus.style.color = '';
-
-                // Set 6-second timeout
-                voiceTimeout = setTimeout(function () {
-                    if (isRecording && window.recognition_active) {
-                        console.log("Voice timeout reached (6s), stopping...");
-                        window.recognition.stop();
-                        isRecording = false; // logic will handle in onend/onresult
-                    }
-                }, 6000);
-            };
-
-            window.recognition.onresult = function (event) {
-                if (voiceTimeout) clearTimeout(voiceTimeout); // Success, clear timeout
-
-                var transcript = event.results[0][0].transcript;
-                var confidence = event.results[0][0].confidence;
-                console.log("Web Speech result:", transcript, confidence);
-
-                // Clean punctuation
-                transcript = transcript.trim().replace(/[.,!?]+$/, '');
-
-                if (transcript) {
-                    searchProducts(transcript);
-                } else {
-                    voiceStatus.textContent = "No speech detected. Try again.";
-                }
-            };
-
-            window.recognition.onerror = function (event) {
-                if (voiceTimeout) clearTimeout(voiceTimeout);
-
-                console.error("Web Speech Error:", event.error);
-                isRecording = false;
-                window.recognition_active = false;
-                micBtn.classList.remove('listening');
-
-                if (event.error === 'no-speech') {
-                    voiceStatus.textContent = "No speech detected. Try again.";
-                } else if (event.error === 'audio-capture') {
-                    voiceStatus.textContent = "No microphone found.";
-                    showModal("No Microphone Found", "We couldn't find a microphone on your device.");
-                } else if (event.error === 'not-allowed') {
-                    voiceStatus.textContent = "Microphone blocked.";
-                    showModal("Microphone Access Denied", "Permission was denied. Please allow microphone access in your browser settings.");
-                } else {
-                    voiceStatus.textContent = "Error: " + event.error;
-                }
-            };
-
-            window.recognition.onend = function () {
-                if (voiceTimeout) clearTimeout(voiceTimeout);
-                isRecording = false;
-                window.recognition_active = false;
-                micBtn.classList.remove('listening');
-            };
-
-            window.recognition.start();
-        } else {
-            // Fallback for Firefox / others without Web Speech API
-            console.log("Web Speech API not supported, using Server Whisper.");
-            startServerWhisper();
-        }
+        startRecognition();
     };
 
-    function startServerWhisper() {
-        recordedChunks = [];
-        voiceStatus.textContent = "Getting microphone (server mode)...";
-        voiceStatus.style.color = '';
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-            voiceStatus.textContent = "Microphone API not supported or insecure context (HTTPS required). Type below.";
-            voiceStatus.style.color = "var(--accent-color, #f4511e)";
+    function startRecognition() {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            voiceStatus.textContent = "Speech recognition not supported in this browser.";
+            showFallbackInput();
             return;
         }
 
-        navigator.mediaDevices.getUserMedia({ audio: true })
-            .then(function (s) {
-                stream = s;
-                var options = { mimeType: 'audio/webm;codecs=opus' };
-                if (!MediaRecorder.isTypeSupported(options.mimeType)) options = {};
+        const recognition = new SpeechRecognition();
+        recognition.lang = selectedLang;
+        recognition.interimResults = false;
 
-                try {
-                    mediaRecorder = new MediaRecorder(stream);
-                } catch (e) {
-                    console.error("MediaRecorder init failed:", e);
-                    voiceStatus.textContent = "Recorder failed. Try typing.";
-                    return;
-                }
-
-                mediaRecorder.ondataavailable = function (e) { if (e.data.size > 0) recordedChunks.push(e.data); };
-                mediaRecorder.onstop = function () {
-                    if (voiceTimeout) clearTimeout(voiceTimeout); // Clear timeout on stop
-                    if (stream) stream.getTracks().forEach(function (t) { t.stop(); });
-                    voiceStatus.textContent = "Transcribing with Whisper...";
-                    var blob = new Blob(recordedChunks, { type: 'audio/webm' });
-                    var fd = new FormData();
-                    fd.append('audio', blob, 'recording.webm');
-                    fetch('/api/transcribe', { method: 'POST', body: fd })
-                        .then(function (r) { return r.json(); })
-                        .then(function (data) {
-                            if (data.error) {
-                                voiceStatus.textContent = "Transcribe: " + data.error + ". Try typing below.";
-                                voiceStatus.style.color = "var(--accent-color, #f4511e)";
-                                return;
-                            }
-                            var text = (data.text || '').trim();
-                            // Clean punctuation (remove trailing . , ! ?)
-                            text = text.replace(/[.,!?]+$/, '');
-                            if (text) {
-                                searchProducts(text);
-                            } else {
-                                voiceStatus.textContent = "No speech detected. Try again or type below.";
-                                voiceStatus.style.color = "var(--accent-color, #f4511e)";
-                            }
-                        })
-                        .catch(function () {
-                            voiceStatus.textContent = "Server error. Try typing below.";
-                            voiceStatus.style.color = "var(--accent-color, #f4511e)";
-                        });
-                };
-                mediaRecorder.start();
-                isRecording = true;
-                micBtn.classList.add('listening');
-                voiceStatus.textContent = "Recording... (Max 6s)";
-                transcriptionCard.style.display = 'none';
-
-                // Set 6-second timeout for server fallback too
-                voiceTimeout = setTimeout(function () {
-                    if (mediaRecorder && mediaRecorder.state === 'recording') {
-                        console.log("Server recording timeout (6s), stopping...");
-                        mediaRecorder.stop();
-                        isRecording = false;
-                        micBtn.classList.remove('listening');
-                    }
-                }, 6000);
-            })
-            .catch(function (err) {
-                console.error("Mic Error:", err);
-                let title = "Microphone Access Denied";
-                let msg = "Please allow microphone access in your browser settings to use this feature.";
-
-                if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-                    msg = "Permission was denied. You need to allow microphone access in your browser settings.";
-                } else if (window.isSecureContext === false) {
-                    title = "Insecure Connection";
-                    msg = "Your browser blocked the microphone because the connection is not HTTPS.";
-                } else if (err.name === 'NotFoundError') {
-                    title = "No Microphone Found";
-                    msg = "We couldn't find a microphone on your device.";
-                }
-
-                showModal(title, msg);
-
-                voiceStatus.textContent = "Microphone access failed. Try typing below.";
-                voiceStatus.style.color = "var(--accent-color, #f4511e)";
-            });
-    }
-
-    var voiceTextInput = document.getElementById('voiceTextInput');
-    var voiceAskBtn = document.getElementById('voiceAskBtn');
-    if (voiceAskBtn && voiceTextInput) {
-        voiceAskBtn.textContent = "Search Products";
-        voiceAskBtn.onclick = function () {
-            searchProducts(voiceTextInput.value);
-            voiceTextInput.value = '';
+        recognition.onstart = () => {
+            isRecording = true;
+            micBtn.classList.add('listening');
+            voiceStatus.textContent = "Listening...";
+            transcriptionCard.style.display = 'none';
         };
-        voiceTextInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                searchProducts(voiceTextInput.value);
-                voiceTextInput.value = '';
+
+        recognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            searchProducts(transcript);
+        };
+
+        recognition.onerror = (event) => {
+            console.error(event.error);
+            if (event.error === 'network') {
+                voiceStatus.textContent = "Voice service temporarily unavailable. Check internet and try again.";
+                showFallbackInput();
+            } else if (event.error === 'not-allowed') {
+                voiceStatus.textContent = "Microphone permission denied. Please allow mic access.";
+                showFallbackInput();
+            } else if (event.error === 'no-speech') {
+                voiceStatus.textContent = "No speech detected. Try again.";
+            } else {
+                voiceStatus.textContent = "Error: " + event.error;
+                showFallbackInput();
             }
-        });
+            stopRecognition();
+        };
+
+        recognition.onend = () => {
+            stopRecognition();
+        };
+
+        recognition.start();
+        window.activeRecognition = recognition;
     }
+
+    function stopRecognition() {
+        isRecording = false;
+        micBtn.classList.remove('listening');
+        if (window.activeRecognition) {
+            window.activeRecognition.stop();
+        }
+    }
+
+    function closeModal() {
+        document.getElementById('voice-modal').style.display = 'none';
+    }
+
+    function showFallbackInput() {
+        voiceFallback.style.display = 'flex';
+        if (voiceFallbackInput && !voiceFallbackInput.value) {
+            voiceFallbackInput.value = '';
+        }
+    }
+
+    voiceFallbackBtn.onclick = () => {
+        const q = (voiceFallbackInput.value || '').trim();
+        if (!q) return;
+        searchProducts(q);
+    };
+
+    voiceFallbackInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            voiceFallbackBtn.click();
+        }
+    });
 </script>
 {% endblock %}

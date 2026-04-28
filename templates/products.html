@@ -2,8 +2,8 @@
 {% block content %}
 <section class="products-header">
     <div class="header-content">
-        <h1>Handcrafted Masterpieces</h1>
-        <p>Curated from the heart of India</p>
+        <h1 class="hero-title-premium" style="color: white; margin-bottom: 0.5rem;">Indian Heritage Collection</h1>
+        <p class="hero-tagline-new" style="color: var(--accent-gold); letter-spacing: 3px;">Discover the Soul of India</p>
     </div>
 </section>
 
@@ -54,6 +54,17 @@
                     <circle cx="12" cy="10" r="3"></circle>
                 </svg>
             </a>
+
+            <!-- Create Your Own Art -->
+            <a href="{{ url_for('design_craft') }}" class="icon-btn design-btn tour-art-icon" title="Design Your Own Art">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
+                    <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
+                    <path d="M2 2l7.586 7.586"></path>
+                    <circle cx="11" cy="11" r="2"></circle>
+                </svg>
+            </a>
         </div>
 
         <div class="filter-controls">
@@ -84,22 +95,10 @@
             </select>
         </div>
 
-        <!-- Design Craft (Placed after filters) -->
-        <a href="{{ url_for('design_craft') }}" class="icon-btn design-btn tour-art-icon" title="Design Your Own Art">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
-                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 19l7-7 3 3-7 7-3-3z"></path>
-                <path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"></path>
-                <path d="M2 2l7.586 7.586"></path>
-                <circle cx="11" cy="11" r="2"></circle>
-            </svg>
-        </a>
-
-
     </form>
 </section>
 
-<section class="products-grid-section">
+<section class="products-grid-section container">
     <div class="products-grid">
         {% for product in products %}
         <div class="product-card animate-on-scroll">

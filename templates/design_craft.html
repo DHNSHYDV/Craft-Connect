@@ -1,129 +1,108 @@
 {% extends "base.html" %}
 
-{% block extra_head %}
-<!-- External CSS for Design Page -->
-<link rel="stylesheet" href="{{ url_for('static', filename='css/design_craft.css') }}">
-{% endblock %}
-
 {% block content %}
-<section class="ai-hero">
+<section class="ai-hero design-hero">
     <div class="container">
-        <!-- <span class="badge">Design Your Artifact</span> -->
-        <h1 class="hero-title-premium">Create Your Own Design</h1>
-        <p class="hero-subtitle-premium">Your imagination, curated by heritage. Describe the artifact you want to build.
-        </p>
+        <div class="hero-badge-row">
+            <span class="ai-badge">AI Studio</span>
+            <span class="gsc-badge">Co-Creation</span>
+        </div>
+        <h1 class="hero-title-premium">Create Your Vision</h1>
+        <p class="hero-subtitle-premium">Collaborate with AI to design custom artifacts inspired by Indian heritage. We'll match your design with real artisans.</p>
     </div>
 </section>
 
-<section class="designer-tool">
+<section class="design-interface">
     <div class="container">
-        <div class="designer-grid">
-            <div class="input-panel card">
-                <div class="panel-header">
-                    <h3>Describe Your Vision</h3>
-                    <div class="word-count">0 / 500</div>
-                </div>
-                <div class="input-wrapper">
-                    <textarea id="designPrompt"
-                        placeholder="E.g., A Madhubani style lamp with floral patterns and a brass metallic base for my living room..."></textarea>
-                    <div class="input-actions">
-                        <button type="button" class="btn-icon btn-magic-prompt" id="magicPromptBtn"
-                            title="Refine prompt with AI">✨</button>
+        <div class="studio-split">
+            <!-- Left: Creative Controls -->
+            <div class="controls-panel card-premium">
+                <div class="control-group">
+                    <label>Describe your masterpiece</label>
+                    <div class="input-wrapper-premium">
+                        <textarea id="designPrompt" placeholder="e.g. A brass lamp with Peacock motifs in Dhokra style for a modern living room..."></textarea>
+                        <button class="magic-refine" id="magicPromptBtn" title="Refine with AI">✨</button>
                     </div>
                 </div>
 
-                <div class="style-options">
-                    <label>Style Selection</label>
-                    <div class="style-chips">
-                        <button class="chip active">Traditional</button>
-                        <button class="chip">Contemporary</button>
-                        <button class="chip">Minimalist</button>
-                        <button class="chip">Fusion</button>
+                <div class="control-group">
+                    <label>Select Heritage Style</label>
+                    <div class="pill-grid" id="styleGrid">
+                        <button class="style-pill active" data-style="Traditional">
+                            <span class="pill-swatch" style="background: #8B4513;"></span>
+                            Traditional
+                        </button>
+                        <button class="style-pill" data-style="Modern Fusion">
+                            <span class="pill-swatch" style="background: #4682B4;"></span>
+                            Modern Fusion
+                        </button>
+                        <button class="style-pill" data-style="Minimalist">
+                            <span class="pill-swatch" style="background: #D3D3D3;"></span>
+                            Minimalist
+                        </button>
                     </div>
                 </div>
 
-                <div class="material-options">
+                <div class="control-group">
                     <label>Base Material</label>
-                    <div class="style-chips">
-                        <button class="chip">Terracotta</button>
-                        <button class="chip active">Metal/Brass</button>
-                        <button class="chip">Silk/Fabric</button>
-                        <button class="chip">Wood</button>
+                    <div class="pill-grid" id="materialGrid">
+                        <button class="style-pill active" data-mat="Metal/Brass">Brass</button>
+                        <button class="style-pill" data-mat="Clay/Terracotta">Clay</button>
+                        <button class="style-pill" data-mat="Wood">Wood</button>
+                        <button class="style-pill" data-mat="Fabric/Silk">Silk</button>
                     </div>
                 </div>
 
-                <button class="btn-generate btn-primary" id="generateBtn">
-                    <span class="btn-text">Creating masterpiece... (approx 30s)</span>
+                <button class="btn-generate-premium" id="generateBtn">
+                    <span class="btn-text">Generate Design</span>
                     <div class="btn-loader" style="display: none;"></div>
                 </button>
             </div>
 
-            <div class="output-panel">
-                <div class="output-placeholder card" id="outputPlaceholder">
+            <!-- Right: Live Canvas -->
+            <div class="canvas-panel">
+                <div class="canvas-card card-premium" id="outputPlaceholder">
                     <div class="placeholder-content">
-                        <div class="ai-orb"></div>
-                        <h3>Awaiting Your Inspiration</h3>
-                        <p>Your design will appear here once you hit generate.</p>
+                        <div class="canvas-icon">🎨</div>
+                        <h3>Studio Canvas</h3>
+                        <p>Your AI-generated design will appear here.</p>
                     </div>
                 </div>
-                <div class="output-result card" id="outputResult" style="display: none;">
-                    <div class="result-image">
+
+                <div class="result-card card-premium" id="outputResult" style="display: none;">
+                    <div class="result-image-wrap">
                         <img id="generatedImage" src="" alt="Generated design">
+                        <div class="image-actions">
+                            <button class="btn-circle-action" title="Zoom">🔍</button>
+                            <button class="btn-circle-action" title="Download">📥</button>
+                        </div>
                     </div>
-                    <div class="result-info">
-                        <div class="result-header">
-                            <span class="badge-new">New Creation</span>
-                            <h3 id="resultTitle"></h3>
+                    
+                    <div class="result-info-premium">
+                        <div class="res-header">
+                            <h3 id="resultTitle">Artisan Concept</h3>
+                            <span class="price-tag" id="resPrice">₹4,500</span>
                         </div>
-                        <p id="resultDesc"></p>
-
-                        <div class="generated-product-specs">
-                            <div class="spec-row">
-                                <span class="spec-label">Material</span>
-                                <span class="spec-value" id="resMaterial"></span>
+                        <p id="resultDesc">A unique concept blending traditional motifs with modern aesthetics.</p>
+                        
+                        <div class="match-box" id="artisanMatchCard">
+                            <div class="match-header">
+                                <span class="match-label">Master Craftsman Match</span>
+                                <span class="region-badge" id="matchState">Rajasthan</span>
                             </div>
-                            <div class="spec-row">
-                                <span class="spec-label">Style</span>
-                                <span class="spec-value" id="resStyle"></span>
-                            </div>
-                            <div class="spec-row">
-                                <span class="spec-label">Est. Price</span>
-                                <span class="spec-value price">₹2,999</span>
-                                <span style="font-size: 0.7rem; opacity: 0.6; display: block; margin-top: 2px;">*AI
-                                    Heritage Estimate</span>
-                            </div>
-                        </div>
-
-                        <!-- Artisan Match Card -->
-                        <div id="artisanMatchCard"
-                            style="display: none; margin-top: 1.5rem; padding: 1rem; background: rgba(var(--accent-color-rgb, 0, 77, 64), 0.05); border-radius: 12px; border: 1px solid var(--accent-color); animation: fadeIn 0.5s ease;">
-                            <div
-                                style="display: flex; align-items: center; gap: 8px; margin-bottom: 0.5rem; color: var(--accent-color); font-weight: 700; font-size: 0.9rem;">
-                                <span style="font-size: 1.2rem;">✨</span> Craftsman Connection
-                            </div>
-                            <div style="font-size: 0.85rem; line-height: 1.4;">
-                                <div style="margin-bottom: 4px;"><strong>Artist Name:</strong> <span id="matchName"
-                                        style="color: var(--accent-color);"></span></div>
-                                <div style="margin-bottom: 4px;"><strong>Heritage Origin:</strong> <span
-                                        id="matchState"></span></div>
-                                <div
-                                    style="opacity: 0.8; font-style: italic; margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 8px;">
-                                    " <span id="matchFact"></span> "
+                            <div class="match-body">
+                                <div class="artisan-avatar">👤</div>
+                                <div class="artisan-meta">
+                                    <strong id="matchName">Arjun Ram</strong>
+                                    <p id="matchFact">Expert in lost-wax metal casting with 20 years experience.</p>
                                 </div>
                             </div>
                         </div>
 
-                        <button class="btn-primary btn-add-to-cart-custom" id="addToCartBtn"
-                            style="width: 100%; justify-content: center; margin-top: 1rem;">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24"
-                                fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                stroke-linejoin="round" style="margin-right: 8px;">
-                                <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path>
-                                <line x1="3" y1="6" x2="21" y2="6"></line>
-                                <path d="M16 10a4 4 0 0 1-8 0"></path>
-                            </svg>
-                            Add to Cart
-                        </button>
+                        <div class="final-actions">
+                            <button class="btn-cart-premium" id="addToCartBtn">Add to Cart</button>
+                            <button class="btn-wishlist">❤️</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -131,111 +110,251 @@
     </div>
 </section>
 
-<!-- Load Gemini AI Integration -->
-<script src="{{ url_for('static', filename='js/gemini-ai-integration.js') }}"></script>
+<style>
+    .design-hero { padding: 160px 2rem 4rem; text-align: center; }
 
-<script>
-    // Initialize API Keys from server
-    const GEMINI_API_KEY = "{{ gemini_api_key }}";
-    const POLLINATIONS_API_KEY = "{{ pollinations_api_key }}";
-    const POLLINATIONS_MODELS = "{{ pollinations_models }}".split(',').filter(m => m.trim());
-    let geminiAI = null;
-
-    console.log('🔑 Pollinations API Key:', POLLINATIONS_API_KEY ? 'SET' : 'NOT SET');
-    console.log('🎨 Pollinations Models:', POLLINATIONS_MODELS);
-
-    if (GEMINI_API_KEY && GEMINI_API_KEY !== 'None') {
-        geminiAI = new GeminiAIIntegration(GEMINI_API_KEY);
-        console.log('✅ Gemini AI Integration initialized');
-    } else {
-        console.warn('⚠️ Gemini API key not available, using fallback generation only');
+    .studio-split {
+        display: grid;
+        grid-template-columns: 400px 1fr;
+        gap: 2rem;
+        align-items: start;
+        margin-bottom: 5rem;
     }
 
-    const promptArea = document.getElementById('designPrompt');
-    const generateBtn = document.getElementById('generateBtn');
-    const outputPlaceholder = document.getElementById('outputPlaceholder');
-    const outputResult = document.getElementById('outputResult');
-    const generatedImage = document.getElementById('generatedImage');
-    const resultTitle = document.getElementById('resultTitle');
-    const resultDesc = document.getElementById('resultDesc');
-    const resMaterial = document.getElementById('resMaterial');
-    const resStyle = document.getElementById('resStyle');
-    const buyCustomBtn = document.getElementById('buyCustomBtn');
-    const chips = document.querySelectorAll('.chip');
+    @media (max-width: 1000px) {
+        .studio-split { grid-template-columns: 1fr; }
+    }
+
+    .card-premium {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 24px;
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .control-group { margin-bottom: 2rem; }
+    .control-group label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        letter-spacing: 1px;
+    }
+
+    .input-wrapper-premium {
+        position: relative;
+    }
+
+    #designPrompt {
+        width: 100%;
+        height: 120px;
+        padding: 1.25rem;
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        background: rgba(0,0,0,0.02);
+        font-family: var(--font-body);
+        font-size: 0.95rem;
+        resize: none;
+        transition: border-color 0.3s;
+    }
+
+    #designPrompt:focus {
+        border-color: var(--accent-gold);
+        outline: none;
+    }
+
+    .magic-refine {
+        position: absolute;
+        bottom: 12px;
+        right: 12px;
+        background: white;
+        border: 1px solid var(--border-color);
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    }
+
+    .pill-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+
+    .style-pill {
+        padding: 10px 16px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        transition: all 0.2s;
+    }
+
+    .style-pill.active {
+        border-color: var(--accent-gold);
+        background: rgba(232, 168, 56, 0.05);
+        color: var(--accent-gold);
+    }
+
+    .pill-swatch {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+    }
+
+    .btn-generate-premium {
+        width: 100%;
+        padding: 1.25rem;
+        background: var(--gradient-gold);
+        color: var(--brand-navy);
+        border: none;
+        border-radius: 16px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        box-shadow: 0 10px 30px rgba(232, 168, 56, 0.3);
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+    }
+
+    .btn-generate-premium:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 15px 40px rgba(232, 168, 56, 0.4);
+    }
+
+    .canvas-panel {
+        height: 100%;
+    }
+
+    .canvas-card {
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px dashed var(--border-color);
+        background: rgba(0,0,0,0.01);
+    }
+
+    .placeholder-content { text-align: center; color: var(--text-muted); }
+    .canvas-icon { font-size: 4rem; margin-bottom: 1rem; }
+
+    .result-image-wrap {
+        position: relative;
+        border-radius: 16px;
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+        background: #f8f8f8;
+    }
+
+    #generatedImage {
+        width: 100%;
+        display: block;
+    }
+
+    .image-actions {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .btn-circle-action {
+        width: 36px;
+        height: 36px;
+        background: white;
+        border-radius: 50%;
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .res-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    #resultTitle { font-family: var(--font-heading); font-size: 1.8rem; }
+    .price-tag { font-size: 1.5rem; font-weight: 700; color: var(--accent-gold); }
+
+    .match-box {
+        background: rgba(0, 180, 166, 0.05);
+        border-radius: 16px;
+        padding: 1.25rem;
+        margin: 1.5rem 0;
+    }
+
+    .match-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 1rem;
+    }
+
+    .match-label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: var(--accent-teal); }
+    .region-badge { background: white; padding: 2px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; }
+
+    .match-body { display: flex; gap: 1rem; align-items: center; }
+    .artisan-avatar { width: 40px; height: 40px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+    .artisan-meta strong { display: block; font-size: 1rem; }
+    .artisan-meta p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.4; margin-top: 2px; }
+
+    .final-actions { display: flex; gap: 1rem; }
+    .btn-cart-premium { flex: 1; padding: 12px; background: var(--brand-navy); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; }
+    .btn-wishlist { width: 48px; background: white; border: 1px solid var(--border-color); border-radius: 12px; cursor: pointer; font-size: 1.2rem; }
+</style>
+
+<script>
     let selectedStyle = 'Traditional';
     let selectedMaterial = 'Metal/Brass';
 
-    chips.forEach(chip => {
-        chip.onclick = () => {
-            const parent = chip.closest('.style-options, .material-options');
-            parent.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-            chip.classList.add('active');
-            if (parent.classList.contains('style-options')) {
-                selectedStyle = chip.textContent;
-            } else {
-                selectedMaterial = chip.textContent;
-            }
+    document.querySelectorAll('#styleGrid .style-pill').forEach(pill => {
+        pill.onclick = () => {
+            document.querySelectorAll('#styleGrid .style-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            selectedStyle = pill.dataset.style;
         };
     });
 
-    if (promptArea) {
-        const wordCountEl = document.querySelector('.word-count');
-        promptArea.addEventListener('input', () => {
-            if (wordCountEl) wordCountEl.textContent = (promptArea.value.length) + ' / 500';
-        });
-    }
-
-    const magicPromptBtn = document.getElementById('magicPromptBtn');
-    if (magicPromptBtn) {
-        magicPromptBtn.onclick = async () => {
-            const text = promptArea.value.trim();
-            if (!text) {
-                alert("Type a short description first, then click ✨ to refine it.");
-                return;
-            }
-            magicPromptBtn.classList.add('loading');
-            magicPromptBtn.title = "Refining...";
-            try {
-                const response = await fetch('/api/refine-design-prompt', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: text })
-                });
-                const data = await response.json().catch(() => ({}));
-                if (!response.ok) {
-                    throw new Error(data.error || "Refine failed");
-                }
-                if (data.prompt) {
-                    promptArea.value = data.prompt;
-                    const wordCountEl = document.querySelector('.word-count');
-                    if (wordCountEl) wordCountEl.textContent = (data.prompt.length) + ' / 500';
-                }
-                if (data.refined === false && data.message) {
-                    alert(data.message);
-                }
-            } catch (err) {
-                alert("Could not refine prompt: " + (err.message || "Try again."));
-            } finally {
-                magicPromptBtn.classList.remove('loading');
-                magicPromptBtn.title = "Refine prompt with AI";
-            }
+    document.querySelectorAll('#materialGrid .style-pill').forEach(pill => {
+        pill.onclick = () => {
+            document.querySelectorAll('#materialGrid .style-pill').forEach(p => p.classList.remove('active'));
+            pill.classList.add('active');
+            selectedMaterial = pill.dataset.mat;
         };
-    }
+    });
+
+    const generateBtn = document.getElementById('generateBtn');
+    const promptInput = document.getElementById('designPrompt');
 
     generateBtn.onclick = async () => {
-        const text = promptArea.value.trim();
-        if (!text) {
-            alert("Please describe your design first!");
-            return;
-        }
+        const text = promptInput.value.trim();
+        if (!text) { alert("Describe your vision first!"); return; }
 
         generateBtn.disabled = true;
-        generateBtn.querySelector('.btn-text').textContent = "Creating masterpiece... (approx 15s)";
-        generateBtn.querySelector('.btn-loader').style.display = 'inline-block';
-
+        generateBtn.querySelector('.btn-text').textContent = "Visualizing Concept...";
+        
         try {
-            console.log('🎨 Requesting generation via backend (Hugging Face)...');
-
             const response = await fetch('/api/generate-design', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -247,84 +366,44 @@
             });
 
             const data = await response.json();
+            if (!response.ok) throw new Error(data.error);
 
-            if (!response.ok) {
-                throw new Error(data.error || "Generation failed");
+            document.getElementById('outputPlaceholder').style.display = 'none';
+            document.getElementById('outputResult').style.display = 'block';
+            document.getElementById('generatedImage').src = data.image_url;
+            document.getElementById('resultTitle').textContent = data.title;
+            document.getElementById('resultDesc').textContent = data.description;
+            
+            if (data.artisan_match) {
+                document.getElementById('matchName').textContent = data.artisan_match.artist_name;
+                document.getElementById('matchState').textContent = data.artisan_match.state;
+                document.getElementById('matchFact').textContent = data.artisan_match.fact;
+                document.getElementById('resPrice').textContent = '₹' + data.artisan_match.price.toLocaleString();
             }
 
-            console.log('✅ Generation successful', data);
-
-            // Display results
-            outputPlaceholder.style.display = 'none';
-            outputResult.style.display = 'block';
-
-            generatedImage.src = data.image_url;
-            resultTitle.textContent = `${selectedStyle} ${selectedMaterial} Artisan Concept`;
-            resultDesc.textContent = `A unique AI-generated design based on your vision: "${text}"`;
-
-            if (resMaterial) resMaterial.textContent = selectedMaterial;
-            if (resStyle) resStyle.textContent = selectedStyle;
-
-            // Handle Artisan Match and Dynamic Price from backend
-            const matchCard = document.getElementById('artisanMatchCard');
-            const artisanMatch = data.artisan_match;
-            let finalPrice = 2999; // Fallback
-            let artistName = "Master Craftsman";
-
-            if (artisanMatch) {
-                artistName = artisanMatch.artist_name || "Traditional Artisan";
-                document.getElementById('matchName').textContent = artistName;
-                document.getElementById('matchState').textContent = artisanMatch.state;
-                document.getElementById('matchFact').textContent = artisanMatch.fact;
-
-                // Update Price Display
-                if (artisanMatch.price) {
-                    finalPrice = artisanMatch.price;
-                    document.querySelector('.spec-value.price').textContent = '₹' + finalPrice.toLocaleString('en-IN');
-                }
-
-                if (matchCard) matchCard.style.display = 'block';
-            } else if (matchCard) {
-                matchCard.style.display = 'none';
-            }
-
-            // Setup Add to Cart Button
-            const addToCartBtn = document.getElementById('addToCartBtn');
-            if (addToCartBtn) {
-                addToCartBtn.onclick = () => {
-                    if (typeof window.addToCart === 'function') {
-                        const customId = 'custom_' + Date.now();
-                        window.addToCart({
-                            id: customId,
-                            name: `Custom ${selectedStyle} ${selectedMaterial} by ${artistName}`,
-                            price: finalPrice,
-                            image: imageUrl,
-                            state: 'AI Studio',
-                            quantity: 1
-                        });
-
-                        // Visual feedback
-                        const originalContent = addToCartBtn.innerHTML;
-                        addToCartBtn.innerHTML = '✓ Added to Cart';
-                        addToCartBtn.style.background = '#388e3c';
-                        setTimeout(() => {
-                            addToCartBtn.innerHTML = originalContent;
-                            addToCartBtn.style.background = '';
-                        }, 2000);
-                    }
-                };
-            }
-            outputResult.scrollIntoView({ behavior: 'smooth' });
+            document.getElementById('outputResult').scrollIntoView({ behavior: 'smooth' });
 
         } catch (err) {
-            console.error("Generation failed", err);
-            alert("Could not generate design: " + err.message + "\n\nTry again or use a different description.");
+            alert(err.message);
         } finally {
             generateBtn.disabled = false;
-            generateBtn.querySelector('.btn-text').textContent = "Generate design";
-            generateBtn.querySelector('.btn-loader').style.display = 'none';
+            generateBtn.querySelector('.btn-text').textContent = "Generate Design";
         }
     };
 
+    document.getElementById('magicPromptBtn').onclick = async () => {
+        const text = promptInput.value.trim();
+        if (!text) return;
+
+        try {
+            const response = await fetch('/api/refine-design-prompt', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: text })
+            });
+            const data = await response.json();
+            if (data.prompt) promptInput.value = data.prompt;
+        } catch (err) { console.error(err); }
+    };
 </script>
 {% endblock %}

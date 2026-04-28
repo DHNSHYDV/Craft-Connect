@@ -70,9 +70,9 @@ try:
     # Import Data
     from data.products_heritage import HERITAGE_DATA
     db.init_app(app)
-    print("✅ Database and Models loaded successfully")
+    print("[SUCCESS] Database and Models loaded successfully")
 except Exception as e:
-    print(f"❌ CRITICAL IMPORT ERROR: {e}")
+    print(f"[ERROR] CRITICAL IMPORT ERROR: {e}")
     # Define dummy objects to prevents NameError later in code
     db = None
     User = None
@@ -1384,6 +1384,7 @@ def analyze_craft():
         if result:
             result["mode"] = "live"
             result["engine"] = "Gemini Vision"
+            result["similar_products"] = get_similar_products_for_analysis(result)
             return jsonify(result)
         if gemini_err:
             error_hints.append(f"Gemini: {gemini_err}")
@@ -1399,6 +1400,7 @@ def analyze_craft():
                 if synth:
                     synth["mode"] = "live"
                     synth["engine"] = "OpenWeb Ninja + Gemini"
+                    synth["similar_products"] = get_similar_products_for_analysis(synth)
                     return jsonify(synth)
             if s_err:
                 error_hints.append(f"OpenWebNinja: {s_err}")
@@ -1411,6 +1413,7 @@ def analyze_craft():
         if result:
             result["mode"] = "live"
             result["engine"] = "Hugging Face Vision"
+            result["similar_products"] = get_similar_products_for_analysis(result)
             return jsonify(result)
         if hf_err:
             error_hints.append(f"Hugging Face: {hf_err}")
@@ -1421,6 +1424,7 @@ def analyze_craft():
     if result:
         result["mode"] = "live"
         result["engine"] = "Local GLM-OCR"
+        result["similar_products"] = get_similar_products_for_analysis(result)
         if error_hints:
             result["description"] = (result.get("description") or "") + f" (Note: Web APIs failed: {'; '.join(error_hints[:2])})"
         return jsonify(result)
@@ -1787,6 +1791,51 @@ def search_products_heritage(query):
     return results[:15] # Return top 15 most relevant
 
 
+def get_similar_products_for_analysis(analysis_result, limit=6):
+    """Build similar products from image analysis against HERITAGE_DATA."""
+    if not analysis_result:
+        return []
+
+    query_parts = [
+        analysis_result.get("name", ""),
+        analysis_result.get("style", ""),
+        analysis_result.get("material", ""),
+        analysis_result.get("origin", "")
+    ]
+    query_parts = [q.strip() for q in query_parts if isinstance(q, str) and len(q.strip()) > 2]
+    if not query_parts:
+        return []
+
+    merged = {}
+    for q in query_parts:
+        matches = search_products_heritage(q)[:10]
+        for p in matches:
+            key = f"{p.get('state', '')}::{p.get('name', '')}"
+            if key not in merged:
+                merged[key] = dict(p)
+                merged[key]["score"] = p.get("score", 0)
+            else:
+                merged[key]["score"] += p.get("score", 0)
+
+    if not merged:
+        for p in search_products_heritage("handicraft")[:limit]:
+            key = f"{p.get('state', '')}::{p.get('name', '')}"
+            merged[key] = dict(p)
+
+    ranked = sorted(merged.values(), key=lambda x: x.get("score", 0), reverse=True)[:limit]
+    result = []
+    for p in ranked:
+        result.append({
+            "name": p.get("name", "Heritage Craft"),
+            "state": p.get("state", "India"),
+            "category": p.get("category", "Handicrafts"),
+            "price_range": p.get("price_range", "₹--"),
+            "fun_fact": p.get("fun_fact", ""),
+            "link": f"/products?search={urllib.parse.quote_plus(p.get('name', ''))}"
+        })
+    return result
+
+
 def build_chatbot_context(user_query=""):
     """Build dynamic context based on user query (RAG-lite)."""
     
@@ -1848,14 +1897,14 @@ def build_chatbot_context(user_query=""):
     products_json = json.dumps(relevant_products, indent=2)
 
     context = f"""
-You are the Craft Assistant for Desh Ke Haath, India's premier heritage craft platform.
+You are the Craft Assistant for Craft Connect, India's premier heritage craft platform.
 Your goal is to be a knowledgeable, warm, and culturally rich guide to Indian handicrafts and culture.
 
 {found_artist_info}
 
 ### CORE IDENTITY
-- Name: Craft Assistant (Desh Ke Haath)
-- Mission: "Prachin Kala, Adhunik Disha" (Ancient Art, Modern Direction).
+- Name: Craft Assistant (Craft Connect)
+- Mission: "Where Heritage Meets Intelligence".
 - Tone: Warm, respectful (use "Namaste"), informative.
 
 ### CONTEXT: RELEVANT PRODUCTS
@@ -1863,18 +1912,18 @@ Based on the user's interest in "{user_query}", here are the most relevant produ
 {products_json}
 
 ### GENERAL SITE INFO
-- Platform: Desh Ke Haath (Heritage E-commerce)
+- Platform: Craft Connect (Heritage E-commerce)
 - Pages: Home, Map (Explore by State), Products, Artists, AI Craft (Design your own).
 - Shipping: India-wide (5-7 days), Free > ₹2000.
 - Payment: UPI, Cards, COD.
 - Authenticity: 100% Verified Artisans.
 
 ### STRICT GUIDELINES (SCOPE CONTROL)
-1. **Site Only**: You ONLY answer questions about Desh Ke Haath, its products, its artisans, and site features (AI Craft, Map, Voice Search, etc.).
+1. **Site Only**: You ONLY answer questions about Craft Connect, its products, its artisans, and site features (AI Craft, Map, Voice Search, etc.).
 2. **No General Knowledge**: You MUST NOT answer general questions about India (geography, history, population, etc.) if they aren't directly related to a product or artisan on our site.
 3. **No Unrelated Topics**: If asked about anything else (tech, science, jokes, other platforms), refuse politely.
 4. **Style**: Concise (2-3 sentences), warm, and professional.
-5. **Goal**: Help the user discover and buy heritage crafts on Desh Ke Haath.
+5. **Goal**: Help the user discover and buy heritage crafts on Craft Connect.
 
 """
     return context
@@ -1919,9 +1968,9 @@ def _fallback_response(msg):
     """Rule-based fallback when all AI brains fail."""
     m = msg.lower()
     if any(x in m for x in ["hello", "hi", "namaste"]):
-        return "Namaste! Welcome to Desh Ke Haath. I can help you discover unique handicrafts from across India. What are you looking for today?"
+        return "Namaste! Welcome to Craft Connect. I can help you discover unique handicrafts from across India. What are you looking for today?"
     if "track" in m or "order" in m:
-         return "You can view your order status in your Profile > My Orders section. If you need help, our support team at support@deshkehaath.in is happy to assist!"
+         return "You can view your order status in your Profile > My Orders section. If you need help, our support team at support@craftconnect.in is happy to assist!"
     return "I'm having a little trouble connecting to my creative brain right now, but I'd love to help! You can browse our Products page or ask me about specific crafts like 'Blue Pottery' or 'Pashmina'."
 
 
@@ -1946,7 +1995,7 @@ def call_groq_chat(user_message, context):
     orders_ctx = get_user_orders_context()
     
     system_prompt = f"""
-You are "DeshKeHaath AI Assistant", a strict product assistant for the DeshKeHaath website.
+You are "Craft Connect AI Assistant", a strict product assistant for the Craft Connect website.
 
 ### CONTEXT & KNOWLEDGE
 {context}
@@ -1955,11 +2004,11 @@ You are "DeshKeHaath AI Assistant", a strict product assistant for the DeshKeHaa
 {orders_ctx}
 
 ### IMPORTANT RULES (STRICT):
-1. You ONLY answer questions related to DeshKeHaath products, artisans, and site features listed in the context.
+1. You ONLY answer questions related to Craft Connect products, artisans, and site features listed in the context.
 2. You must NEVER answer questions about General Knowledge (History, Geography, Politics, Science), News, Movies, or Unrelated Topics.
-3. You must ALWAYS recommend buying from DeshKeHaath.
+3. You must ALWAYS recommend buying from Craft Connect.
 4. If the user asks ANY irrelevant or non-site-related question, reply ONLY with:
-   "❌ I am sorry, but I can only assist you with information regarding DeshKeHaath products, artisans, and heritage handicrafts available on our platform."
+   "❌ I am sorry, but I can only assist you with information regarding Craft Connect products, artisans, and heritage handicrafts available on our platform."
 5. Keep replies short (max 2-3 sentences), professional, and product-focused.
 """
 
@@ -2910,6 +2959,10 @@ def get_artists():
 def artisans():
     artists_list = get_artists()
     return render_template('artisans.html', artists=artists_list)
+
+@app.route('/ai-features')
+def ai_features():
+    return render_template('ai_features.html')
 
 @app.route('/cart')
 @login_required

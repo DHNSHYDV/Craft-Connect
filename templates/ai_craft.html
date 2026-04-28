@@ -1,268 +1,513 @@
 {% extends "base.html" %}
 
 {% block content %}
-<section class="ai-hero">
+<section class="ai-hero vision-hero">
     <div class="container">
-        <!-- <span class="badge">Computer Vision</span> -->
+        <div class="hero-badge-row">
+            <span class="ai-badge">Gemini Vision Pro</span>
+            <span class="gsc-badge">Image Analysis</span>
+        </div>
         <h1 class="hero-title-premium">Search by Image</h1>
-        <p class="hero-subtitle-premium">Identify, authenticate, and explore the history of any Indian handicraft simply
-            by uploading a photo.</p>
+        <p class="hero-subtitle-premium">Capture or upload a photo of any Indian handicraft to identify its heritage, authenticity, and artisan roots.</p>
     </div>
 </section>
 
-<section class="vision-tool">
+<section class="vision-interface">
     <div class="container">
-        <div class="vision-card">
-            <div class="upload-area" id="dropZone">
-                <div class="upload-placeholder" id="placeholder">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                        <polyline points="17 8 12 3 7 8"></polyline>
-                        <line x1="12" y1="3" x2="12" y2="15"></line>
-                    </svg>
-                    <h3>Drag & Drop Image</h3>
-                    <p>or click to browse from gallery</p>
-                    <input type="file" id="fileInput" hidden accept="image/*" capture="environment">
+        <div class="vision-main-grid">
+            <!-- Left: Upload Panel -->
+            <div class="upload-panel card-premium">
+                <div class="upload-area-modern" id="dropZone">
+                    <div class="upload-inner" id="placeholder">
+                        <div class="upload-icon-circle">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                <polyline points="17 8 12 3 7 8"></polyline>
+                                <line x1="12" y1="3" x2="12" y2="15"></line>
+                            </svg>
+                        </div>
+                        <h3>Identify your craft</h3>
+                        <p>Drag & drop or click to upload</p>
+                        <div class="upload-actions">
+                            <button class="btn-browse">Browse Gallery</button>
+                            <span class="or-divider">or</span>
+                            <button class="btn-camera" onclick="event.stopPropagation(); document.getElementById('fileInput').click();">Use Camera</button>
+                        </div>
+                        <input type="file" id="fileInput" hidden accept="image/*" capture="environment">
+                    </div>
+                    <div class="preview-area-modern" id="previewArea" style="display: none;">
+                        <img id="imagePreview" src="" alt="Preview">
+                        <div class="scanning-overlay">
+                            <div class="scan-line"></div>
+                            <div class="scan-shimmer"></div>
+                        </div>
+                    </div>
                 </div>
-                <div class="preview-area" id="previewArea" style="display: none;">
-                    <img id="imagePreview" src="" alt="Preview">
-                    <div class="scanning-bar"></div>
+                <div class="upload-tips">
+                    <div class="tip"><span class="dot"></span> Clear lighting</div>
+                    <div class="tip"><span class="dot"></span> Focus on patterns</div>
+                    <div class="tip"><span class="dot"></span> Single object</div>
                 </div>
             </div>
 
-            <div class="analysis-results" id="results" style="display: none;">
-                <div class="result-header">
-                    <span class="status pulse">AI Processing Complete</span>
-                    <h2>Madhubani Painting</h2>
-                </div>
-                <div class="result-grid">
-                    <div class="result-item">
-                        <label>Origin</label>
-                        <p>Mithila Region, Bihar</p>
+            <!-- Right: Results Panel -->
+            <div class="results-panel card-premium" id="results" style="display: none;">
+                <div class="analysis-header">
+                    <div class="ai-status">
+                        <span class="status-pulse"></span>
+                        Analysis Complete
                     </div>
-                    <div class="result-item">
+                    <h2 id="craftName">Madhubani Painting</h2>
+                    <p id="craftOrigin" class="origin-text">Mithila Region, Bihar</p>
+                </div>
+
+                <div class="analysis-stats">
+                    <div class="stat-box">
                         <label>Authenticity</label>
-                        <p class="score">98% Match</p>
+                        <div class="score-display">
+                            <span id="craftScore">98%</span>
+                            <div class="score-bar"><div id="scoreProgress" style="width: 98%;"></div></div>
+                        </div>
                     </div>
-                    <div class="result-item">
+                </div>
+
+                <div class="details-grid">
+                    <div class="detail-item">
                         <label>Primary Material</label>
-                        <p>Handmade Paper, Natural Pigments</p>
+                        <p id="craftMaterial">Handmade Paper</p>
                     </div>
-                    <div class="result-item">
+                    <div class="detail-item">
                         <label>Artisan Style</label>
-                        <p>Kachni (Line work)</p>
+                        <p id="craftStyle">Kachni (Line work)</p>
                     </div>
                 </div>
-                <p class="result-description">
-                    Analysis suggests this is an authentic Madhubani painting from Bihar. The geometric patterns and
-                    natural color variations are consistent with traditional village techniques.
-                </p>
-                <p class="result-disclaimer" id="resultDisclaimer" style="display: none;">Analysis uses an OCR-style
-                    model; descriptions may be generic for non-document images.</p>
-                <div class="result-actions">
-                    <a href="/products?search=madhubani" class="btn-primary">Shop Similar Crafts</a>
-                    <button class="btn-secondary" onclick="resetVision()">Try Another</button>
+
+                <div class="description-box">
+                    <label>AI Analysis Report</label>
+                    <p id="craftDesc">Analysis suggests this is an authentic Madhubani painting. The geometric patterns and natural color variations are consistent with traditional village techniques from the Mithila region.</p>
                 </div>
+
+                <div class="results-actions">
+                    <a href="#" id="shopLink" class="btn-shop-similar">Shop Similar Crafts</a>
+                    <button class="btn-reset" onclick="resetVision()">Try Another</button>
+                </div>
+            </div>
+
+            <!-- Initial State Info -->
+            <div class="results-placeholder card-premium" id="resultsPlaceholder">
+                <div class="placeholder-content">
+                    <div class="ai-brain-icon">🧠</div>
+                    <h3>Ready for Analysis</h3>
+                    <p>Upload an image to see Gemini Vision analysis in real-time.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Similar Products Preview (Hidden until analysis) -->
+        <div class="similar-products-section" id="similarSection" style="display: none;">
+            <h3 class="sub-title">Matching Handicrafts</h3>
+            <div class="similar-grid" id="similarGrid">
+                <!-- Dynamic Content -->
             </div>
         </div>
     </div>
 </section>
 
 <style>
-    .ai-hero {
-        padding: 140px 2rem 4rem;
-        background: linear-gradient(135deg, rgba(0, 77, 64, 0.05) 0%, rgba(0, 0, 0, 0) 100%);
+    .vision-hero {
+        padding: 160px 2rem 4rem;
         text-align: center;
     }
 
-    .badge {
-        display: inline-block;
-        padding: 6px 16px;
-        background: var(--accent-color);
-        color: white;
-        border-radius: 20px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-        letter-spacing: 1px;
+    .vision-main-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 2rem;
+        align-items: start;
+        margin-bottom: 4rem;
     }
 
-    .ai-hero h1 {
-        font-size: 3.5rem;
-        font-family: var(--font-heading);
-        color: var(--accent-color);
-        margin-bottom: 1rem;
+    @media (max-width: 960px) {
+        .vision-main-grid { grid-template-columns: 1fr; }
     }
 
-    .vision-tool {
-        padding: 0 2rem 8rem;
-    }
-
-    .vision-card {
-        max-width: 900px;
-        margin: 0 auto;
+    .card-premium {
         background: var(--card-bg);
         border: 1px solid var(--border-color);
         border-radius: 24px;
-        overflow: hidden;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
-        display: flex;
-        flex-direction: column;
+        padding: 2rem;
+        box-shadow: var(--card-shadow);
+        height: 100%;
     }
 
-    .upload-area {
-        padding: 4rem;
+    .upload-area-modern {
         border: 2px dashed var(--border-color);
-        margin: 2rem;
-        border-radius: 16px;
+        border-radius: 20px;
+        padding: 3rem 2rem;
         text-align: center;
-        transition: all 0.3s ease;
         cursor: pointer;
-        background: rgba(var(--accent-color-rgb), 0.02);
+        transition: all 0.3s;
+        background: rgba(0, 180, 166, 0.02);
         position: relative;
+        overflow: hidden;
+        min-height: 400px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
-    .upload-area:hover {
-        border-color: var(--accent-color);
-        background: rgba(var(--accent-color-rgb), 0.05);
+    .upload-area-modern:hover {
+        border-color: var(--accent-teal);
+        background: rgba(0, 180, 166, 0.05);
     }
 
-    .upload-placeholder h3 {
-        margin: 1.5rem 0 0.5rem;
+    .upload-icon-circle {
+        width: 80px;
+        height: 80px;
+        background: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        box-shadow: 0 8px 20px rgba(0, 180, 166, 0.1);
+        color: var(--accent-teal);
+    }
+
+    .upload-inner h3 {
+        font-family: var(--font-heading);
         font-size: 1.5rem;
+        margin-bottom: 0.5rem;
     }
 
-    .upload-placeholder p {
-        opacity: 0.6;
+    .upload-inner p {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
     }
 
-    .preview-area {
+    .upload-actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+    }
+
+    .btn-browse {
+        padding: 10px 20px;
+        background: var(--brand-navy);
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .btn-camera {
+        padding: 10px 20px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .or-divider {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        font-weight: 500;
+    }
+
+    .preview-area-modern {
+        width: 100%;
+        height: 100%;
         position: relative;
-        max-width: 100%;
-        max-height: 400px;
-        margin: 0 auto;
     }
 
     #imagePreview {
         max-width: 100%;
-        max-height: 400px;
+        max-height: 350px;
         border-radius: 12px;
         display: block;
+        margin: 0 auto;
     }
 
-    .scanning-bar {
+    .scanning-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 180, 166, 0.1);
+        display: none;
+        pointer-events: none;
+    }
+
+    .scan-line {
         position: absolute;
         top: 0;
         left: 0;
         width: 100%;
         height: 4px;
-        background: var(--accent-color);
-        box-shadow: 0 0 15px var(--accent-color);
-        animation: scan 2.5s infinite linear;
-        display: none;
+        background: var(--accent-teal);
+        box-shadow: 0 0 15px var(--accent-teal);
+        animation: scan 2s infinite linear;
     }
 
     @keyframes scan {
-        0% {
-            top: 0;
-        }
-
-        100% {
-            top: 100%;
-        }
+        from { top: 0; }
+        to { top: 100%; }
     }
 
-    .analysis-results {
-        padding: 0 2rem 3rem;
-        animation: fadeInUp 0.5s ease forwards;
+    .upload-tips {
+        display: flex;
+        justify-content: center;
+        gap: 2rem;
+        margin-top: 1.5rem;
     }
 
-    .result-header {
+    .tip {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .tip .dot {
+        width: 6px;
+        height: 6px;
+        background: var(--accent-teal);
+        border-radius: 50%;
+    }
+
+    .analysis-header {
         text-align: center;
         margin-bottom: 2rem;
     }
 
-    .status {
-        font-size: 0.8rem;
+    .ai-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.75rem;
         font-weight: 700;
+        color: var(--accent-teal);
         text-transform: uppercase;
-        color: #4caf50;
-        margin-bottom: 0.5rem;
-        display: block;
+        letter-spacing: 1px;
+        margin-bottom: 1rem;
     }
 
-    .result-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 1.5rem;
-        margin-bottom: 2rem;
+    .status-pulse {
+        width: 8px;
+        height: 8px;
+        background: var(--accent-teal);
+        border-radius: 50%;
+        animation: pulseDot 2s infinite;
     }
 
-    .result-item label {
-        display: block;
-        font-size: 0.8rem;
-        color: #666;
+    #craftName {
+        font-family: var(--font-heading);
+        font-size: 2.2rem;
         margin-bottom: 0.25rem;
     }
 
-    .result-item p {
+    .origin-text {
+        color: var(--accent-gold);
         font-weight: 600;
         font-size: 1.1rem;
     }
 
-    .score {
-        color: var(--accent-color);
-    }
-
-    .result-description {
-        line-height: 1.6;
-        opacity: 0.8;
-        margin-bottom: 0.75rem;
-        text-align: center;
-    }
-
-    .result-disclaimer {
-        font-size: 0.8rem;
-        opacity: 0.65;
-        text-align: center;
+    .analysis-stats {
         margin-bottom: 2rem;
     }
 
-    .result-actions {
+    .stat-box label {
+        display: block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        margin-bottom: 0.5rem;
+    }
+
+    .score-display {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .score-display span {
+        font-family: var(--font-heading);
+        font-size: 1.8rem;
+        font-weight: 700;
+        color: var(--text-color);
+    }
+
+    .score-bar {
+        flex: 1;
+        height: 8px;
+        background: rgba(0, 180, 166, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+    }
+
+    #scoreProgress {
+        height: 100%;
+        background: var(--accent-teal);
+        border-radius: 4px;
+        transition: width 1s ease;
+    }
+
+    .details-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+
+    .detail-item label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        margin-bottom: 0.25rem;
+    }
+
+    .detail-item p {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: var(--text-color);
+    }
+
+    .description-box {
+        background: rgba(232, 168, 56, 0.05);
+        padding: 1.5rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+    }
+
+    .description-box label {
+        display: block;
+        font-size: 0.75rem;
+        font-weight: 700;
+        color: var(--accent-gold);
+        text-transform: uppercase;
+        margin-bottom: 0.5rem;
+    }
+
+    .description-box p {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: var(--text-color);
+    }
+
+    .results-actions {
         display: flex;
         gap: 1rem;
-        justify-content: center;
     }
 
-    .pulse {
-        animation: pulseAnim 2s infinite;
+    .btn-shop-similar {
+        flex: 2;
+        padding: 12px;
+        background: var(--brand-navy);
+        color: white;
+        text-align: center;
+        text-decoration: none;
+        border-radius: 12px;
+        font-weight: 600;
+        transition: all 0.3s;
     }
 
-    @keyframes pulseAnim {
-        0% {
-            opacity: 0.6;
-        }
-
-        50% {
-            opacity: 1;
-        }
-
-        100% {
-            opacity: 0.6;
-        }
+    .btn-reset {
+        flex: 1;
+        padding: 12px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        font-weight: 600;
+        cursor: pointer;
     }
 
-    @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(20px);
-        }
+    .similar-products-section {
+        margin-top: 1.5rem;
+        margin-bottom: 2.5rem;
+    }
 
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+    .similar-products-section .sub-title {
+        font-family: var(--font-heading);
+        font-size: 1.4rem;
+        margin-bottom: 1rem;
+    }
+
+    .similar-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1rem;
+    }
+
+    .similar-card {
+        background: var(--card-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 14px;
+        padding: 1rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.45rem;
+        box-shadow: var(--card-shadow);
+    }
+
+    .similar-card h4 {
+        font-size: 1rem;
+        margin: 0;
+        font-family: var(--font-heading);
+    }
+
+    .similar-meta {
+        font-size: 0.8rem;
+        color: var(--text-muted);
+    }
+
+    .similar-fact {
+        font-size: 0.82rem;
+        color: var(--text-muted);
+        line-height: 1.45;
+        min-height: 2.2em;
+    }
+
+    .similar-link {
+        margin-top: 0.25rem;
+        font-size: 0.82rem;
+        font-weight: 700;
+        color: var(--accent-teal);
+        text-decoration: none;
+    }
+
+    .similar-link:hover {
+        text-decoration: underline;
+    }
+
+    .placeholder-content {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .ai-brain-icon {
+        font-size: 4rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .placeholder-content h3 {
+        font-family: var(--font-heading);
+        font-size: 1.5rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .placeholder-content p {
+        color: var(--text-muted);
+    }
+
+    @keyframes pulseDot {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.4); opacity: 0.5; }
     }
 </style>
 
@@ -273,16 +518,10 @@
     const previewArea = document.getElementById('previewArea');
     const imagePreview = document.getElementById('imagePreview');
     const results = document.getElementById('results');
-    const scanningBar = document.querySelector('.scanning-bar');
-
-    // UI Result Elements
-    const resultTitle = document.querySelector('.result-header h2');
-    const resultOrigin = document.querySelector('.result-item:nth-child(1) p');
-    const resultScore = document.querySelector('.score');
-    const resultMaterial = document.querySelector('.result-item:nth-child(3) p');
-    const resultStyle = document.querySelector('.result-item:nth-child(4) p');
-    const resultDesc = document.querySelector('.result-description');
-    const shopLink = document.querySelector('.result-actions .btn-primary');
+    const resultsPlaceholder = document.getElementById('resultsPlaceholder');
+    const scanningOverlay = document.querySelector('.scanning-overlay');
+    const similarSection = document.getElementById('similarSection');
+    const similarGrid = document.getElementById('similarGrid');
 
     dropZone.onclick = () => fileInput.click();
 
@@ -291,21 +530,15 @@
         if (file) handleFile(file);
     };
 
-    function statusDisplay(text) {
-        const statusEl = document.querySelector('.status');
-        if (statusEl) statusEl.textContent = text;
-    }
-
     function handleFile(file) {
         const reader = new FileReader();
         reader.onload = async (e) => {
             imagePreview.src = e.target.result;
             placeholder.style.display = 'none';
             previewArea.style.display = 'block';
-            scanningBar.style.display = 'block';
+            scanningOverlay.style.display = 'block';
             results.style.display = 'none';
-
-            statusDisplay("AI Uploading & Analyzing...");
+            resultsPlaceholder.style.display = 'block';
 
             const formData = new FormData();
             formData.append('image', file);
@@ -317,65 +550,86 @@
                 });
 
                 const data = await response.json();
-                if (!response.ok || data.error) throw new Error(data.error || `Request failed (${response.status})`);
+                if (!response.ok || data.error) throw new Error(data.error || "Analysis failed");
 
-                processResults(data);
+                showResults(data);
             } catch (err) {
-                console.error("Analysis error", err);
-                statusDisplay("Analysis failed");
-                alert(err.message || "Analysis failed. Try another image or check your connection.");
+                alert(err.message);
+                resetVision();
             } finally {
-                scanningBar.style.display = 'none';
+                scanningOverlay.style.display = 'none';
             }
         };
         reader.readAsDataURL(file);
     }
 
-    function processResults(data) {
-        statusDisplay("AI Analysis Complete");
-        resultTitle.textContent = data.name || "Indian Handicraft";
-        resultOrigin.textContent = data.origin || "—";
-        resultScore.textContent = `${data.score != null ? data.score : 85}% Match`;
-        resultMaterial.textContent = data.material || "—";
-        resultStyle.textContent = data.style || "—";
-        resultDesc.textContent = data.description || "Analysis complete.";
-
-        const disclaimerEl = document.getElementById('resultDisclaimer');
-        if (disclaimerEl) disclaimerEl.style.display = 'block';
-
-        const query = (data.name || "craft").toLowerCase().split(/\s+/)[0];
-        shopLink.href = `/products?search=${encodeURIComponent(query)}`;
-
+    function showResults(data) {
+        resultsPlaceholder.style.display = 'none';
         results.style.display = 'block';
-        results.scrollIntoView({ behavior: 'smooth' });
+        
+        document.getElementById('craftName').textContent = data.name;
+        document.getElementById('craftOrigin').textContent = data.origin;
+        document.getElementById('craftScore').textContent = data.score + '%';
+        document.getElementById('scoreProgress').style.width = data.score + '%';
+        document.getElementById('craftMaterial').textContent = data.material;
+        document.getElementById('craftStyle').textContent = data.style;
+        document.getElementById('craftDesc').textContent = data.description;
+        
+        const query = (data.name).toLowerCase().split(' ')[0];
+        document.getElementById('shopLink').href = '/products?search=' + encodeURIComponent(query);
+
+        renderSimilarProducts(data.similar_products || []);
+    }
+
+    function renderSimilarProducts(products) {
+        if (!products.length) {
+            similarSection.style.display = 'none';
+            similarGrid.innerHTML = '';
+            return;
+        }
+
+        similarGrid.innerHTML = products.map((item) => `
+            <article class="similar-card">
+                <h4>${escapeHtml(item.name || 'Heritage Craft')}</h4>
+                <div class="similar-meta">${escapeHtml(item.state || 'India')} • ${escapeHtml(item.category || 'Handicrafts')}</div>
+                <div class="similar-meta">${escapeHtml(item.price_range || '₹--')}</div>
+                <p class="similar-fact">${escapeHtml(item.fun_fact || 'Authentic traditional craft from our catalog.')}</p>
+                <a class="similar-link" href="${escapeAttr(item.link || '/products')}">View similar →</a>
+            </article>
+        `).join('');
+        similarSection.style.display = 'block';
+    }
+
+    function escapeHtml(value) {
+        return String(value)
+            .replaceAll('&', '&amp;')
+            .replaceAll('<', '&lt;')
+            .replaceAll('>', '&gt;')
+            .replaceAll('"', '&quot;')
+            .replaceAll("'", '&#39;');
+    }
+
+    function escapeAttr(value) {
+        return escapeHtml(value);
     }
 
     function resetVision() {
         placeholder.style.display = 'block';
         previewArea.style.display = 'none';
         results.style.display = 'none';
-        const disclaimerEl = document.getElementById('resultDisclaimer');
-        if (disclaimerEl) disclaimerEl.style.display = 'none';
+        resultsPlaceholder.style.display = 'block';
+        similarSection.style.display = 'none';
+        similarGrid.innerHTML = '';
         fileInput.value = '';
-        statusDisplay("AI Ready for Analysis");
     }
 
     // Drag and Drop
-    dropZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropZone.style.borderColor = 'var(--accent-color)';
-    });
-
-    dropZone.addEventListener('dragleave', () => {
-        dropZone.style.borderColor = 'var(--border-color)';
-    });
-
-    dropZone.addEventListener('drop', (e) => {
+    dropZone.ondragover = (e) => { e.preventDefault(); dropZone.style.borderColor = 'var(--accent-teal)'; };
+    dropZone.ondragleave = () => { dropZone.style.borderColor = 'var(--border-color)'; };
+    dropZone.ondrop = (e) => {
         e.preventDefault();
         const file = e.dataTransfer.files[0];
-        if (file && file.type.startsWith('image/')) {
-            handleFile(file);
-        }
-    });
+        if (file && file.type.startsWith('image/')) handleFile(file);
+    };
 </script>
 {% endblock %}
